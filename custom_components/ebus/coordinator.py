@@ -22,6 +22,7 @@ from aioebus.poll import PollScheduler
 from aioebus.scan import ScanResult
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -40,6 +41,9 @@ from .library import all_messages, device_messages
 
 _LOGGER = logging.getLogger(__name__)
 _RECONNECT_BACKOFF: Final = 10  # seconds between reconnect attempts
+_CACHE_STORAGE_VERSION: Final = 1
+_CACHE_SAVE_DELAY: Final = 60  # s; throttle persisting the value cache
+_JSON_SCALARS: Final = (str, int, float, bool, type(None))
 
 type SendFn = Callable[[bytes], Awaitable[None]]
 type RecvFn = Callable[[], Awaitable[bytes]]
@@ -71,6 +75,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._writer: asyncio.StreamWriter | None = None
         self._supervisor: asyncio.Task[None] | None = None
         self._base_interval = interval
+        # persisted value cache, so entities show their last value right after a
+        # restart instead of being unavailable until the bus is read again
+        self._store: Store[dict[str, object]] = Store(
+            hass, _CACHE_STORAGE_VERSION, f"ebus_cache_{entry.entry_id}")
 
     async def _connect(self) -> tuple[SendFn, RecvFn]:
         reader, writer = await asyncio.open_connection(self.host, self.port)
@@ -115,6 +123,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             default_priority=PLAIN_READ_PRIORITY)
         self.engine = EbusEngine(send, recv, registry, scheduler=scheduler,
                                  qq=SOURCE_ADDRESS, allow_write=self.allow_write)
+        await self._warm_start_cache()
         self._supervisor = self.config_entry.async_create_background_task(
             self.hass, self._run_forever(), name="ebus-supervisor")
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
@@ -143,11 +152,49 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
     async def _async_update_data(self) -> EbusCache:
         if self.engine is None:
             raise UpdateFailed("engine not started")
+        # persist the cache (throttled) so a restart can warm-start from it
+        self._store.async_delay_save(self._serialize_cache, _CACHE_SAVE_DELAY)
         return dict(self.engine.cache)
+
+    def _serialize_cache(self) -> dict[str, object]:
+        """The value cache as JSON: [[["zz","name","field"], value], ...].
+        Only scalar values are kept, so the store always stays serialisable."""
+        if self.engine is None:
+            return {"values": []}
+        return {
+            "values": [
+                [list(key), value]
+                for key, value in self.engine.cache.items()
+                if isinstance(value, _JSON_SCALARS)
+            ]
+        }
+
+    async def _warm_start_cache(self) -> None:
+        """Seed the engine cache from the last persisted values, so entities are
+        available with their last value immediately after a restart."""
+        if self.engine is None:
+            return
+        try:
+            stored = await self._store.async_load()
+        except Exception as err:  # noqa: BLE001 - a bad cache file must not block setup
+            _LOGGER.debug("eBUS: could not load value cache: %s", err)
+            return
+        if not stored:
+            return
+        values = stored.get("values")
+        if not isinstance(values, list):
+            return
+        for item in values:
+            if (isinstance(item, list) and len(item) == 2
+                    and isinstance(item[0], list) and len(item[0]) == 3):
+                k = item[0]
+                self.engine.cache[(str(k[0]), str(k[1]), str(k[2]))] = item[1]
+        _LOGGER.debug("eBUS: warm-started %d cached value(s)", len(self.engine.cache))
 
     async def async_shutdown(self) -> None:
         await super().async_shutdown()
         if self.engine is not None:
+            await self._store.async_save(self._serialize_cache())  # final flush
             self.engine.stop()
         if self._supervisor is not None:
             self._supervisor.cancel()
