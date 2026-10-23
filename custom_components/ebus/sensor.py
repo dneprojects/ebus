@@ -69,8 +69,10 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         value = self.coordinator.data.get(self._key)
-        # an ENUM sensor must only report one of its declared options
-        options = self._attr_options
+        # an ENUM sensor must only report one of its declared options; _attr_options
+        # is set only for those and raises when unset (HA cached-property backing),
+        # so read it defensively -- a non-enum sensor has no options to enforce
+        options = getattr(self, "_attr_options", None)
         if options is not None and value not in options:
             return None
         return cast(StateType, value)

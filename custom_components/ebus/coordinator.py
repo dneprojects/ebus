@@ -42,7 +42,8 @@ from .library import all_messages, device_messages
 _LOGGER = logging.getLogger(__name__)
 _RECONNECT_BACKOFF: Final = 10  # seconds between reconnect attempts
 _CACHE_STORAGE_VERSION: Final = 1
-_CACHE_SAVE_DELAY: Final = 60  # s; throttle persisting the value cache
+_CACHE_SAVE_DELAY: Final = 20  # s; throttle persisting the cache (below the
+# poll interval so the delayed write actually fires between updates)
 _JSON_SCALARS: Final = (str, int, float, bool, type(None))
 
 type SendFn = Callable[[bytes], Awaitable[None]]
