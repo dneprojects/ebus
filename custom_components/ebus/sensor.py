@@ -51,9 +51,9 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         self._attr_unique_id = f"ebus_{'_'.join(str(p) for p in self._key)}"
         self._attr_translation_key = translation_key(field.msg, field.field)
         self._attr_icon = icon_for(field.field)
-        # only the actively polled registers are enabled by default; the rest are
-        # available but off until the user enables them (keeps the list sane)
-        self._attr_entity_registry_enabled_default = field.msg.poll_priority > 0
+        # the bundled defs are already the curated set of registers that carry a
+        # value on this installation, so read entities are enabled by default
+        self._attr_entity_registry_enabled_default = True
 
         if field.field.values:  # value table -> enum sensor with its labels
             self._attr_device_class = SensorDeviceClass.ENUM
