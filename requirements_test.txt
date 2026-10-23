@@ -1,0 +1,5 @@
+# aioebus provides the protocol library (install from PyPI once published, or
+# from a local/CI checkout in the meantime).
+ruff
+mypy
+pytest-homeassistant-custom-component

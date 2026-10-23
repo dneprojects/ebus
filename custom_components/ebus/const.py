@@ -1,0 +1,31 @@
+"""Constants for the eBUS integration."""
+from __future__ import annotations
+
+from typing import Final
+
+DOMAIN: Final = "ebus"
+
+CONF_HOST: Final = "host"
+CONF_PORT: Final = "port"
+CONF_SCAN_INTERVAL: Final = "scan_interval"
+CONF_ALLOW_WRITE: Final = "allow_write"
+CONF_CONFIG_DIR: Final = "config_dir"  # optional dir of user-generated device JSONs
+
+DEFAULT_PORT: Final = 9999  # enhanced-adapter TCP port (enh:host:port)
+DEFAULT_SCAN_INTERVAL: Final = 60  # base poll interval (seconds); priority scales it
+# priority for plain `r` reads (no r1..r9 digit): polled every N * base interval,
+# so ~5 min at the default. Kept rare because these are mostly static registers.
+PLAIN_READ_PRIORITY: Final = 5
+DEFAULT_ALLOW_WRITE: Final = False  # writing settings is opt-in
+
+# device addresses to scan at setup (eBUS slave addresses seen on a Vaillant bus)
+SCAN_ADDRESSES: Final[tuple[int, ...]] = (0x08, 0x0A, 0x15, 0x18, 0x26, 0x38, 0x76, 0xF6)
+
+# master address aioebus uses on the bus; must be free (ebusd's own address, so
+# this integration replaces ebusd rather than running alongside it)
+SOURCE_ADDRESS: Final = 0x31
+
+# synthetic address for the broadcast circuit (telegrams sent to 0xfe); not a
+# scanned device, injected by the coordinator so bus broadcasts become entities
+BROADCAST_ADDRESS: Final = 0xFE
+BROADCAST_IDENT: Final = "Broadcast"

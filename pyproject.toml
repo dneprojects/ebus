@@ -1,0 +1,32 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "BLE", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501", "E402", "SIM102", "RUF059", "RUF015"]
+"tools/*" = ["E501"]  # dev scripts carry long help/config strings
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+# Home Assistant ships inline types; check against them (installed in CI).
+# `custom_components` is not a package root we import through, so treat the
+# component as a top-level module tree.
+follow_imports = "normal"
+local_partial_types = true
+
+# aioebus is a separately maintained, published dependency with its own CI
+# (ruff + pytest). Use its public type hints, but do not report its internals
+# here -- its source is not part of this project.
+[[tool.mypy.overrides]]
+module = "aioebus.*"
+ignore_errors = true

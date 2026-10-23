@@ -1,0 +1,507 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "eBUS-Adapter",
+        "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port). Falls ebusd denselben Adapter nutzt, zuerst ebusd stoppen.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "download_defs": "Gerätedefinitionen von ebusd-configuration laden"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Adapter unter diesem Host/Port nicht erreichbar."
+    },
+    "abort": {
+      "already_configured": "Dieser Adapter ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "eBUS-Optionen",
+        "data": {
+          "scan_interval": "Basis-Abfrageintervall (s)",
+          "allow_write": "Schreiben von Einstellungen auf den Bus erlauben",
+          "config_dir": "Zusätzliches Definitionsverzeichnis (optional)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "outsidetemp": {
+        "name": "Außentemperatur"
+      },
+      "hwcparallelloading": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "maxroomhumidity": {
+        "name": "Max. Raumfeuchte"
+      },
+      "adaptheatcurve": {
+        "state": {
+          "no": "Nein",
+          "yes": "Ja"
+        }
+      },
+      "waterpressure": {
+        "name": "Wasserdruck"
+      },
+      "systemflowtemp": {
+        "name": "Anlagen-Vorlauftemperatur"
+      },
+      "displayedoutsidetemp": {
+        "name": "Außentemperatur"
+      },
+      "maintenancedue": {
+        "state": {
+          "no": "Nein",
+          "yes": "Ja"
+        }
+      },
+      "hwcopmode": {
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "hwcsfmode": {
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "hc1circuittype_mctype": {
+        "state": {
+          "hwc": "Warmwasser"
+        }
+      },
+      "hc1actualflowtempdesired": {
+        "name": "Vorlauf-Sollwert Heizkreis 1"
+      },
+      "hc1flowtemp": {
+        "name": "Vorlauftemperatur Heizkreis 1"
+      },
+      "hc1roomtempswitchon": {
+        "state": {
+          "off": "Aus"
+        }
+      },
+      "hc2circuittype_mctype": {
+        "state": {
+          "hwc": "Warmwasser"
+        }
+      },
+      "hc2flowtemp": {
+        "name": "Vorlauftemperatur Heizkreis 2"
+      },
+      "hc2roomtempswitchon": {
+        "state": {
+          "off": "Aus"
+        }
+      },
+      "hc3circuittype_mctype": {
+        "state": {
+          "hwc": "Warmwasser"
+        }
+      },
+      "hc3roomtempswitchon": {
+        "state": {
+          "off": "Aus"
+        }
+      },
+      "z1opmode": {
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "z1sfmode": {
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "z2opmode": {
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "z2sfmode": {
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "z3opmode": {
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "z3sfmode": {
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "hwclegionelladay": {
+        "state": {
+          "off": "Aus"
+        }
+      },
+      "flowtemp": {
+        "name": "Vorlauftemperatur"
+      },
+      "pumpstate": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein",
+          "overrun": "Nachlauf",
+          "hwc": "Warmwasser"
+        }
+      },
+      "statenumber": {
+        "name": "Status",
+        "state": {
+          "kein_bedarf": "Kein Bedarf",
+          "heizen": "Heizen",
+          "pumpennachlauf": "Pumpennachlauf",
+          "anlauf": "Anlauf",
+          "warmwasser": "Warmwasser",
+          "sommer": "Sommer",
+          "frostschutz": "Frostschutz"
+        }
+      },
+      "heatingdemand": {
+        "state": {
+          "no": "Nein",
+          "yes": "Ja"
+        }
+      },
+      "hwcdemand": {
+        "state": {
+          "no": "Nein",
+          "yes": "Ja"
+        }
+      },
+      "wp": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "heatingswitch": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "hwcswitch": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "templimiter": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "partloadhwckw": {
+        "name": "Warmwasser-Teillast"
+      },
+      "hwctemp": {
+        "name": "Warmwassertemperatur"
+      },
+      "hcpumpmode": {
+        "state": {
+          "winter": "Winter"
+        }
+      },
+      "ebusheatcontrol": {
+        "state": {
+          "no": "Nein",
+          "yes": "Ja"
+        }
+      },
+      "warmstartenable": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "cirpump": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "ebusvoltage": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "state_onoff": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "yieldhcday": {
+        "name": "Wärmeertrag Heizung (Tag)"
+      },
+      "yieldhwcday": {
+        "name": "Wärmeertrag Warmwasser (Tag)"
+      },
+      "yieldhcmonth": {
+        "name": "Wärmeertrag Heizung (Monat)"
+      },
+      "cophcmonth": {
+        "name": "Arbeitszahl Heizung (Monat)"
+      },
+      "rundataelectricpowerconsumption": {
+        "name": "Stromaufnahme Wärmepumpe"
+      },
+      "setmode_hcmode": {
+        "state": {
+          "auto": "Auto",
+          "off": "Aus",
+          "heat": "Heizen",
+          "water": "Warmwasser"
+        }
+      },
+      "status01_pumpstate": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein",
+          "overrun": "Nachlauf",
+          "hwc": "Warmwasser"
+        }
+      },
+      "singlestoragecharge": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "operatinghours": {
+        "name": "Betriebsstunden"
+      },
+      "electricalheater": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "operatingmode": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein",
+          "auto": "Auto"
+        }
+      },
+      "quickvetostart": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "partystart": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "holidaystart": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "actorfernsteuerung": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "teleswitch": {
+        "state": {
+          "on": "Ein",
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "teleswitchstate": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "enablehwcoperation": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "mode_hwcmode": {
+        "state": {
+          "on": "Ein",
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "mode_hwcmode_1": {
+        "state": {
+          "on": "Ein",
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "mode_mctype": {
+        "state": {
+          "hwc": "Warmwasser"
+        }
+      },
+      "status_onoff": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      }
+    },
+    "number": {
+      "maxroomhumidity": {
+        "name": "Max. Raumfeuchte"
+      }
+    },
+    "select": {
+      "hwcparallelloading": {
+        "name": "HwcParallelLoading",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "adaptheatcurve": {
+        "name": "AdaptHeatCurve",
+        "state": {
+          "no": "Nein",
+          "yes": "Ja"
+        }
+      },
+      "hwcopmode": {
+        "name": "HwcOpMode",
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "hwcsfmode": {
+        "name": "HwcSFMode",
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "hc1roomtempswitchon": {
+        "name": "Hc1RoomTempSwitchOn",
+        "state": {
+          "off": "Aus"
+        }
+      },
+      "hc2roomtempswitchon": {
+        "name": "Hc2RoomTempSwitchOn",
+        "state": {
+          "off": "Aus"
+        }
+      },
+      "hc3roomtempswitchon": {
+        "name": "Hc3RoomTempSwitchOn",
+        "state": {
+          "off": "Aus"
+        }
+      },
+      "z1opmode": {
+        "name": "Z1OpMode",
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "z1sfmode": {
+        "name": "Z1SFMode",
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "z2opmode": {
+        "name": "Z2OpMode",
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "z2sfmode": {
+        "name": "Z2SFMode",
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "z3opmode": {
+        "name": "Z3OpMode",
+        "state": {
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "z3sfmode": {
+        "name": "Z3SFMode",
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "statuscirpump": {
+        "name": "StatusCirPump",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "operatingmode": {
+        "name": "OperatingMode",
+        "state": {
+          "off": "Aus",
+          "on": "Ein",
+          "auto": "Auto"
+        }
+      },
+      "setmode": {
+        "name": "SetMode",
+        "state": {
+          "on": "Ein",
+          "off": "Aus",
+          "auto": "Auto"
+        }
+      },
+      "party": {
+        "name": "Party",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "load": {
+        "name": "Load",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      }
+    }
+  }
+}

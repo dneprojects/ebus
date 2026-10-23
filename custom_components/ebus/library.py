@@ -1,0 +1,184 @@
+"""Loading the bundled eBUS device definitions and classifying their fields.
+
+All protocol knowledge lives in aioebus; this module only turns the bundled
+device configs into the lists the platforms need (which message/field becomes a
+sensor, a number or a select) and small presentation helpers (icons).
+"""
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, replace
+from functools import cache
+from pathlib import Path
+from typing import Any, Final
+
+from aioebus.conditions import context_from_scan, evaluate_all
+from aioebus.convert import from_dicts
+from aioebus.messages import FieldDef, MessageDef
+from aioebus.scan import ScanResult
+
+_CONFIG_DIR: Final = Path(__file__).parent / "configs" / "vaillant"
+
+# numeric field types that can be written as a Home Assistant number
+NUMBER_TYPES: Final[frozenset[str]] = frozenset(
+    {"UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "D1B", "D1C", "D2B", "D2C", "FLT"})
+
+# mdi icon by unit, else by a keyword in the field name (mirrors the eBUS Bridge)
+_UNIT_ICON: Final[dict[str, str]] = {
+    "°C": "mdi:thermometer", "bar": "mdi:gauge", "%": "mdi:percent",
+    "kW": "mdi:lightning-bolt", "W": "mdi:lightning-bolt", "kWh": "mdi:counter",
+    "l/h": "mdi:pump", "h": "mdi:clock-outline", "min": "mdi:clock-outline"}
+_KEYWORD_ICON: Final[tuple[tuple[str, str], ...]] = (
+    ("pump", "mdi:pump"), ("pressure", "mdi:gauge"),
+    ("temp", "mdi:thermometer"), ("mode", "mdi:tune"),
+    ("error", "mdi:alert-circle-outline"), ("time", "mdi:clock-outline"))
+
+
+@dataclass
+class Field:
+    """One decodable field of a message, with its HA label and key."""
+    msg: MessageDef
+    field: FieldDef
+    label: str  # HA-style label (decode_labeled key)
+
+
+@cache
+def _index() -> dict[str, Any]:
+    data: dict[str, Any] = json.loads((_CONFIG_DIR / "index.json").read_text(encoding="utf-8"))
+    return data
+
+
+@cache
+def _load_file(name: str) -> tuple[MessageDef, ...]:
+    return tuple(from_dicts(json.loads((_CONFIG_DIR / name).read_text(encoding="utf-8"))))
+
+
+def resolve_file(ident: str, hw: str | None) -> str | None:
+    """Pick the definition file for a scanned device by its ident and HW variant.
+    The address plays no role here, so identical devices resolve to one file."""
+    entry = _index().get(ident)
+    if entry is None:
+        return None
+    if isinstance(entry, str):
+        return entry
+    result = entry.get("hw", {}).get(hw or "") or entry.get("default")
+    return result if isinstance(result, str) else None
+
+
+def resolve_user_file(scan: ScanResult, user_dir: Path) -> Path | None:
+    """Find a user-generated definition file for a scanned device, matching the
+    scan ident (longest filename ident that is a prefix of the lowercased scan
+    id) and preferring the matching HW variant. Lets a user cover any device by
+    converting their own ebusd-configuration locally (see docs/local-configs.md)."""
+    ident = (scan.ident or "").lower()
+    if not ident:
+        return None
+    cands: list[tuple[int, str, Path]] = []
+    for p in sorted(user_dir.glob("*.json")):
+        parts = p.stem.split(".")  # ZZ . ident [. variant]
+        if len(parts) < 2:
+            continue
+        fid = parts[1].lower()
+        if fid and ident.startswith(fid):
+            cands.append((len(fid), parts[2] if len(parts) > 2 else "", p))
+    if not cands:
+        return None
+    best = max(c[0] for c in cands)
+    matches = [(variant, path) for length, variant, path in cands if length == best]
+    want_hw = f"HW{scan.hw or ''}".upper()
+    for variant, path in matches:  # prefer HW variant, then the plain file, then any
+        if variant.upper() == want_hw:
+            return path
+    for variant, path in matches:
+        if variant == "":
+            return path
+    return matches[0][1]
+
+
+def _messages_for(scan: ScanResult, user_dir: Path | None) -> list[MessageDef]:
+    """Our own bundled definition wins; otherwise a user-generated one."""
+    name = resolve_file(scan.ident, scan.hw)
+    if name is not None:
+        return list(_load_file(name))
+    if user_dir is not None:
+        p = resolve_user_file(scan, user_dir)
+        if p is not None:
+            return from_dicts(json.loads(p.read_text(encoding="utf-8")))
+    return []
+
+
+def addressed_messages(address: int, scan: ScanResult,
+                       user_dir: Path | None = None) -> list[MessageDef]:
+    """The messages for one scanned device, with its bus address stamped on.
+
+    Conditions are evaluated against *this device's* scan (id_sw / id_hw):
+    messages whose condition is False for the device are dropped, and where
+    several definitions share a command (pbsb+id) the one that best fits the
+    device wins (a matched condition over an unconditional base over an
+    unresolved one). Two devices of the same type still share one file."""
+    zz = f"{address:02x}"
+    ctx = context_from_scan(scan)
+    chosen: dict[tuple[str, str], tuple[int, MessageDef]] = {}
+    for m in _messages_for(scan, user_dir):
+        result = evaluate_all(m.conditions, ctx)
+        if result is False:
+            continue
+        # matched variant (3) beats unconditional base (2) beats unresolved (1)
+        rank = (3 if result is True else 1) if m.conditions else 2
+        key = (m.pbsb, m.msgid)
+        if key not in chosen or rank > chosen[key][0]:
+            chosen[key] = (rank, m)
+    return [replace(m, zz=zz) for _, m in chosen.values()]
+
+
+def all_messages(devices: dict[int, ScanResult],
+                 user_dir: Path | None = None) -> list[MessageDef]:
+    """Addressed messages across every scanned device (for the passive registry)."""
+    out: list[MessageDef] = []
+    for address, scan in devices.items():
+        out += addressed_messages(address, scan, user_dir)
+    return out
+
+
+def _decodable_fields(msg: MessageDef) -> list[FieldDef]:
+    return [f for f in msg.fields if f.name and not f.type.upper().startswith("IGN")]
+
+
+def _label(msg: MessageDef, field: FieldDef, fields: list[FieldDef]) -> str:
+    lone_value = [f.name for f in fields] == ["value"]
+    return msg.name if (field.name == "value" or lone_value) else f"{msg.name} {field.name}"
+
+
+def fields_of(msg: MessageDef) -> list[Field]:
+    fields = _decodable_fields(msg)
+    return [Field(msg, f, _label(msg, f, fields)) for f in fields]
+
+
+def device_messages(devices: dict[int, ScanResult], direction: str,
+                    user_dir: Path | None = None) -> list[MessageDef]:
+    """Addressed messages of a given direction ('r' read / 'w' write) across all
+    scanned devices, de-duplicated per (address, name)."""
+    want_read = direction == "r"
+    out: list[MessageDef] = []
+    seen: set[tuple[str, str]] = set()
+    for m in all_messages(devices, user_dir):
+        # reads include passive updates (u), so broadcast values surface as
+        # sensors; only true writes (w) go to the number/select platforms
+        if want_read != m.is_read or (not want_read and not m.is_write):
+            continue
+        key = (m.zz, m.name)
+        if key in seen:  # first definition wins (avoids duplicate entities)
+            continue
+        seen.add(key)
+        out.append(m)
+    return out
+
+
+def icon_for(field: FieldDef) -> str | None:
+    if field.unit in _UNIT_ICON:
+        return _UNIT_ICON[field.unit]
+    name = field.name.lower()
+    for keyword, icon in _KEYWORD_ICON:
+        if keyword in name:
+            return icon
+    return None

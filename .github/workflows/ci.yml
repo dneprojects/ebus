@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # aioebus is the protocol dependency. Once it is on PyPI this is just
+      # `pip install aioebus`; until then, check it out alongside and install it.
+      - uses: actions/checkout@v4
+        with:
+          repository: dneprojects/aioebus
+          path: _aioebus
+      - run: pip install ./_aioebus
+      - run: pip install -r requirements_test.txt
+      - run: ruff check custom_components
+      - run: python -m pytest -q

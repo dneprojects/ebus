@@ -1,0 +1,103 @@
+# Home Assistant integration quality scale checklist for `ebus`.
+# Target tier: bronze (all bronze rules met). Silver/gold/platinum rules are
+# tracked here as done / todo / exempt toward a later promotion.
+rules:
+  # --- Bronze ---------------------------------------------------------------
+  action-setup:
+    status: exempt
+    comment: The integration registers no custom service actions.
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: Icons live under brand/ locally; submit them to home-assistant/brands.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No custom actions to document.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # --- Silver ---------------------------------------------------------------
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: todo
+    comment: Sensors go unavailable without a cached value; number/select still rely only on the coordinator's last-update state.
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Reconnects are logged, but not yet as a single log-once-per-outage pattern.
+  parallel-updates:
+    status: todo
+    comment: PARALLEL_UPDATES is not yet declared on the platforms.
+  reauthentication-flow:
+    status: exempt
+    comment: The adapter needs no credentials, so there is nothing to re-authenticate.
+  test-coverage:
+    status: todo
+    comment: Library resolution and the config flow are covered; full platform coverage is pending.
+
+  # --- Gold -----------------------------------------------------------------
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: The enhanced eBUS adapter exposes no standard network discovery.
+  discovery-update-info:
+    status: exempt
+    comment: No discovery, so no discovery-driven connection updates.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations:
+    status: todo
+    comment: Document the single-client adapter constraint (cannot run alongside ebusd).
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: todo
+    comment: Devices are scanned once at setup; runtime add/remove is not handled yet.
+  entity-category:
+    status: todo
+    comment: No diagnostic/config entity categories assigned yet.
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Write failures raise HomeAssistantError with plain messages, not translation keys.
+  icon-translations:
+    status: todo
+    comment: Icons are set per entity via _attr_icon rather than an icons.json translation.
+  reconfiguration-flow:
+    status: todo
+    comment: An options flow exists; host/port reconfiguration is not offered.
+  repair-issues:
+    status: exempt
+    comment: No user-actionable repair scenarios are defined yet.
+  stale-devices:
+    status: todo
+    comment: Devices that stop answering scans are not yet removed.
+
+  # --- Platinum -------------------------------------------------------------
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The bus link is a raw asyncio TCP connection; the optional definition download uses Home Assistant's shared aiohttp session.
+  strict-typing:
+    status: todo
+    comment: Full type hints are in place and mypy --strict passes on the HA-free module; the HA-facing modules are gated in CI once Home Assistant is installed.
