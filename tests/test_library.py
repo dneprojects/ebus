@@ -25,14 +25,24 @@ def _scan(ident, hw="0000", sw="0000"):
 
 def test_resolve_bundled_by_ident_and_hw():
     assert library.resolve_file("V32", "9802") == "eloblock.json"   # HW variant
+    assert library.resolve_file("V32", "6004") == "v32.hp.json"     # other V32 = heat pump
     assert library.resolve_file("NETX3", "0404") == "f6.netx3.json"
     assert library.resolve_file("HMU00", "5103") == "hmu.json"
     assert library.resolve_file("CTLV3", "8004") == "ctlv3.json"    # re-engineered
     assert library.resolve_file("PMW01", "0000") == "pmw.json"
     assert library.resolve_file("VR_71", "0000") == "vr_71.json"
     assert library.resolve_file("Broadcast", "") == "broadcast.json"
-    assert library.resolve_file("V32", "6004") is None              # no bundled base
+    assert library.resolve_file("V32", "1111") is None              # unknown HW variant
     assert library.resolve_file("UNKNOWN", "0000") is None
+
+
+def test_device_name_disambiguates_shared_ident():
+    # eloBlock and the heat pump both scan as "V32" but must get distinct names
+    assert library.device_name(_scan("V32", "9802")) == "eloBlock"
+    assert library.device_name(_scan("V32", "6004")) == "Wärmepumpe 2"
+    assert library.device_name(_scan("HMU00", "5103")) == "Wärmepumpe"
+    # no mapped name -> fall back to the scan ident
+    assert library.device_name(_scan("CTLV3", "8004")) == "CTLV3"
 
 
 def test_resolve_user_file_prefix_and_variant():

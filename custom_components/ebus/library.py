@@ -65,6 +65,18 @@ def resolve_file(ident: str, hw: str | None) -> str | None:
     return result if isinstance(result, str) else None
 
 
+def device_name(scan: ScanResult) -> str:
+    """Friendly device name for Home Assistant. Two devices can share a scan
+    ident (e.g. an eloBlock and a heat pump both scan as 'V32'), so prefer the
+    name mapped to the resolved definition file; fall back to the scan ident."""
+    file = resolve_file(scan.ident, scan.hw)
+    if file:
+        name = _index().get("names", {}).get(file)
+        if isinstance(name, str):
+            return name
+    return scan.ident
+
+
 def resolve_user_file(scan: ScanResult, user_dir: Path) -> Path | None:
     """Find a user-generated definition file for a scanned device, matching the
     scan ident (longest filename ident that is a prefix of the lowercased scan
