@@ -24,10 +24,13 @@ CONFIG_EN = {
     "config": {
         "step": {"user": {
             "title": "eBUS adapter",
-            "description": "Connect to an enhanced eBUS adapter (enh:host:port). Stop ebusd first if it uses the same adapter.",
+            "description": "Connect to an enhanced eBUS adapter (enh:host:port).",
             "data": {"host": "Host", "port": "Port",
                      "download_defs": "Download device definitions from ebusd-configuration"}}},
-        "error": {"cannot_connect": "Could not reach the adapter at this host and port."},
+        "error": {
+            "cannot_connect": "Could not reach the adapter at this host and port.",
+            "no_ebus_data": "Reached the adapter, but no eBUS data is coming through. Another client (e.g. ebusd) may be using the adapter — stop it first, then retry.",
+        },
         "abort": {"already_configured": "This adapter is already configured."},
     },
     "options": {"step": {"init": {
@@ -39,10 +42,13 @@ CONFIG_DE = {
     "config": {
         "step": {"user": {
             "title": "eBUS-Adapter",
-            "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port). Falls ebusd denselben Adapter nutzt, zuerst ebusd stoppen.",
+            "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port).",
             "data": {"host": "Host", "port": "Port",
                      "download_defs": "Gerätedefinitionen von ebusd-configuration laden"}}},
-        "error": {"cannot_connect": "Adapter unter diesem Host/Port nicht erreichbar."},
+        "error": {
+            "cannot_connect": "Adapter unter diesem Host/Port nicht erreichbar.",
+            "no_ebus_data": "Adapter erreichbar, aber es kommen keine eBUS-Daten an. Vermutlich nutzt ein anderer Dienst (z. B. ebusd) den Adapter — diesen zuerst stoppen und erneut versuchen.",
+        },
         "abort": {"already_configured": "Dieser Adapter ist bereits eingerichtet."},
     },
     "options": {"step": {"init": {

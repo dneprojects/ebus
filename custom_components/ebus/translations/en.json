@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "eBUS adapter",
-        "description": "Connect to an enhanced eBUS adapter (enh:host:port). Stop ebusd first if it uses the same adapter.",
+        "description": "Connect to an enhanced eBUS adapter (enh:host:port).",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -12,7 +12,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Could not reach the adapter at this host and port."
+      "cannot_connect": "Could not reach the adapter at this host and port.",
+      "no_ebus_data": "Reached the adapter, but no eBUS data is coming through. Another client (e.g. ebusd) may be using the adapter — stop it first, then retry."
     },
     "abort": {
       "already_configured": "This adapter is already configured."

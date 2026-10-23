@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "eBUS-Adapter",
-        "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port). Falls ebusd denselben Adapter nutzt, zuerst ebusd stoppen.",
+        "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port).",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -12,7 +12,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Adapter unter diesem Host/Port nicht erreichbar."
+      "cannot_connect": "Adapter unter diesem Host/Port nicht erreichbar.",
+      "no_ebus_data": "Adapter erreichbar, aber es kommen keine eBUS-Daten an. Vermutlich nutzt ein anderer Dienst (z. B. ebusd) den Adapter — diesen zuerst stoppen und erneut versuchen."
     },
     "abort": {
       "already_configured": "Dieser Adapter ist bereits eingerichtet."
