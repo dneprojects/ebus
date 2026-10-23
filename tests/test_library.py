@@ -45,6 +45,20 @@ def test_device_name_disambiguates_shared_ident():
     assert library.device_name(_scan("CTLV3", "8004")) == "CTLV3"
 
 
+def test_climate_zones_from_index():
+    # the 'climate' declaration in index.json must bundle the Z<n> registers
+    devices = {0x15: _scan("CTLV3", "8004", "808")}
+    zones = {z.n: z for z in library.climate_zones(devices)}
+    assert set(zones) == {1, 2, 3}
+    z1 = zones[1]
+    assert z1.name == "Heizkreis 1" and z1.zz == "15"
+    assert z1.target_write is not None and z1.target_write.name == "Z1DayTemp"
+    assert z1.current is not None and z1.current.name == "Z1RoomTemp"
+    assert z1.mode_read is not None and z1.mode_read.name == "Z1OpMode"
+    # no climate declaration for a device without one -> no zones
+    assert library.climate_zones({0x08: _scan("HMU00", "5103")}) == []
+
+
 def test_resolve_user_file_prefix_and_variant():
     d = Path(tempfile.mkdtemp())
     for name in ("15.ctlv3.json", "08.hmu.json", "08.hmu.HW5103.json"):

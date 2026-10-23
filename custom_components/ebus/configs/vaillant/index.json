@@ -11,5 +11,15 @@
     "eloblock.json": "eloBlock",
     "hmu.json": "Wärmepumpe",
     "v32.hp.json": "Wärmepumpe 2"
+  },
+  "climate": {
+    "_comment": "Bundle per-zone registers into a climate entity (one per heating zone). For each zone N, '<prefix>N<target>' is the writable comfort setpoint (target temperature), '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode (off/auto -> HVAC off/auto, others -> heat + preset). A zone is created only if it has data.",
+    "ctlv3.json": {
+      "name": "Heizkreis {n}",
+      "zone_prefix": "Z",
+      "target": "DayTemp",
+      "current": "RoomTemp",
+      "mode": "OpMode"
+    }
   }
 }

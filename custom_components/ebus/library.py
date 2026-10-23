@@ -7,6 +7,7 @@ sensor, a number or a select) and small presentation helpers (icons).
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, replace
 from functools import cache
 from pathlib import Path
@@ -183,6 +184,62 @@ def device_messages(devices: dict[int, ScanResult], direction: str,
             continue
         seen.add(key)
         out.append(m)
+    return out
+
+
+@dataclass
+class ClimateZone:
+    """A heating zone to expose as one climate entity, with the addressed
+    messages for its target setpoint (read/write), current temperature (read)
+    and operating mode (read/write). Missing roles are None."""
+    zz: str
+    n: int
+    name: str
+    target_read: MessageDef | None
+    target_write: MessageDef | None
+    current: MessageDef | None
+    mode_read: MessageDef | None
+    mode_write: MessageDef | None
+
+
+def _find_msg(msgs: list[MessageDef], name: str, *, write: bool) -> MessageDef | None:
+    for m in msgs:
+        if m.name == name and (m.is_write if write else m.is_read):
+            return m
+    return None
+
+
+def climate_zones(
+    devices: dict[int, ScanResult], user_dir: Path | None = None
+) -> list[ClimateZone]:
+    """Bundle per-zone registers into climate zones, driven by the 'climate'
+    section of index.json (keyed by the resolved definition file). For each zone
+    N present, it gathers '<prefix>N<target/current/mode>' as the setpoint, room
+    temperature and operating mode. Whether a zone is 'active' (has data) is left
+    to the caller, which has the value cache."""
+    decls = _index().get("climate", {})
+    out: list[ClimateZone] = []
+    for address, scan in devices.items():
+        name = resolve_file(scan.ident, scan.hw)
+        decl = decls.get(name) if name else None
+        if not isinstance(decl, dict):
+            continue
+        prefix = str(decl.get("zone_prefix", ""))
+        target, current, mode = decl["target"], decl["current"], decl["mode"]
+        msgs = addressed_messages(address, scan, user_dir)
+        rx = re.compile(rf"^{re.escape(prefix)}(\d+){re.escape(target)}$")
+        nums = sorted({int(mt.group(1)) for m in msgs
+                       if (mt := rx.match(m.name)) and m.is_write})
+        for n in nums:
+            out.append(ClimateZone(
+                zz=f"{address:02x}", n=n,
+                name=str(decl.get("name", "Zone {n}")).format(n=n),
+                target_read=_find_msg(msgs, f"{prefix}{n}{target}", write=False),
+                target_write=_find_msg(msgs, f"{prefix}{n}{target}", write=True),
+                current=_find_msg(msgs, f"{prefix}{n}{current}", write=False),
+                mode_read=_find_msg(msgs, f"{prefix}{n}{mode}", write=False),
+                mode_write=_find_msg(msgs, f"{prefix}{n}{mode}", write=True),
+            ))
     return out
 
 
