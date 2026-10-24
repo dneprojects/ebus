@@ -7,6 +7,7 @@ from typing import Final, cast
 from aioebus.engine import value_key
 from aioebus.translations import translation_key
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,10 +35,13 @@ _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({
     "D1B", "D1C", "D2B", "D2C", "FLT", "EXP", "EXR", "BCD"})
 
 
-# the adapter's own diagnostic sensors (name, value, unit, device class, state
-# class, icon), attached to the adapter device alongside the connection sensor
+# the adapter's own diagnostic sensors (name, value, native unit, device class,
+# state class, icon, suggested display unit), attached to the adapter device
+# alongside the connection sensor. The native unit feeds statistics; the suggested
+# unit is only how HA shows it by default (the user can still switch it).
 _AdapterSpec = tuple[str, Callable[[EbusCoordinator], StateType], str | None,
-                     SensorDeviceClass | None, SensorStateClass | None, str | None]
+                     SensorDeviceClass | None, SensorStateClass | None,
+                     str | None, str | None]
 
 
 def _sta(c: EbusCoordinator, key: str) -> StateType:
@@ -46,25 +50,26 @@ def _sta(c: EbusCoordinator, key: str) -> StateType:
 
 # always available: derived from the engine / connection
 _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
-    ("Host", lambda c: f"{c.host}:{c.port}", None, None, None, "mdi:ip-network"),
+    ("Host", lambda c: f"{c.host}:{c.port}", None, None, None, "mdi:ip-network", None),
     ("Telegramme", lambda c: c.engine.stats.telegrams if c.engine else None,
-     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:bus"),
+     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:bus", None),
     ("Abfragen beantwortet", lambda c: c.engine.stats.polls_ok if c.engine else None,
-     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:check-network"),
+     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:check-network", None),
     ("Abfragen ohne Antwort", lambda c: c.engine.stats.polls_failed if c.engine else None,
-     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:network-off"),
+     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:network-off", None),
     ("Werte zwischengespeichert", lambda c: len(c.engine.cache) if c.engine else None,
-     None, None, SensorStateClass.MEASUREMENT, "mdi:database"),
+     None, None, SensorStateClass.MEASUREMENT, "mdi:database", None),
 ]
 
 # only when the adapter exposes its web API (eBUS Adapter Shield / ebusd-ESP)
 _ADAPTER_WEB_SENSORS: Final[list[_AdapterSpec]] = [
     ("WLAN-Signal", lambda c: _sta(c, "rssi"), "dBm",
-     SensorDeviceClass.SIGNAL_STRENGTH, SensorStateClass.MEASUREMENT, None),
-    ("Laufzeit", lambda c: c.adapter_status.get("uptime"), "s",
-     SensorDeviceClass.DURATION, None, "mdi:timer-outline"),
-    ("Freier Speicher", lambda c: c.adapter_status.get("heap"), "B",
-     SensorDeviceClass.DATA_SIZE, SensorStateClass.MEASUREMENT, "mdi:memory"),
+     SensorDeviceClass.SIGNAL_STRENGTH, SensorStateClass.MEASUREMENT, None, None),
+    ("Laufzeit", lambda c: c.adapter_status.get("uptime"), UnitOfTime.SECONDS,
+     SensorDeviceClass.DURATION, None, "mdi:timer-outline", UnitOfTime.HOURS),
+    ("Freier Speicher", lambda c: c.adapter_status.get("heap"), UnitOfInformation.BYTES,
+     SensorDeviceClass.DATA_SIZE, SensorStateClass.MEASUREMENT, "mdi:memory",
+     UnitOfInformation.MEGABYTES),
 ]
 
 
@@ -152,6 +157,7 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         icon: str | None,
+        suggested_unit: str | None = None,
     ) -> None:
         super().__init__(coordinator)
         self._value = value
@@ -159,6 +165,8 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
+        if suggested_unit is not None:
+            self._attr_suggested_unit_of_measurement = suggested_unit
         if icon is not None:
             self._attr_icon = icon
         slug = name.lower().replace(" ", "_").replace("-", "_")
