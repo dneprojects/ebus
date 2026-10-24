@@ -21,5 +21,21 @@
       "current": "RoomTemp",
       "mode": "OpMode"
     }
+  },
+  "disabled_fields": {
+    "_comment": "Entity labels ('<message> <field>') that never carried a value in the reference capture -- unconnected channels (e.g. a sensor input with nothing wired). Their sensors are created disabled by default; the user can enable them. Only affects a sensor's enabled_default at first registration.",
+    "pmw.json": ["Status temp_1"],
+    "vr_71.json": [
+      "SensorData1 s4", "SensorData1 s5", "SensorData1 s6", "SensorData1 s7",
+      "SensorData2 s8", "SensorData2 s10", "SensorData2 s11"
+    ],
+    "hmu.json": [
+      "DateTime btime", "DateTime bdate", "DateTime temp",
+      "Status01 temp_2", "Status01 temp_3", "Status01 temp_4"
+    ],
+    "v32.hp.json": [
+      "DateTime btime", "DateTime bdate", "DateTime temp", "SetMode hwctempdesired",
+      "Status01 temp_2", "Status01 temp_3", "Status01 temp_4"
+    ]
   }
 }

@@ -67,6 +67,16 @@ def resolve_file(ident: str, hw: str | None) -> str | None:
     return result if isinstance(result, str) else None
 
 
+def disabled_field_labels(scan: ScanResult) -> set[str]:
+    """Entity labels that should be created disabled by default for this device
+    (unconnected channels, from the 'disabled_fields' section of index.json)."""
+    file = resolve_file(scan.ident, scan.hw)
+    if not file:
+        return set()
+    labels = _index().get("disabled_fields", {}).get(file, [])
+    return set(labels) if isinstance(labels, list) else set()
+
+
 def device_name(scan: ScanResult) -> str:
     """Friendly device name for Home Assistant. Two devices can share a scan
     ident (e.g. an eloBlock and a heat pump both scan as 'V32'), so prefer the

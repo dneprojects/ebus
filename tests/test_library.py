@@ -71,6 +71,13 @@ def test_timer_schedules_convention():
     assert len(hwc) >= 7 and all(s.msg.is_read for s in hwc)
 
 
+def test_disabled_field_labels():
+    vr = library.disabled_field_labels(_scan("VR_71", "5904"))
+    assert "SensorData1 s4" in vr and "SensorData2 s8" in vr
+    assert library.disabled_field_labels(_scan("CTLV3", "8004")) == set()  # none declared
+    assert library.disabled_field_labels(_scan("NOPE", "0000")) == set()   # unknown device
+
+
 def test_select_polled_only_enabled():
     reads = library.device_messages({0x15: _scan("CTLV3", "8004", "808")}, "r")
     target = next(m for m in reads if m.direction[:1] == "r" and library.fields_of(m))
