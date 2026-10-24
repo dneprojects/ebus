@@ -5,8 +5,11 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntry
 
+from .const import BROADCAST_ADDRESS, DOMAIN
 from .coordinator import EbusCoordinator
+from .device import adapter_identifier
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR, Platform.SENSOR, Platform.NUMBER,
@@ -35,3 +38,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> boo
     if unloaded:
         await entry.runtime_data.async_shutdown()
     return unloaded
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: EbusConfigEntry, device: DeviceEntry
+) -> bool:
+    """Let the user delete a stale device the current bus no longer backs.
+
+    The adapter and every scanned device are kept; anything else (e.g. the former
+    synthetic 'Broadcast' device, now folded into the adapter) may be removed."""
+    coordinator = entry.runtime_data
+    kept = {adapter_identifier(coordinator.host, coordinator.port)}
+    kept |= {
+        (DOMAIN, f"{zz:02x}")
+        for zz in coordinator.devices
+        if zz != BROADCAST_ADDRESS  # broadcasts belong to the adapter now
+    }
+    return not (device.identifiers & kept)
