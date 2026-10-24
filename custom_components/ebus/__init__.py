@@ -9,8 +9,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import EbusCoordinator
 
 PLATFORMS: list[Platform] = [
-    Platform.SENSOR, Platform.NUMBER, Platform.SELECT,
-    Platform.CLIMATE, Platform.CALENDAR]
+    Platform.SENSOR, Platform.NUMBER, Platform.SELECT, Platform.CLIMATE]
 
 type EbusConfigEntry = ConfigEntry[EbusCoordinator]
 
