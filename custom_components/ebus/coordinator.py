@@ -36,6 +36,7 @@ from .const import (
     CONF_SCAN_INTERVAL,
     DEFAULT_ALLOW_WRITE,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     PLAIN_READ_PRIORITY,
     SCAN_ADDRESSES,
     SOURCE_ADDRESS,
@@ -120,11 +121,18 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             sw="", hw="", sw_num=None, hw_num=None)
         # register the adapter as the hub device: scanned devices hang off it
         # (via_device) and the broadcast entities belong to it
-        dr.async_get(self.hass).async_get_or_create(
+        registry = dr.async_get(self.hass)
+        registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={adapter_identifier(self.host, self.port)},
             name="eBUS Adapter", manufacturer="eBUS", model="Enhanced adapter",
             sw_version=AIOEBUS_VERSION)
+        # drop the former synthetic 'Broadcast' device: its entities now live on
+        # the adapter, so it lingers as an empty shell from older versions
+        stale = registry.async_get_device(
+            identifiers={(DOMAIN, f"{BROADCAST_ADDRESS:02x}")})
+        if stale is not None:
+            registry.async_remove_device(stale.id)
         self.read_messages = device_messages(self.devices, "r", self.user_dir)
         self.write_messages = (
             device_messages(self.devices, "w", self.user_dir) if self.allow_write else [])
