@@ -49,7 +49,8 @@ class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
         self._attr_translation_key = translation_key(msg, field)
         self._attr_icon = icon_for(field)
         self._attr_options = list(dict.fromkeys(field.values.values()))
-        self._attr_device_info = device_info(zz, coordinator.devices.get(zz))
+        self._attr_device_info = device_info(
+            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
 
     @property
     def current_option(self) -> str | None:

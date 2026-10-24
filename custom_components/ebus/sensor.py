@@ -1,19 +1,21 @@
 """Sensor platform: one entity per decodable read field of every scanned device."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Final, cast
 
 from aioebus.engine import value_key
 from aioebus.translations import translation_key
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .device import device_info
+from .device import adapter_device_info, device_info
 from .library import Field, disabled_field_labels, fields_of, icon_for
 
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
@@ -32,15 +34,33 @@ _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({
     "D1B", "D1C", "D2B", "D2C", "FLT", "EXP", "EXR", "BCD"})
 
 
+# the adapter's own diagnostic sensors (name, value, unit, state class, icon),
+# attached to the adapter device alongside the connection binary sensor
+_AdapterSpec = tuple[str, Callable[[EbusCoordinator], StateType], str | None,
+                     SensorStateClass | None, str]
+_ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
+    ("Host", lambda c: f"{c.host}:{c.port}", None, None, "mdi:ip-network"),
+    ("Telegramme", lambda c: c.engine.stats.telegrams if c.engine else None,
+     None, SensorStateClass.TOTAL_INCREASING, "mdi:bus"),
+    ("Abfragen beantwortet", lambda c: c.engine.stats.polls_ok if c.engine else None,
+     None, SensorStateClass.TOTAL_INCREASING, "mdi:check-network"),
+    ("Abfragen ohne Antwort", lambda c: c.engine.stats.polls_failed if c.engine else None,
+     None, SensorStateClass.TOTAL_INCREASING, "mdi:network-off"),
+    ("Werte zwischengespeichert", lambda c: len(c.engine.cache) if c.engine else None,
+     None, SensorStateClass.MEASUREMENT, "mdi:database"),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
-    entities = [
+    entities: list[SensorEntity] = [
         EbusSensor(coordinator, field)
         for msg in coordinator.read_messages
         for field in fields_of(msg)
     ]
+    entities += [EbusAdapterSensor(coordinator, *spec) for spec in _ADAPTER_SENSORS]
     async_add_entities(entities)
 
 
@@ -78,7 +98,8 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
             if field.field.type.upper().split(":", 1)[0] in _NUMERIC_TYPES:
                 self._attr_state_class = unit_state or SensorStateClass.MEASUREMENT
 
-        self._attr_device_info = device_info(zz, coordinator.devices.get(zz))
+        self._attr_device_info = device_info(
+            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
 
     @property
     def native_value(self) -> StateType:
@@ -94,3 +115,33 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         return super().available and self._key in self.coordinator.data
+
+
+class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
+    """A diagnostic reading about the adapter link itself (not a bus register)."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: EbusCoordinator,
+        name: str,
+        value: Callable[[EbusCoordinator], StateType],
+        unit: str | None,
+        state_class: SensorStateClass | None,
+        icon: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._value = value
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
+        self._attr_state_class = state_class
+        self._attr_icon = icon
+        slug = name.lower().replace(" ", "_")
+        self._attr_unique_id = f"ebus_{coordinator.host}_{coordinator.port}_{slug}"
+        self._attr_device_info = adapter_device_info(coordinator.host, coordinator.port)
+
+    @property
+    def native_value(self) -> StateType:
+        return self._value(self.coordinator)

@@ -68,7 +68,8 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         self._attr_native_step = step
         if field.unit:
             self._attr_native_unit_of_measurement = field.unit
-        self._attr_device_info = device_info(zz, coordinator.devices.get(zz))
+        self._attr_device_info = device_info(
+            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
 
     @property
     def native_value(self) -> float | None:
