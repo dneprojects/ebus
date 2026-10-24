@@ -14,12 +14,14 @@ def adapter_identifier(host: str, port: int) -> tuple[str, str]:
 
 def adapter_device_info(host: str, port: int) -> DeviceInfo:
     """The adapter itself, as the hub device every scanned device hangs off and
-    the bus-wide broadcasts (outside temperature, date/time) belong to."""
+    the bus-wide broadcasts (outside temperature, date/time) belong to.
+
+    Deliberately minimal (identifiers + name): the coordinator registers the same
+    device with the rich fields (firmware, hardware, web-UI link) from the adapter
+    status, and entities must not overwrite those with placeholders here."""
     return DeviceInfo(
         identifiers={adapter_identifier(host, port)},
         name="eBUS Adapter",
-        manufacturer="eBUS",
-        model="Enhanced adapter",
     )
 
 

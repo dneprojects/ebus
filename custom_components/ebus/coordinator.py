@@ -14,6 +14,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Final
 
+import aiohttp
 from aioebus import __version__ as AIOEBUS_VERSION
 from aioebus.active import ActiveReader
 from aioebus.engine import EbusEngine
@@ -25,6 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -84,6 +86,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self.read_messages: list[MessageDef] = []
         self.write_messages: list[MessageDef] = []
         self.engine: EbusEngine | None = None
+        # the adapter shield's own web API (firmware, Wi-Fi, uptime); {} when the
+        # adapter has no web UI or is unreachable
+        self.adapter_status: dict[str, Any] = {}
+        self._has_web = False
         self._writer: asyncio.StreamWriter | None = None
         self._supervisor: asyncio.Task[None] | None = None
         self._base_interval = interval
@@ -120,13 +126,13 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             mf=0, manufacturer="", ident=BROADCAST_IDENT,
             sw="", hw="", sw_num=None, hw_num=None)
         # register the adapter as the hub device: scanned devices hang off it
-        # (via_device) and the broadcast entities belong to it
+        # (via_device) and the broadcast entities belong to it. Enrich it from the
+        # adapter shield's own web API when present (real firmware/hardware + a
+        # link straight to its web UI)
+        self.adapter_status = await self._fetch_adapter_status()
+        self._has_web = bool(self.adapter_status)
         registry = dr.async_get(self.hass)
-        registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={adapter_identifier(self.host, self.port)},
-            name="eBUS Adapter", manufacturer="eBUS", model="Enhanced adapter",
-            sw_version=AIOEBUS_VERSION)
+        registry.async_get_or_create(**self._adapter_device_info())
         # drop the former synthetic 'Broadcast' device: its entities now live on
         # the adapter, so it lingers as an empty shell from older versions
         stale = registry.async_get_device(
@@ -148,6 +154,48 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             self.hass, self._run_forever(), name="ebus-supervisor")
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
                      len(self.devices), len(self.read_messages), len(self.write_messages))
+
+    async def _fetch_adapter_status(self) -> dict[str, Any]:
+        """Best-effort read of the adapter shield's web API (eBUS Adapter Shield /
+        ebusd-ESP). Returns {} when the adapter has no web UI or is unreachable, so
+        a plain serial/Pi adapter simply gets no extra info."""
+        url = f"http://{self.host}/api/v1/status"
+        try:
+            session = async_get_clientsession(self.hass)
+            async with asyncio.timeout(5):
+                resp = await session.get(url)
+                if resp.status != 200:
+                    return {}
+                data = await resp.json(content_type=None)
+        except (TimeoutError, aiohttp.ClientError, ValueError) as err:
+            _LOGGER.debug("eBUS: adapter web status unavailable: %s", err)
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def _adapter_device_info(self) -> dict[str, Any]:
+        """DeviceInfo kwargs for the adapter hub, enriched from its web status."""
+        st = self.adapter_status
+        info: dict[str, Any] = {
+            "config_entry_id": self.config_entry.entry_id,
+            "identifiers": {adapter_identifier(self.host, self.port)},
+            "name": "eBUS Adapter",
+            "manufacturer": "eBUS",
+            "model": (f"eBUS Adapter Shield ({st['chip']})"
+                      if st.get("chip") else "Enhanced adapter"),
+            # the adapter firmware is what the user means by "firmware"; fall back
+            # to the library version when there is no web API to ask
+            "sw_version": st.get("versions") or AIOEBUS_VERSION,
+        }
+        if st.get("pcb"):
+            info["hw_version"] = st["pcb"]
+        if st.get("id"):
+            info["serial_number"] = st["id"]
+        mac = (st.get("sta") or {}).get("mac")
+        if isinstance(mac, str) and mac:
+            info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+        if st:  # only link a web UI we actually reached
+            info["configuration_url"] = f"http://{self.host}/"
+        return info
 
     def _build_scheduler(self) -> PollScheduler:
         """Poll only the read registers that back an enabled entity. Before any
@@ -200,6 +248,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
     async def _async_update_data(self) -> EbusCache:
         if self.engine is None:
             raise UpdateFailed("engine not started")
+        # refresh the adapter's web status for its diagnostic entities (only when
+        # the adapter actually has a web UI, so a plain adapter isn't probed)
+        if self._has_web:
+            self.adapter_status = await self._fetch_adapter_status()
         # persist the cache (throttled) so a restart can warm-start from it
         self._store.async_delay_save(self._serialize_cache, _CACHE_SAVE_DELAY)
         return dict(self.engine.cache)

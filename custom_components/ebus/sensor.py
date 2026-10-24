@@ -34,20 +34,37 @@ _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({
     "D1B", "D1C", "D2B", "D2C", "FLT", "EXP", "EXR", "BCD"})
 
 
-# the adapter's own diagnostic sensors (name, value, unit, state class, icon),
-# attached to the adapter device alongside the connection binary sensor
+# the adapter's own diagnostic sensors (name, value, unit, device class, state
+# class, icon), attached to the adapter device alongside the connection sensor
 _AdapterSpec = tuple[str, Callable[[EbusCoordinator], StateType], str | None,
-                     SensorStateClass | None, str]
+                     SensorDeviceClass | None, SensorStateClass | None, str | None]
+
+
+def _sta(c: EbusCoordinator, key: str) -> StateType:
+    return (c.adapter_status.get("sta") or {}).get(key)
+
+
+# always available: derived from the engine / connection
 _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
-    ("Host", lambda c: f"{c.host}:{c.port}", None, None, "mdi:ip-network"),
+    ("Host", lambda c: f"{c.host}:{c.port}", None, None, None, "mdi:ip-network"),
     ("Telegramme", lambda c: c.engine.stats.telegrams if c.engine else None,
-     None, SensorStateClass.TOTAL_INCREASING, "mdi:bus"),
+     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:bus"),
     ("Abfragen beantwortet", lambda c: c.engine.stats.polls_ok if c.engine else None,
-     None, SensorStateClass.TOTAL_INCREASING, "mdi:check-network"),
+     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:check-network"),
     ("Abfragen ohne Antwort", lambda c: c.engine.stats.polls_failed if c.engine else None,
-     None, SensorStateClass.TOTAL_INCREASING, "mdi:network-off"),
+     None, None, SensorStateClass.TOTAL_INCREASING, "mdi:network-off"),
     ("Werte zwischengespeichert", lambda c: len(c.engine.cache) if c.engine else None,
-     None, SensorStateClass.MEASUREMENT, "mdi:database"),
+     None, None, SensorStateClass.MEASUREMENT, "mdi:database"),
+]
+
+# only when the adapter exposes its web API (eBUS Adapter Shield / ebusd-ESP)
+_ADAPTER_WEB_SENSORS: Final[list[_AdapterSpec]] = [
+    ("WLAN-Signal", lambda c: _sta(c, "rssi"), "dBm",
+     SensorDeviceClass.SIGNAL_STRENGTH, SensorStateClass.MEASUREMENT, None),
+    ("Laufzeit", lambda c: c.adapter_status.get("uptime"), "s",
+     SensorDeviceClass.DURATION, None, "mdi:timer-outline"),
+    ("Freier Speicher", lambda c: c.adapter_status.get("heap"), "B",
+     SensorDeviceClass.DATA_SIZE, SensorStateClass.MEASUREMENT, "mdi:memory"),
 ]
 
 
@@ -60,7 +77,10 @@ async def async_setup_entry(
         for msg in coordinator.read_messages
         for field in fields_of(msg)
     ]
-    entities += [EbusAdapterSensor(coordinator, *spec) for spec in _ADAPTER_SENSORS]
+    specs = list(_ADAPTER_SENSORS)
+    if coordinator.adapter_status:  # adapter has a web UI -> add its own metrics
+        specs += _ADAPTER_WEB_SENSORS
+    entities += [EbusAdapterSensor(coordinator, *spec) for spec in specs]
     async_add_entities(entities)
 
 
@@ -129,16 +149,19 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         name: str,
         value: Callable[[EbusCoordinator], StateType],
         unit: str | None,
+        device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
-        icon: str,
+        icon: str | None,
     ) -> None:
         super().__init__(coordinator)
         self._value = value
         self._attr_name = name
         self._attr_native_unit_of_measurement = unit
+        self._attr_device_class = device_class
         self._attr_state_class = state_class
-        self._attr_icon = icon
-        slug = name.lower().replace(" ", "_")
+        if icon is not None:
+            self._attr_icon = icon
+        slug = name.lower().replace(" ", "_").replace("-", "_")
         self._attr_unique_id = f"ebus_{coordinator.host}_{coordinator.port}_{slug}"
         self._attr_device_info = adapter_device_info(coordinator.host, coordinator.port)
 
