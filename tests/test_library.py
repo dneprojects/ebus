@@ -59,6 +59,17 @@ def test_climate_zones_from_index():
     assert library.climate_zones({0x08: _scan("HMU00", "5103")}) == []
 
 
+def test_timer_schedules_convention():
+    # weekly time programs are detected from the <prefix>Timer_<Weekday><slot>
+    # register names alone -- no declaration
+    devices = {0x15: _scan("CTLV3", "8004", "808")}
+    sched = library.timer_schedules(devices)
+    prefixes = {prefix for (_zz, prefix) in sched}
+    assert {"Hwc", "Z1", "Z2"} <= prefixes  # hot water + the active heating zones
+    hwc = sched[("15", "Hwc")]
+    assert len(hwc) >= 7 and all(s.msg.is_read for s in hwc)
+
+
 def test_resolve_user_file_prefix_and_variant():
     d = Path(tempfile.mkdtemp())
     for name in ("15.ctlv3.json", "08.hmu.json", "08.hmu.HW5103.json"):

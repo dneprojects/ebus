@@ -243,6 +243,41 @@ def climate_zones(
     return out
 
 
+_WEEKDAY_NAMES: Final = (
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+_WEEKDAY: Final = {name: i for i, name in enumerate(_WEEKDAY_NAMES)}
+_TIMER_RE: Final = re.compile(
+    r"^(?P<prefix>.+?)Timer_(?P<day>" + "|".join(_WEEKDAY) + r")(?P<slot>\d+)$")
+
+
+@dataclass
+class TimerSlot:
+    """One weekly time-program slot message, with its weekday and slot index."""
+    weekday: int
+    slot: int
+    msg: MessageDef
+
+
+def timer_schedules(
+    devices: dict[int, ScanResult], user_dir: Path | None = None
+) -> dict[tuple[str, str], list[TimerSlot]]:
+    """Group timer registers into weekly schedules per (device address, prefix).
+
+    Convention-based, straight from the definition: a register named
+    '<prefix>Timer_<Weekday><slot>' (e.g. HwcTimer_Monday0, Z1Timer_Tuesday1) is
+    one slot of the '<prefix>' weekly program. No declaration needed -- the
+    register naming in the def (which came from the CSV) is the declaration."""
+    out: dict[tuple[str, str], list[TimerSlot]] = {}
+    for address, scan in devices.items():
+        for m in addressed_messages(address, scan, user_dir):
+            mt = _TIMER_RE.match(m.name)
+            if mt and m.is_read:
+                key = (f"{address:02x}", mt.group("prefix"))
+                out.setdefault(key, []).append(
+                    TimerSlot(_WEEKDAY[mt.group("day")], int(mt.group("slot")), m))
+    return out
+
+
 def icon_for(field: FieldDef) -> str | None:
     if field.unit in _UNIT_ICON:
         return _UNIT_ICON[field.unit]
