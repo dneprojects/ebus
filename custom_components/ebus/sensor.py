@@ -16,6 +16,8 @@ from .coordinator import EbusCoordinator
 from .device import device_info
 from .library import Field, fields_of, icon_for
 
+_MISSING: Final = object()  # distinguishes "not received yet" from a decoded None
+
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
     "°C": (SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT),
     "bar": (SensorDeviceClass.PRESSURE, SensorStateClass.MEASUREMENT),
@@ -51,9 +53,12 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         self._attr_unique_id = f"ebus_{'_'.join(str(p) for p in self._key)}"
         self._attr_translation_key = translation_key(field.msg, field.field)
         self._attr_icon = icon_for(field.field)
-        # the bundled defs are already the curated set of registers that carry a
-        # value on this installation, so read entities are enabled by default
-        self._attr_entity_registry_enabled_default = True
+        # a field that was received but decoded to None is an unconnected channel
+        # (e.g. a sensor input with nothing wired to it) -> off by default; the
+        # user can still enable it. A field not received yet stays enabled, so
+        # this never hides a value that simply has not arrived.
+        self._attr_entity_registry_enabled_default = (
+            coordinator.data.get(self._key, _MISSING) is not None)
 
         if field.field.values:  # value table -> enum sensor with its labels
             self._attr_device_class = SensorDeviceClass.ENUM

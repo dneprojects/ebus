@@ -15,6 +15,7 @@ from typing import Any, Final
 
 from aioebus.conditions import context_from_scan, evaluate_all
 from aioebus.convert import from_dicts
+from aioebus.engine import value_key
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
 
@@ -278,6 +279,45 @@ def timer_schedules(
                 out.setdefault(key, []).append(
                     TimerSlot(_WEEKDAY[mt.group("day")], int(mt.group("slot")), m))
     return out
+
+
+def select_polled(
+    read_messages: list[MessageDef],
+    enabled_uids: set[str],
+    zones: list[ClimateZone],
+    schedules: dict[tuple[str, str], list[TimerSlot]],
+) -> list[MessageDef]:
+    """The read messages that back at least one *enabled* entity, so only those
+    are polled. ``enabled_uids`` is the set of enabled ebus entity unique_ids; a
+    read backs a sensor (uid 'ebus_<zz>_<name>_<label>'), a number/select (same
+    + '_set'), a climate zone or a calendar. Keyed by (zz, name, label) which a
+    read and its write twin share, so a writable's read twin is polled whenever
+    its number/select is enabled."""
+    polled: list[MessageDef] = []
+    seen: set[int] = set()
+
+    def add(msg: MessageDef | None) -> None:
+        if msg is not None and id(msg) not in seen:
+            seen.add(id(msg))
+            polled.append(msg)
+
+    for m in read_messages:
+        if m.direction[:1] != "r":
+            continue
+        for field in fields_of(m):
+            base = "ebus_" + "_".join(value_key(m, field.label))
+            if base in enabled_uids or f"{base}_set" in enabled_uids:
+                add(m)
+                break
+    for zone in zones:
+        if f"ebus_{zone.zz}_z{zone.n}_climate" in enabled_uids:
+            for msg in (zone.target_read, zone.current, zone.mode_read, zone.shortname):
+                add(msg)
+    for (zz, prefix), slots in schedules.items():
+        if f"ebus_{zz}_{prefix}_timer".lower() in enabled_uids:
+            for slot in slots:
+                add(slot.msg)
+    return polled
 
 
 def icon_for(field: FieldDef) -> str | None:

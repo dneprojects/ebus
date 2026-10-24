@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from aioebus.engine import value_key
 from aioebus.scan import ScanResult
 
 _PKG = Path(__file__).resolve().parents[1] / "custom_components" / "ebus"
@@ -68,6 +69,14 @@ def test_timer_schedules_convention():
     assert {"Hwc", "Z1", "Z2"} <= prefixes  # hot water + the active heating zones
     hwc = sched[("15", "Hwc")]
     assert len(hwc) >= 7 and all(s.msg.is_read for s in hwc)
+
+
+def test_select_polled_only_enabled():
+    reads = library.device_messages({0x15: _scan("CTLV3", "8004", "808")}, "r")
+    target = next(m for m in reads if m.direction[:1] == "r" and library.fields_of(m))
+    uid = "ebus_" + "_".join(value_key(target, library.fields_of(target)[0].label))
+    assert library.select_polled(reads, {uid}, [], {}) == [target]  # only the enabled one
+    assert library.select_polled(reads, set(), [], {}) == []         # nothing enabled
 
 
 def test_resolve_user_file_prefix_and_variant():

@@ -12,7 +12,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from aioebus.active import ActiveReader
 from aioebus.engine import EbusEngine
@@ -21,7 +21,8 @@ from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
 from aioebus.scan import ScanResult
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -37,7 +38,13 @@ from .const import (
     SCAN_ADDRESSES,
     SOURCE_ADDRESS,
 )
-from .library import all_messages, device_messages
+from .library import (
+    all_messages,
+    climate_zones,
+    device_messages,
+    select_polled,
+    timer_schedules,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _RECONNECT_BACKOFF: Final = 10  # seconds between reconnect attempts
@@ -113,22 +120,44 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             device_messages(self.devices, "w", self.user_dir) if self.allow_write else [])
 
         registry = MessageRegistry(all_messages(self.devices, self.user_dir))
-        # Let aioebus poll every readable register: r1..r9 at their own rate and
-        # plain r at PLAIN_READ_PRIORITY (the re-engineered defs are almost all
-        # plain r). The passive-first engine suppresses any register already seen
-        # on the bus, so in practice only the otherwise-silent ones -- e.g. a
-        # system controller's own registers -- are actively read. This also covers
-        # write read-twins, so number/select entities show their current value.
-        scheduler = PollScheduler.for_registry(
-            registry, base_interval=self._base_interval,
-            default_priority=PLAIN_READ_PRIORITY)
-        self.engine = EbusEngine(send, recv, registry, scheduler=scheduler,
+        self.engine = EbusEngine(send, recv, registry, scheduler=self._build_scheduler(),
                                  qq=SOURCE_ADDRESS, allow_write=self.allow_write)
         await self._warm_start_cache()
+        # re-scope polling when the user enables/disables entities
+        self.config_entry.async_on_unload(self.hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED, self._on_registry_update))
         self._supervisor = self.config_entry.async_create_background_task(
             self.hass, self._run_forever(), name="ebus-supervisor")
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
                      len(self.devices), len(self.read_messages), len(self.write_messages))
+
+    def _build_scheduler(self) -> PollScheduler:
+        """Poll only the read registers that back an enabled entity. Before any
+        entity is registered (fresh install) poll every read, so values arrive
+        and the entities can be created; after that, a disabled entity's register
+        is dropped from the rotation (unless another enabled entity needs it)."""
+        reg = er.async_get(self.hass)
+        entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
+        if not entries:
+            polled: list[MessageDef] = [
+                m for m in self.read_messages if m.direction[:1] == "r"]
+        else:
+            enabled = {e.unique_id for e in entries if e.disabled_by is None}
+            polled = select_polled(
+                self.read_messages, enabled,
+                climate_zones(self.devices, self.user_dir),
+                timer_schedules(self.devices, self.user_dir))
+        return PollScheduler(polled, base_interval=self._base_interval,
+                             default_priority=PLAIN_READ_PRIORITY)
+
+    async def _on_registry_update(self, event: Event[Any]) -> None:
+        """Rebuild the poll set when an entity is enabled or disabled."""
+        if event.data.get("action") != "update":
+            return
+        if "disabled_by" not in event.data.get("changes", {}):
+            return
+        if self.engine is not None:
+            self.engine.scheduler = self._build_scheduler()
 
     async def _run_forever(self) -> None:
         """Run the engine, reconnecting with backoff if the link drops."""
