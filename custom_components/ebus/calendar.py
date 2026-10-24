@@ -20,6 +20,9 @@ from .coordinator import EbusCoordinator
 from .device import device_info
 from .library import TimerSlot, timer_schedules
 
+# friendly labels for non-zone programs (zone programs use the zone's own name)
+_FRIENDLY: dict[str, str] = {"Hwc": "Warmwasser", "Cc": "Zirkulation"}
+
 
 def _hm(value: object) -> time | None:
     if isinstance(value, str) and ":" in value:
@@ -58,7 +61,10 @@ class EbusCalendar(CoordinatorEntity[EbusCoordinator], CalendarEntity):
             self._by_day.setdefault(slot.weekday, []).append(slot)
         for day_slots in self._by_day.values():
             day_slots.sort(key=lambda s: s.slot)
-        self._attr_name = f"{prefix} Zeitprogramm"
+        # name after the zone's own short name (e.g. "Fbh"), else a friendly label
+        short = coordinator.data.get((zz, f"{prefix}Shortname", f"{prefix}Shortname"))
+        base = short if isinstance(short, str) and short.strip() else _FRIENDLY.get(prefix, prefix)
+        self._attr_name = f"{base} Zeitprogramm"
         self._attr_unique_id = f"ebus_{zz}_{prefix}_timer".lower()
         self._attr_device_info = device_info(int(zz, 16), coordinator.devices.get(int(zz, 16)))
 

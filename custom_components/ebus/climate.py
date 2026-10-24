@@ -66,7 +66,8 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         super().__init__(coordinator)
         self._zone = zone
         zz = int(zone.zz, 16)
-        self._attr_name = zone.name
+        short = coordinator.data.get(_key(zone.shortname)) if zone.shortname else None
+        self._attr_name = short if isinstance(short, str) and short.strip() else zone.name
         self._attr_unique_id = f"ebus_{zone.zz}_z{zone.n}_climate"
         self._attr_device_info = device_info(zz, coordinator.devices.get(zz))
 

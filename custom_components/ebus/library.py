@@ -194,12 +194,13 @@ class ClimateZone:
     and operating mode (read/write). Missing roles are None."""
     zz: str
     n: int
-    name: str
+    name: str  # fallback name; the entity prefers the zone's own short name
     target_read: MessageDef | None
     target_write: MessageDef | None
     current: MessageDef | None
     mode_read: MessageDef | None
     mode_write: MessageDef | None
+    shortname: MessageDef | None  # <prefix><n>Shortname, the user's zone label
 
 
 def _find_msg(msgs: list[MessageDef], name: str, *, write: bool) -> MessageDef | None:
@@ -239,6 +240,7 @@ def climate_zones(
                 current=_find_msg(msgs, f"{prefix}{n}{current}", write=False),
                 mode_read=_find_msg(msgs, f"{prefix}{n}{mode}", write=False),
                 mode_write=_find_msg(msgs, f"{prefix}{n}{mode}", write=True),
+                shortname=_find_msg(msgs, f"{prefix}{n}Shortname", write=False),
             ))
     return out
 
