@@ -25,6 +25,12 @@ _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | 
     "kWh": (SensorDeviceClass.ENERGY, SensorStateClass.TOTAL_INCREASING),
 }
 
+# eBUS field types that decode to a number (so the sensor can carry long-term
+# statistics); text, date/time, PIN, hex and bit-flag fields are excluded
+_NUMERIC_TYPES: Final[frozenset[str]] = frozenset({
+    "UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "U4L", "UIR", "SIR",
+    "D1B", "D1C", "D2B", "D2C", "FLT", "EXP", "EXR", "BCD"})
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
@@ -60,11 +66,17 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         if field.field.values:  # value table -> enum sensor with its labels
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(dict.fromkeys(field.field.values.values()))
-        elif field.field.unit:
-            self._attr_native_unit_of_measurement = field.field.unit
-            dev_cls, state_cls = _UNIT_CLASS.get(field.field.unit, (None, None))
+        else:
+            unit = field.field.unit
+            if unit:
+                self._attr_native_unit_of_measurement = unit
+            dev_cls, unit_state = _UNIT_CLASS.get(unit, (None, None))
             self._attr_device_class = dev_cls
-            self._attr_state_class = state_cls
+            # a numeric reading gets long-term statistics: energy accumulates
+            # (total_increasing), everything else is a measurement; text, date/
+            # time and flag fields stay without a state class
+            if field.field.type.upper().split(":", 1)[0] in _NUMERIC_TYPES:
+                self._attr_state_class = unit_state or SensorStateClass.MEASUREMENT
 
         self._attr_device_info = device_info(zz, coordinator.devices.get(zz))
 
