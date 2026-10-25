@@ -85,21 +85,38 @@ STATE_DE = {
 NUMBER_TYPES = {"UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "D1B", "D1C", "D2B", "D2C", "FLT"}
 
 
-def _primary(msg):
-    return next((f for f in msg.fields if f.name and not f.type.upper().startswith("IGN")), None)
-
-
 def _decodable(msg):
     return [f for f in msg.fields if f.name and not f.type.upper().startswith("IGN")]
 
 
-def build():
-    msgs = []
-    for jf in sorted((PKG / "configs" / "vaillant").glob("*.json")):
-        if jf.name == "index.json":  # the ident->file map, not a definition file
-            continue
-        msgs += from_dicts(json.loads(jf.read_text(encoding="utf-8")))
+def _cap(text: str) -> str:
+    return text[:1].upper() + text[1:] if text else text
 
+
+def _en_name(m, f) -> str:
+    """English display name: the message's own English text from `tr`, else its
+    technical name; a multi-field entity keeps the field suffix."""
+    base = (m.tr or {}).get("en") or m.name
+    return _cap(base if f.name == "value" else f"{base} {f.name}")
+
+
+def _de_name(m, f, key) -> str | None:
+    """German display name from `tr`, else the curated NAME_DE override, else None
+    (so de.json omits it and HA falls back to the English name)."""
+    de = (m.tr or {}).get("de")
+    if de:
+        return _cap(de if f.name == "value" else f"{de} {f.name}")
+    if key in NAME_DE:
+        return _cap(NAME_DE[key])
+    return None
+
+
+def build_entities(msgs) -> tuple[dict, dict]:
+    """Build the HA ``entity`` sections (English, German) from the definitions,
+    taking display names from each definition's ``tr`` (merged from the per-
+    language CSVs). German entries are emitted only where a German name or state
+    exists, so HA falls back to English for the rest -- which keeps two users on
+    one installation each in their own language via HA's own translation system."""
     sensor_en, sensor_de = {}, {}
     number_en, number_de = {}, {}
     select_en, select_de = {}, {}
@@ -110,36 +127,48 @@ def build():
         writable = "w" in m.direction
         for f in _decodable(m):
             key = translation_key(m, f)
-            name = m.name if f.name == "value" else f"{m.name} {f.name}"
+            en_name, de_name = _en_name(m, f), _de_name(m, f, key)
             states = {_slug(v): v for v in f.values.values()} if f.values else None
             states_de = ({_slug(v): STATE_DE[_slug(v)] for v in f.values.values()
                           if _slug(v) in STATE_DE} if f.values else None)
             if writable and len(_decodable(m)) == 1:
                 if f.values:
-                    select_en[key] = {"name": name, "state": states}
-                    if states_de:
-                        select_de[key] = {"name": NAME_DE.get(key, name), "state": states_de}
-                    elif key in NAME_DE:
-                        select_de[key] = {"name": NAME_DE[key]}
+                    select_en[key] = {"name": en_name, "state": states}
+                    de = {**({"name": de_name} if de_name else {}),
+                          **({"state": states_de} if states_de else {})}
+                    if de:
+                        select_de[key] = de
                 elif f.type.upper() in NUMBER_TYPES:
-                    number_en[key] = {"name": name}
-                    if key in NAME_DE:
-                        number_de[key] = {"name": NAME_DE[key]}
+                    number_en[key] = {"name": en_name}
+                    if de_name:
+                        number_de[key] = {"name": de_name}
             elif m.direction[:1] in ("r", "u"):  # updates (broadcasts) are sensors too
-                entry = {"name": name}
+                entry = {"name": en_name}
                 if states:
                     entry["state"] = states
                 sensor_en[key] = entry
-                de = {}
-                if key in NAME_DE:
-                    de["name"] = NAME_DE[key]
-                if states_de:
-                    de["state"] = states_de
+                de = {**({"name": de_name} if de_name else {}),
+                      **({"state": states_de} if states_de else {})}
                 if de:
                     sensor_de[key] = de
 
-    en = {**CONFIG_EN, "entity": {"sensor": sensor_en, "number": number_en, "select": select_en}}
-    de = {**CONFIG_DE, "entity": {"sensor": sensor_de, "number": number_de, "select": select_de}}
+    en = {"entity": {"sensor": sensor_en, "number": number_en, "select": select_en}}
+    de = {"entity": {"sensor": sensor_de, "number": number_de, "select": select_de}}
+    return en, de
+
+
+def build():
+    msgs = []
+    for jf in sorted((PKG / "configs" / "vaillant").glob("*.json")):
+        if jf.name == "index.json":  # the ident->file map, not a definition file
+            continue
+        msgs += from_dicts(json.loads(jf.read_text(encoding="utf-8")))
+
+    ent_en, ent_de = build_entities(msgs)
+    en = {**CONFIG_EN, **ent_en}
+    de = {**CONFIG_DE, **ent_de}
+    sensor_en, number_en, select_en = (ent_en["entity"][p] for p in ("sensor", "number", "select"))
+    sensor_de, number_de, select_de = (ent_de["entity"][p] for p in ("sensor", "number", "select"))
     (PKG / "strings.json").write_text(json.dumps(en, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (PKG / "translations" / "en.json").write_text(json.dumps(en, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (PKG / "translations" / "de.json").write_text(json.dumps(de, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

@@ -383,98 +383,83 @@
     },
     "select": {
       "hwcparallelloading": {
-        "name": "HwcParallelLoading",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "adaptheatcurve": {
-        "name": "AdaptHeatCurve",
         "state": {
           "no": "Nein",
           "yes": "Ja"
         }
       },
       "hwcopmode": {
-        "name": "HwcOpMode",
         "state": {
           "off": "Aus",
           "auto": "Auto"
         }
       },
       "hwcsfmode": {
-        "name": "HwcSFMode",
         "state": {
           "auto": "Auto"
         }
       },
       "hc1roomtempswitchon": {
-        "name": "Hc1RoomTempSwitchOn",
         "state": {
           "off": "Aus"
         }
       },
       "hc2roomtempswitchon": {
-        "name": "Hc2RoomTempSwitchOn",
         "state": {
           "off": "Aus"
         }
       },
       "hc3roomtempswitchon": {
-        "name": "Hc3RoomTempSwitchOn",
         "state": {
           "off": "Aus"
         }
       },
       "z1opmode": {
-        "name": "Z1OpMode",
         "state": {
           "off": "Aus",
           "auto": "Auto"
         }
       },
       "z1sfmode": {
-        "name": "Z1SFMode",
         "state": {
           "auto": "Auto"
         }
       },
       "z2opmode": {
-        "name": "Z2OpMode",
         "state": {
           "off": "Aus",
           "auto": "Auto"
         }
       },
       "z2sfmode": {
-        "name": "Z2SFMode",
         "state": {
           "auto": "Auto"
         }
       },
       "z3opmode": {
-        "name": "Z3OpMode",
         "state": {
           "off": "Aus",
           "auto": "Auto"
         }
       },
       "z3sfmode": {
-        "name": "Z3SFMode",
         "state": {
           "auto": "Auto"
         }
       },
       "statuscirpump": {
-        "name": "StatusCirPump",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "operatingmode": {
-        "name": "OperatingMode",
         "state": {
           "off": "Aus",
           "on": "Ein",
@@ -482,7 +467,6 @@
         }
       },
       "setmode": {
-        "name": "SetMode",
         "state": {
           "on": "Ein",
           "off": "Aus",
@@ -490,14 +474,12 @@
         }
       },
       "party": {
-        "name": "Party",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "load": {
-        "name": "Load",
         "state": {
           "off": "Aus",
           "on": "Ein"
