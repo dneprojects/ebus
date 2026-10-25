@@ -7,6 +7,10 @@
     "id": "020000000200",
     "zz": "15",
     "comment": "continous heating",
+    "tr": {
+      "en": "continous heating",
+      "de": "Durchgehendes Heizen"
+    },
     "fields": [
       {
         "name": "ign",
@@ -16,7 +20,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)"
+        "comment": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)",
+        "tr": {
+          "en": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)",
+          "de": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)"
+        }
       }
     ]
   },
@@ -28,12 +36,20 @@
     "id": "020100000200",
     "zz": "15",
     "comment": "continous heating",
+    "tr": {
+      "en": "continous heating",
+      "de": "Durchgehendes Heizen"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)"
+        "comment": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)",
+        "tr": {
+          "en": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)",
+          "de": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)"
+        }
       }
     ]
   },
@@ -45,6 +61,10 @@
     "id": "020000000300",
     "zz": "15",
     "comment": "frost delay time",
+    "tr": {
+      "en": "frost delay time",
+      "de": "Frostschutz-Verzögerung"
+    },
     "fields": [
       {
         "name": "ign",
@@ -54,7 +74,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "delay before frost protection is activated"
+        "comment": "delay before frost protection is activated",
+        "tr": {
+          "en": "delay before frost protection is activated",
+          "de": "delay before frost protection is activated"
+        }
       }
     ]
   },
@@ -66,12 +90,20 @@
     "id": "020100000300",
     "zz": "15",
     "comment": "frost delay time",
+    "tr": {
+      "en": "frost delay time",
+      "de": "Frostschutz-Verzögerung"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "delay before frost protection is activated"
+        "comment": "delay before frost protection is activated",
+        "tr": {
+          "en": "delay before frost protection is activated",
+          "de": "delay before frost protection is activated"
+        }
       }
     ]
   },
@@ -83,6 +115,10 @@
     "id": "020000000a00",
     "zz": "15",
     "comment": "hwc parallel loading",
+    "tr": {
+      "en": "hwc parallel loading",
+      "de": "Parallele Ladung Warmwasserkreis"
+    },
     "fields": [
       {
         "name": "ign",
@@ -95,7 +131,11 @@
           "0": "off",
           "1": "on"
         },
-        "comment": "heating and hot water parallel"
+        "comment": "heating and hot water parallel",
+        "tr": {
+          "en": "heating and hot water parallel",
+          "de": "Heizbetrieb und Speicherladung parallel"
+        }
       }
     ]
   },
@@ -107,6 +147,10 @@
     "id": "020100000a00",
     "zz": "15",
     "comment": "hwc parallel loading",
+    "tr": {
+      "en": "hwc parallel loading",
+      "de": "Parallele Ladung Warmwasserkreis"
+    },
     "fields": [
       {
         "name": "value",
@@ -115,7 +159,11 @@
           "0": "off",
           "1": "on"
         },
-        "comment": "heating and hot water parallel"
+        "comment": "heating and hot water parallel",
+        "tr": {
+          "en": "heating and hot water parallel",
+          "de": "Heizbetrieb und Speicherladung parallel"
+        }
       }
     ]
   },
@@ -127,6 +175,10 @@
     "id": "020000000e00",
     "zz": "15",
     "comment": "max room humidity",
+    "tr": {
+      "en": "max room humidity",
+      "de": "maxRoomHumidity"
+    },
     "fields": [
       {
         "name": "ign",
@@ -135,7 +187,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "maximum room humidity"
+        "comment": "maximum room humidity",
+        "tr": {
+          "en": "maximum room humidity",
+          "de": "maximale Raumluftfeuchte"
+        }
       }
     ]
   },
@@ -147,11 +203,19 @@
     "id": "020100000e00",
     "zz": "15",
     "comment": "max room humidity",
+    "tr": {
+      "en": "max room humidity",
+      "de": "maxRoomHumidity"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
-        "comment": "maximum room humidity"
+        "comment": "maximum room humidity",
+        "tr": {
+          "en": "maximum room humidity",
+          "de": "maximale Raumluftfeuchte"
+        }
       }
     ]
   },
@@ -163,6 +227,10 @@
     "id": "020000001400",
     "zz": "15",
     "comment": "adaptive heat curve",
+    "tr": {
+      "en": "adaptive heat curve",
+      "de": "Adaptive Heizkurve"
+    },
     "fields": [
       {
         "name": "ign",
@@ -175,7 +243,11 @@
           "0": "no",
           "1": "yes"
         },
-        "comment": "automatic correction of configured heat curve"
+        "comment": "automatic correction of configured heat curve",
+        "tr": {
+          "en": "automatic correction of configured heat curve",
+          "de": "automatic correction of configured heat curve"
+        }
       }
     ]
   },
@@ -187,6 +259,10 @@
     "id": "020100001400",
     "zz": "15",
     "comment": "adaptive heat curve",
+    "tr": {
+      "en": "adaptive heat curve",
+      "de": "Adaptive Heizkurve"
+    },
     "fields": [
       {
         "name": "value",
@@ -195,7 +271,11 @@
           "0": "no",
           "1": "yes"
         },
-        "comment": "automatic correction of configured heat curve"
+        "comment": "automatic correction of configured heat curve",
+        "tr": {
+          "en": "automatic correction of configured heat curve",
+          "de": "automatic correction of configured heat curve"
+        }
       }
     ]
   },
@@ -207,6 +287,10 @@
     "id": "020000001700",
     "zz": "15",
     "comment": "maximale Speicherladezeit",
+    "tr": {
+      "en": "maximale Speicherladezeit",
+      "de": "maximale Speicherladezeit"
+    },
     "fields": [
       {
         "name": "ign",
@@ -216,7 +300,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "min",
-        "comment": "maximum cylinder charging time"
+        "comment": "maximum cylinder charging time",
+        "tr": {
+          "en": "maximum cylinder charging time",
+          "de": "maximum cylinder charging time"
+        }
       }
     ]
   },
@@ -228,12 +316,20 @@
     "id": "020100001700",
     "zz": "15",
     "comment": "maximale Speicherladezeit",
+    "tr": {
+      "en": "maximale Speicherladezeit",
+      "de": "maximale Speicherladezeit"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
         "unit": "min",
-        "comment": "maximum cylinder charging time"
+        "comment": "maximum cylinder charging time",
+        "tr": {
+          "en": "maximum cylinder charging time",
+          "de": "maximum cylinder charging time"
+        }
       }
     ]
   },
@@ -245,6 +341,10 @@
     "id": "020000001800",
     "zz": "15",
     "comment": "hwc lock time",
+    "tr": {
+      "en": "hwc lock time",
+      "de": "lockTimeHwc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -254,7 +354,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "min",
-        "comment": "Lock time hot water current"
+        "comment": "Lock time hot water current",
+        "tr": {
+          "en": "Lock time hot water current",
+          "de": "Sperrzeit WW-Bedarf"
+        }
       }
     ]
   },
@@ -266,12 +370,20 @@
     "id": "020100001800",
     "zz": "15",
     "comment": "hwc lock time",
+    "tr": {
+      "en": "hwc lock time",
+      "de": "lockTimeHwc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
         "unit": "min",
-        "comment": "Lock time hot water current"
+        "comment": "Lock time hot water current",
+        "tr": {
+          "en": "Lock time hot water current",
+          "de": "Sperrzeit WW-Bedarf"
+        }
       }
     ]
   },
@@ -283,6 +395,10 @@
     "id": "020000001b00",
     "zz": "15",
     "comment": "pump additional time",
+    "tr": {
+      "en": "pump additional time",
+      "de": "pumpAdditionalTime"
+    },
     "fields": [
       {
         "name": "ign",
@@ -292,7 +408,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "min",
-        "comment": "chargepump additional operationtime"
+        "comment": "chargepump additional operationtime",
+        "tr": {
+          "en": "chargepump additional operationtime",
+          "de": "Ladepumpe Nachlaufzeit"
+        }
       }
     ]
   },
@@ -304,12 +424,20 @@
     "id": "020100001b00",
     "zz": "15",
     "comment": "pump additional time",
+    "tr": {
+      "en": "pump additional time",
+      "de": "pumpAdditionalTime"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
         "unit": "min",
-        "comment": "chargepump additional operationtime"
+        "comment": "chargepump additional operationtime",
+        "tr": {
+          "en": "chargepump additional operationtime",
+          "de": "Ladepumpe Nachlaufzeit"
+        }
       }
     ]
   },
@@ -321,6 +449,10 @@
     "id": "020000002700",
     "zz": "15",
     "comment": "hysteresis cylinder charge",
+    "tr": {
+      "en": "hysteresis cylinder charge",
+      "de": "hystCylinderCharge"
+    },
     "fields": [
       {
         "name": "ign",
@@ -330,7 +462,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "hysteris storage tank loading"
+        "comment": "hysteris storage tank loading",
+        "tr": {
+          "en": "hysteris storage tank loading",
+          "de": "Hysterese Speicherladung"
+        }
       }
     ]
   },
@@ -342,12 +478,20 @@
     "id": "020100002700",
     "zz": "15",
     "comment": "hysteresis cylinder charge",
+    "tr": {
+      "en": "hysteresis cylinder charge",
+      "de": "hystCylinderCharge"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "hysteris storage tank loading"
+        "comment": "hysteris storage tank loading",
+        "tr": {
+          "en": "hysteris storage tank loading",
+          "de": "Hysterese Speicherladung"
+        }
       }
     ]
   },
@@ -359,6 +503,10 @@
     "id": "020000002900",
     "zz": "15",
     "comment": "offset cylinder charge",
+    "tr": {
+      "en": "offset cylinder charge",
+      "de": "offsetCylinderCharge"
+    },
     "fields": [
       {
         "name": "ign",
@@ -368,7 +516,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "storage tank loading. Offset"
+        "comment": "storage tank loading. Offset",
+        "tr": {
+          "en": "storage tank loading. Offset",
+          "de": "Speicherlad. Offset"
+        }
       }
     ]
   },
@@ -380,12 +532,20 @@
     "id": "020100002900",
     "zz": "15",
     "comment": "offset cylinder charge",
+    "tr": {
+      "en": "offset cylinder charge",
+      "de": "offsetCylinderCharge"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "storage tank loading. Offset"
+        "comment": "storage tank loading. Offset",
+        "tr": {
+          "en": "storage tank loading. Offset",
+          "de": "Speicherlad. Offset"
+        }
       }
     ]
   },
@@ -397,6 +557,10 @@
     "id": "020000002c00",
     "zz": "15",
     "comment": "next maintenance",
+    "tr": {
+      "en": "next maintenance",
+      "de": "nächste Wartung"
+    },
     "fields": [
       {
         "name": "ign",
@@ -405,7 +569,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "date next maintenance"
+        "comment": "date next maintenance",
+        "tr": {
+          "en": "date next maintenance",
+          "de": "Datum nächste Wartung"
+        }
       }
     ]
   },
@@ -417,11 +585,19 @@
     "id": "020100002c00",
     "zz": "15",
     "comment": "next maintenance",
+    "tr": {
+      "en": "next maintenance",
+      "de": "nächste Wartung"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "date next maintenance"
+        "comment": "date next maintenance",
+        "tr": {
+          "en": "date next maintenance",
+          "de": "Datum nächste Wartung"
+        }
       }
     ]
   },
@@ -433,6 +609,10 @@
     "id": "020000003400",
     "zz": "15",
     "comment": "date",
+    "tr": {
+      "en": "date",
+      "de": "Datum"
+    },
     "fields": [
       {
         "name": "ign",
@@ -441,7 +621,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "current date"
+        "comment": "current date",
+        "tr": {
+          "en": "current date",
+          "de": "Aktuelles Datum"
+        }
       }
     ]
   },
@@ -453,11 +637,19 @@
     "id": "020100003400",
     "zz": "15",
     "comment": "date",
+    "tr": {
+      "en": "date",
+      "de": "Datum"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "current date"
+        "comment": "current date",
+        "tr": {
+          "en": "current date",
+          "de": "Aktuelles Datum"
+        }
       }
     ]
   },
@@ -469,6 +661,10 @@
     "id": "020000003500",
     "zz": "15",
     "comment": "time",
+    "tr": {
+      "en": "time",
+      "de": "Uhrzeit"
+    },
     "fields": [
       {
         "name": "ign",
@@ -477,7 +673,11 @@
       {
         "name": "value",
         "type": "HTI",
-        "comment": "current time"
+        "comment": "current time",
+        "tr": {
+          "en": "current time",
+          "de": "Aktuelle Uhrzeit"
+        }
       }
     ]
   },
@@ -489,11 +689,19 @@
     "id": "020100003500",
     "zz": "15",
     "comment": "time",
+    "tr": {
+      "en": "time",
+      "de": "Uhrzeit"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HTI",
-        "comment": "current time"
+        "comment": "current time",
+        "tr": {
+          "en": "current time",
+          "de": "Aktuelle Uhrzeit"
+        }
       }
     ]
   },
@@ -505,6 +713,10 @@
     "id": "020000003600",
     "zz": "15",
     "comment": "Systemschema",
+    "tr": {
+      "en": "Systemschema",
+      "de": "Systemschema"
+    },
     "fields": [
       {
         "name": "ign",
@@ -513,7 +725,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "system scheme"
+        "comment": "system scheme",
+        "tr": {
+          "en": "system scheme",
+          "de": "Systemschema"
+        }
       }
     ]
   },
@@ -525,11 +741,19 @@
     "id": "020100003600",
     "zz": "15",
     "comment": "Systemschema",
+    "tr": {
+      "en": "Systemschema",
+      "de": "Systemschema"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
-        "comment": "system scheme"
+        "comment": "system scheme",
+        "tr": {
+          "en": "system scheme",
+          "de": "Systemschema"
+        }
       }
     ]
   },
@@ -541,6 +765,10 @@
     "id": "020000003900",
     "zz": "15",
     "comment": "water pressure",
+    "tr": {
+      "en": "water pressure",
+      "de": "Wasserdruck"
+    },
     "fields": [
       {
         "name": "ign",
@@ -550,7 +778,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "bar",
-        "comment": "water pressure"
+        "comment": "water pressure",
+        "tr": {
+          "en": "water pressure",
+          "de": "Wasserdruck"
+        }
       }
     ]
   },
@@ -562,6 +794,10 @@
     "id": "020000003d00",
     "zz": "15",
     "comment": "total solar yield",
+    "tr": {
+      "en": "total solar yield",
+      "de": "TotalSolarYield"
+    },
     "fields": [
       {
         "name": "ign",
@@ -571,7 +807,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "solar yield total"
+        "comment": "solar yield total",
+        "tr": {
+          "en": "solar yield total",
+          "de": "Solarertrag gesamt"
+        }
       }
     ]
   },
@@ -583,12 +823,20 @@
     "id": "020100003d00",
     "zz": "15",
     "comment": "total solar yield",
+    "tr": {
+      "en": "total solar yield",
+      "de": "TotalSolarYield"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "solar yield total"
+        "comment": "solar yield total",
+        "tr": {
+          "en": "solar yield total",
+          "de": "Solarertrag gesamt"
+        }
       }
     ]
   },
@@ -600,6 +848,10 @@
     "id": "020000003e00",
     "zz": "15",
     "comment": "total environmental yield",
+    "tr": {
+      "en": "total environmental yield",
+      "de": "TotalEnvironmentalYield"
+    },
     "fields": [
       {
         "name": "ign",
@@ -609,7 +861,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "envrionment yield total"
+        "comment": "envrionment yield total",
+        "tr": {
+          "en": "envrionment yield total",
+          "de": "Umweltertrag gesamt"
+        }
       }
     ]
   },
@@ -621,12 +877,20 @@
     "id": "020100003e00",
     "zz": "15",
     "comment": "total environmental yield",
+    "tr": {
+      "en": "total environmental yield",
+      "de": "TotalEnvironmentalYield"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "envrionment yield total"
+        "comment": "envrionment yield total",
+        "tr": {
+          "en": "envrionment yield total",
+          "de": "Umweltertrag gesamt"
+        }
       }
     ]
   },
@@ -638,6 +902,10 @@
     "id": "020000004600",
     "zz": "15",
     "comment": "hwc max flow temp desired",
+    "tr": {
+      "en": "hwc max flow temp desired",
+      "de": "HwcMaxFlowTempDesired"
+    },
     "fields": [
       {
         "name": "ign",
@@ -647,7 +915,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint of Hwc"
+        "comment": "maximum flow temperature setpoint of Hwc",
+        "tr": {
+          "en": "maximum flow temperature setpoint of Hwc",
+          "de": "maximum flow temperature setpoint of Hwc"
+        }
       }
     ]
   },
@@ -659,12 +931,20 @@
     "id": "020100004600",
     "zz": "15",
     "comment": "hwc max flow temp desired",
+    "tr": {
+      "en": "hwc max flow temp desired",
+      "de": "HwcMaxFlowTempDesired"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint of Hwc"
+        "comment": "maximum flow temperature setpoint of Hwc",
+        "tr": {
+          "en": "maximum flow temperature setpoint of Hwc",
+          "de": "maximum flow temperature setpoint of Hwc"
+        }
       }
     ]
   },
@@ -676,6 +956,10 @@
     "id": "020000004b00",
     "zz": "15",
     "comment": "system flow temp",
+    "tr": {
+      "en": "system flow temp",
+      "de": "Systemvorlauf"
+    },
     "fields": [
       {
         "name": "ign",
@@ -685,7 +969,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "system flow temperature"
+        "comment": "system flow temperature",
+        "tr": {
+          "en": "system flow temperature",
+          "de": "Systemvorlauf"
+        }
       }
     ]
   },
@@ -697,6 +985,10 @@
     "id": "020000004d00",
     "zz": "15",
     "comment": "multifunction relay setting",
+    "tr": {
+      "en": "multifunction relay setting",
+      "de": "Multifunktionsausgang"
+    },
     "fields": [
       {
         "name": "ign",
@@ -722,6 +1014,10 @@
     "id": "020100004d00",
     "zz": "15",
     "comment": "multifunction relay setting",
+    "tr": {
+      "en": "multifunction relay setting",
+      "de": "Multifunktionsausgang"
+    },
     "fields": [
       {
         "name": "value",
@@ -743,6 +1039,10 @@
     "id": "020000004e00",
     "zz": "15",
     "comment": "this months fuel consumption heating",
+    "tr": {
+      "en": "this months fuel consumption heating",
+      "de": "ThisMonthsFConsumptionHc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -752,7 +1052,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "current month fuel consumption heating"
+        "comment": "current month fuel consumption heating",
+        "tr": {
+          "en": "current month fuel consumption heating",
+          "de": "Aktueller Monat Brennstoffverbrauch Heizung"
+        }
       }
     ]
   },
@@ -764,12 +1068,20 @@
     "id": "020100004e00",
     "zz": "15",
     "comment": "this months fuel consumption heating",
+    "tr": {
+      "en": "this months fuel consumption heating",
+      "de": "ThisMonthsFConsumptionHc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "current month fuel consumption heating"
+        "comment": "current month fuel consumption heating",
+        "tr": {
+          "en": "current month fuel consumption heating",
+          "de": "Aktueller Monat Brennstoffverbrauch Heizung"
+        }
       }
     ]
   },
@@ -781,6 +1093,10 @@
     "id": "020000004f00",
     "zz": "15",
     "comment": "this months energy consumption heating",
+    "tr": {
+      "en": "this months energy consumption heating",
+      "de": "ThisMonthsEConsumptionHc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -790,7 +1106,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "current month electricity consumption heating"
+        "comment": "current month electricity consumption heating",
+        "tr": {
+          "en": "current month electricity consumption heating",
+          "de": "Aktueller Monat Stromverbrauch Heizung"
+        }
       }
     ]
   },
@@ -802,12 +1122,20 @@
     "id": "020100004f00",
     "zz": "15",
     "comment": "this months energy consumption heating",
+    "tr": {
+      "en": "this months energy consumption heating",
+      "de": "ThisMonthsEConsumptionHc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "current month electricity consumption heating"
+        "comment": "current month electricity consumption heating",
+        "tr": {
+          "en": "current month electricity consumption heating",
+          "de": "Aktueller Monat Stromverbrauch Heizung"
+        }
       }
     ]
   },
@@ -819,6 +1147,10 @@
     "id": "020000005000",
     "zz": "15",
     "comment": "this months energy consumption hot water",
+    "tr": {
+      "en": "this months energy consumption hot water",
+      "de": "ThisMonthsEConsumptionHwc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -828,7 +1160,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "current month electricity consumption hot water"
+        "comment": "current month electricity consumption hot water",
+        "tr": {
+          "en": "current month electricity consumption hot water",
+          "de": "Aktueller Monat Stromverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -840,12 +1176,20 @@
     "id": "020100005000",
     "zz": "15",
     "comment": "this months energy consumption hot water",
+    "tr": {
+      "en": "this months energy consumption hot water",
+      "de": "ThisMonthsEConsumptionHwc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "current month electricity consumption hot water"
+        "comment": "current month electricity consumption hot water",
+        "tr": {
+          "en": "current month electricity consumption hot water",
+          "de": "Aktueller Monat Stromverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -857,6 +1201,10 @@
     "id": "020000005100",
     "zz": "15",
     "comment": "this months fuel consumption hot water",
+    "tr": {
+      "en": "this months fuel consumption hot water",
+      "de": "ThisMonthsFConsumptionHwc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -866,7 +1214,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "Current Month fuel consumption hot water"
+        "comment": "Current Month fuel consumption hot water",
+        "tr": {
+          "en": "Current Month fuel consumption hot water",
+          "de": "Aktueller Monat Brennstoffverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -878,12 +1230,20 @@
     "id": "020100005100",
     "zz": "15",
     "comment": "this months fuel consumption hot water",
+    "tr": {
+      "en": "this months fuel consumption hot water",
+      "de": "ThisMonthsFConsumptionHwc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "Current Month fuel consumption hot water"
+        "comment": "Current Month fuel consumption hot water",
+        "tr": {
+          "en": "Current Month fuel consumption hot water",
+          "de": "Aktueller Monat Brennstoffverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -895,6 +1255,10 @@
     "id": "020000005200",
     "zz": "15",
     "comment": "last months fuel consumption heating",
+    "tr": {
+      "en": "last months fuel consumption heating",
+      "de": "LastMonthsFConsumptionHc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -904,7 +1268,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month fuel consumption heating"
+        "comment": "last month fuel consumption heating",
+        "tr": {
+          "en": "last month fuel consumption heating",
+          "de": "Letzter Monat Brennstoffverbrauch Heizung"
+        }
       }
     ]
   },
@@ -916,12 +1284,20 @@
     "id": "020100005200",
     "zz": "15",
     "comment": "last months fuel consumption heating",
+    "tr": {
+      "en": "last months fuel consumption heating",
+      "de": "LastMonthsFConsumptionHc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month fuel consumption heating"
+        "comment": "last month fuel consumption heating",
+        "tr": {
+          "en": "last month fuel consumption heating",
+          "de": "Letzter Monat Brennstoffverbrauch Heizung"
+        }
       }
     ]
   },
@@ -933,6 +1309,10 @@
     "id": "020000005300",
     "zz": "15",
     "comment": "last months energy consumption heating",
+    "tr": {
+      "en": "last months energy consumption heating",
+      "de": "LastMonthsEConsumptionHc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -942,7 +1322,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month electricity consumption heating"
+        "comment": "last month electricity consumption heating",
+        "tr": {
+          "en": "last month electricity consumption heating",
+          "de": "Letzter Monat Stromverbrauch Heizung"
+        }
       }
     ]
   },
@@ -954,12 +1338,20 @@
     "id": "020100005300",
     "zz": "15",
     "comment": "last months energy consumption heating",
+    "tr": {
+      "en": "last months energy consumption heating",
+      "de": "LastMonthsEConsumptionHc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month electricity consumption heating"
+        "comment": "last month electricity consumption heating",
+        "tr": {
+          "en": "last month electricity consumption heating",
+          "de": "Letzter Monat Stromverbrauch Heizung"
+        }
       }
     ]
   },
@@ -971,6 +1363,10 @@
     "id": "020000005400",
     "zz": "15",
     "comment": "last months energy consumption hot water",
+    "tr": {
+      "en": "last months energy consumption hot water",
+      "de": "LastMonthsEConsumptionHwc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -980,7 +1376,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month electricity consumption hot water"
+        "comment": "last month electricity consumption hot water",
+        "tr": {
+          "en": "last month electricity consumption hot water",
+          "de": "Letzter Monat Stromverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -992,12 +1392,20 @@
     "id": "020100005400",
     "zz": "15",
     "comment": "last months energy consumption hot water",
+    "tr": {
+      "en": "last months energy consumption hot water",
+      "de": "LastMonthsEConsumptionHwc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month electricity consumption hot water"
+        "comment": "last month electricity consumption hot water",
+        "tr": {
+          "en": "last month electricity consumption hot water",
+          "de": "Letzter Monat Stromverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -1009,6 +1417,10 @@
     "id": "020000005500",
     "zz": "15",
     "comment": "last months fuel consumption hot water",
+    "tr": {
+      "en": "last months fuel consumption hot water",
+      "de": "LastMonthsFConsumptionHwc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1018,7 +1430,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month fuel consumption hot water"
+        "comment": "last month fuel consumption hot water",
+        "tr": {
+          "en": "last month fuel consumption hot water",
+          "de": "Letzter Monat Brennstoffverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -1030,12 +1446,20 @@
     "id": "020100005500",
     "zz": "15",
     "comment": "last months fuel consumption hot water",
+    "tr": {
+      "en": "last months fuel consumption hot water",
+      "de": "LastMonthsFConsumptionHwc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "last month fuel consumption hot water"
+        "comment": "last month fuel consumption hot water",
+        "tr": {
+          "en": "last month fuel consumption hot water",
+          "de": "Letzter Monat Brennstoffverbrauch Warmwasser"
+        }
       }
     ]
   },
@@ -1047,6 +1471,10 @@
     "id": "020000005600",
     "zz": "15",
     "comment": "total fuel consumption heating",
+    "tr": {
+      "en": "total fuel consumption heating",
+      "de": "TotalFConsumptionHc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1056,7 +1484,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year fuel consumption heating"
+        "comment": "total year fuel consumption heating",
+        "tr": {
+          "en": "total year fuel consumption heating",
+          "de": "Brennstoffverbrauch Heizung gesamt"
+        }
       }
     ]
   },
@@ -1068,12 +1500,20 @@
     "id": "020100005600",
     "zz": "15",
     "comment": "total fuel consumption heating",
+    "tr": {
+      "en": "total fuel consumption heating",
+      "de": "TotalFConsumptionHc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year fuel consumption heating"
+        "comment": "total year fuel consumption heating",
+        "tr": {
+          "en": "total year fuel consumption heating",
+          "de": "Brennstoffverbrauch Heizung gesamt"
+        }
       }
     ]
   },
@@ -1085,6 +1525,10 @@
     "id": "020000005700",
     "zz": "15",
     "comment": "total energy consumption heating",
+    "tr": {
+      "en": "total energy consumption heating",
+      "de": "TotalEConsumptionHc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1094,7 +1538,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year electricity consumption heating"
+        "comment": "total year electricity consumption heating",
+        "tr": {
+          "en": "total year electricity consumption heating",
+          "de": "Stromverbrauch Heizung gesamt"
+        }
       }
     ]
   },
@@ -1106,12 +1554,20 @@
     "id": "020100005700",
     "zz": "15",
     "comment": "total energy consumption heating",
+    "tr": {
+      "en": "total energy consumption heating",
+      "de": "TotalEConsumptionHc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year electricity consumption heating"
+        "comment": "total year electricity consumption heating",
+        "tr": {
+          "en": "total year electricity consumption heating",
+          "de": "Stromverbrauch Heizung gesamt"
+        }
       }
     ]
   },
@@ -1123,6 +1579,10 @@
     "id": "020000005800",
     "zz": "15",
     "comment": "total energy consumption hot water",
+    "tr": {
+      "en": "total energy consumption hot water",
+      "de": "TotalEConsumptionHwc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1132,7 +1592,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year electricity consumption hot water"
+        "comment": "total year electricity consumption hot water",
+        "tr": {
+          "en": "total year electricity consumption hot water",
+          "de": "Stromverbrauch Warmwasser gesamt"
+        }
       }
     ]
   },
@@ -1144,12 +1608,20 @@
     "id": "020100005800",
     "zz": "15",
     "comment": "total energy consumption hot water",
+    "tr": {
+      "en": "total energy consumption hot water",
+      "de": "TotalEConsumptionHwc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year electricity consumption hot water"
+        "comment": "total year electricity consumption hot water",
+        "tr": {
+          "en": "total year electricity consumption hot water",
+          "de": "Stromverbrauch Warmwasser gesamt"
+        }
       }
     ]
   },
@@ -1161,6 +1633,10 @@
     "id": "020000005900",
     "zz": "15",
     "comment": "total fuel consumption hot water",
+    "tr": {
+      "en": "total fuel consumption hot water",
+      "de": "TotalFConsumptionHwc"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1170,7 +1646,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year fuel consumption hot water"
+        "comment": "total year fuel consumption hot water",
+        "tr": {
+          "en": "total year fuel consumption hot water",
+          "de": "Brennstoffverbrauch Warmwasser gesamt"
+        }
       }
     ]
   },
@@ -1182,12 +1662,20 @@
     "id": "020100005900",
     "zz": "15",
     "comment": "total fuel consumption hot water",
+    "tr": {
+      "en": "total fuel consumption hot water",
+      "de": "TotalFConsumptionHwc"
+    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
         "unit": "kWh",
-        "comment": "total year fuel consumption hot water"
+        "comment": "total year fuel consumption hot water",
+        "tr": {
+          "en": "total year fuel consumption hot water",
+          "de": "Brennstoffverbrauch Warmwasser gesamt"
+        }
       }
     ]
   },
@@ -1199,6 +1687,10 @@
     "id": "020000007300",
     "zz": "15",
     "comment": "outside temperature",
+    "tr": {
+      "en": "outside temperature",
+      "de": "Außentemperatur"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1208,7 +1700,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "outside temperature"
+        "comment": "outside temperature",
+        "tr": {
+          "en": "outside temperature",
+          "de": "Außentemperatur"
+        }
       }
     ]
   },
@@ -1220,6 +1716,10 @@
     "id": "020000007600",
     "zz": "15",
     "comment": "code for installer menu",
+    "tr": {
+      "en": "code for installer menu",
+      "de": "Passwort für das Konfigurationsmenü"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1228,7 +1728,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "000-999; code for the installer's menues"
+        "comment": "000-999; code for the installer's menues",
+        "tr": {
+          "en": "000-999; code for the installer's menues",
+          "de": "000-999; code for the installer's menues"
+        }
       }
     ]
   },
@@ -1240,11 +1744,19 @@
     "id": "020100007600",
     "zz": "15",
     "comment": "code for installer menu",
+    "tr": {
+      "en": "code for installer menu",
+      "de": "Passwort für das Konfigurationsmenü"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
-        "comment": "000-999; code for the installer's menues"
+        "comment": "000-999; code for the installer's menues",
+        "tr": {
+          "en": "000-999; code for the installer's menues",
+          "de": "000-999; code for the installer's menues"
+        }
       }
     ]
   },
@@ -1256,6 +1768,10 @@
     "id": "020000009500",
     "zz": "15",
     "comment": "average outside temperature",
+    "tr": {
+      "en": "average outside temperature",
+      "de": "mittlere Außentemperatur"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1265,7 +1781,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "rounded average outsidetemperature (updated every 3h)"
+        "comment": "rounded average outsidetemperature (updated every 3h)",
+        "tr": {
+          "en": "rounded average outsidetemperature (updated every 3h)",
+          "de": "gerundete mittlere Außentemperatur (alle 3h aktualisiert)"
+        }
       }
     ]
   },
@@ -1277,12 +1797,20 @@
     "id": "020100009500",
     "zz": "15",
     "comment": "average outside temperature",
+    "tr": {
+      "en": "average outside temperature",
+      "de": "mittlere Außentemperatur"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "rounded average outsidetemperature (updated every 3h)"
+        "comment": "rounded average outsidetemperature (updated every 3h)",
+        "tr": {
+          "en": "rounded average outsidetemperature (updated every 3h)",
+          "de": "gerundete mittlere Außentemperatur (alle 3h aktualisiert)"
+        }
       }
     ]
   },
@@ -1294,6 +1822,10 @@
     "id": "020000009600",
     "zz": "15",
     "comment": "maintenance due",
+    "tr": {
+      "en": "maintenance due",
+      "de": "Wartung fällig"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1306,7 +1838,11 @@
           "0": "no",
           "1": "yes"
         },
-        "comment": "shows whether maintenance is due"
+        "comment": "shows whether maintenance is due",
+        "tr": {
+          "en": "shows whether maintenance is due",
+          "de": "zeigt an ob die Wartung fällig ist"
+        }
       }
     ]
   },
@@ -1318,6 +1854,10 @@
     "id": "020001000300",
     "zz": "15",
     "comment": "HwcOpMode",
+    "tr": {
+      "en": "HwcOpMode",
+      "de": "HwcOpMode"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1332,7 +1872,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of Hwc"
+        "comment": "operation mode of Hwc",
+        "tr": {
+          "en": "operation mode of Hwc",
+          "de": "operation mode of Hwc"
+        }
       }
     ]
   },
@@ -1344,6 +1888,10 @@
     "id": "020101000300",
     "zz": "15",
     "comment": "HwcOpMode",
+    "tr": {
+      "en": "HwcOpMode",
+      "de": "HwcOpMode"
+    },
     "fields": [
       {
         "name": "value",
@@ -1354,7 +1902,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of Hwc"
+        "comment": "operation mode of Hwc",
+        "tr": {
+          "en": "operation mode of Hwc",
+          "de": "operation mode of Hwc"
+        }
       }
     ]
   },
@@ -1366,6 +1918,10 @@
     "id": "020001000400",
     "zz": "15",
     "comment": "gewünschte Temperatur Warmwasserkreis",
+    "tr": {
+      "en": "gewünschte Temperatur Warmwasserkreis",
+      "de": "gewünschte Temperatur Warmwasserkreis"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1375,7 +1931,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "setpoint of domestic hot water circuit"
+        "comment": "setpoint of domestic hot water circuit",
+        "tr": {
+          "en": "setpoint of domestic hot water circuit",
+          "de": "setpoint of domestic hot water circuit"
+        }
       }
     ]
   },
@@ -1387,12 +1947,20 @@
     "id": "020101000400",
     "zz": "15",
     "comment": "gewünschte Temperatur Warmwasserkreis",
+    "tr": {
+      "en": "gewünschte Temperatur Warmwasserkreis",
+      "de": "gewünschte Temperatur Warmwasserkreis"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "setpoint of domestic hot water circuit"
+        "comment": "setpoint of domestic hot water circuit",
+        "tr": {
+          "en": "setpoint of domestic hot water circuit",
+          "de": "setpoint of domestic hot water circuit"
+        }
       }
     ]
   },
@@ -1404,6 +1972,10 @@
     "id": "020001000500",
     "zz": "15",
     "comment": "HwcStorageTemp",
+    "tr": {
+      "en": "HwcStorageTemp",
+      "de": "HwcStorageTemp"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1413,7 +1985,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current hot water storage temperature"
+        "comment": "current hot water storage temperature",
+        "tr": {
+          "en": "current hot water storage temperature",
+          "de": "Speicheristtemperatur"
+        }
       }
     ]
   },
@@ -1425,6 +2001,10 @@
     "id": "020001000800",
     "zz": "15",
     "comment": "HwcFlowTemp",
+    "tr": {
+      "en": "HwcFlowTemp",
+      "de": "HwcFlowTemp"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1434,7 +2014,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "desired flow temp for Hwc"
+        "comment": "desired flow temp for Hwc",
+        "tr": {
+          "en": "desired flow temp for Hwc",
+          "de": "desired flow temp for Hwc"
+        }
       }
     ]
   },
@@ -1446,6 +2030,10 @@
     "id": "020001000900",
     "zz": "15",
     "comment": "hwc holiday start period",
+    "tr": {
+      "en": "hwc holiday start period",
+      "de": "HwcHolidayStartPeriod"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1454,7 +2042,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays"
+        "comment": "start date of holidays",
+        "tr": {
+          "en": "start date of holidays",
+          "de": "start date of holidays"
+        }
       }
     ]
   },
@@ -1466,11 +2058,19 @@
     "id": "020101000900",
     "zz": "15",
     "comment": "hwc holiday start period",
+    "tr": {
+      "en": "hwc holiday start period",
+      "de": "HwcHolidayStartPeriod"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays"
+        "comment": "start date of holidays",
+        "tr": {
+          "en": "start date of holidays",
+          "de": "start date of holidays"
+        }
       }
     ]
   },
@@ -1482,6 +2082,10 @@
     "id": "020001000a00",
     "zz": "15",
     "comment": "hwc holiday end period",
+    "tr": {
+      "en": "hwc holiday end period",
+      "de": "HwcHolidayEndPeriod"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1490,7 +2094,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays"
+        "comment": "end date of holidays",
+        "tr": {
+          "en": "end date of holidays",
+          "de": "end date of holidays"
+        }
       }
     ]
   },
@@ -1502,11 +2110,19 @@
     "id": "020101000a00",
     "zz": "15",
     "comment": "hwc holiday end period",
+    "tr": {
+      "en": "hwc holiday end period",
+      "de": "HwcHolidayEndPeriod"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays"
+        "comment": "end date of holidays",
+        "tr": {
+          "en": "end date of holidays",
+          "de": "end date of holidays"
+        }
       }
     ]
   },
@@ -1518,6 +2134,10 @@
     "id": "020001000d00",
     "zz": "15",
     "comment": "hwc SF mode",
+    "tr": {
+      "en": "hwc SF mode",
+      "de": "HwcSFMode"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1546,6 +2166,10 @@
     "id": "020101000d00",
     "zz": "15",
     "comment": "hwc SF mode",
+    "tr": {
+      "en": "hwc SF mode",
+      "de": "HwcSFMode"
+    },
     "fields": [
       {
         "name": "value",
@@ -1570,6 +2194,10 @@
     "id": "020002000200",
     "zz": "15",
     "comment": "CircuitType Heizkreis 1",
+    "tr": {
+      "en": "CircuitType Heizkreis 1",
+      "de": "CircuitType Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1586,7 +2214,11 @@
           "4": "returnincr",
           "5": "pool"
         },
-        "comment": "mixer type"
+        "comment": "mixer type",
+        "tr": {
+          "en": "mixer type",
+          "de": "Mischer Typ"
+        }
       },
       {
         "name": "ign",
@@ -1602,6 +2234,10 @@
     "id": "020002000700",
     "zz": "15",
     "comment": "ActualFlowTempDesired Heizkreis 1",
+    "tr": {
+      "en": "ActualFlowTempDesired Heizkreis 1",
+      "de": "ActualFlowTempDesired Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1611,7 +2247,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current flow temperature setpoint of Hc1"
+        "comment": "current flow temperature setpoint of Hc1",
+        "tr": {
+          "en": "current flow temperature setpoint of Hc1",
+          "de": "current flow temperature setpoint of Hc1"
+        }
       }
     ]
   },
@@ -1623,6 +2263,10 @@
     "id": "020002000800",
     "zz": "15",
     "comment": "FlowTemp Heizkreis 1",
+    "tr": {
+      "en": "FlowTemp Heizkreis 1",
+      "de": "FlowTemp Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1632,7 +2276,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current flow temperature of Hc1"
+        "comment": "current flow temperature of Hc1",
+        "tr": {
+          "en": "current flow temperature of Hc1",
+          "de": "current flow temperature of Hc1"
+        }
       }
     ]
   },
@@ -1644,6 +2292,10 @@
     "id": "020002000b00",
     "zz": "15",
     "comment": "ExcessTemp Heizkreis 1",
+    "tr": {
+      "en": "ExcessTemp Heizkreis 1",
+      "de": "ExcessTemp Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1653,7 +2305,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        "comment": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+        "tr": {
+          "en": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+          "de": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        }
       }
     ]
   },
@@ -1665,12 +2321,20 @@
     "id": "020102000b00",
     "zz": "15",
     "comment": "ExcessTemp Heizkreis 1",
+    "tr": {
+      "en": "ExcessTemp Heizkreis 1",
+      "de": "ExcessTemp Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        "comment": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+        "tr": {
+          "en": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+          "de": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        }
       }
     ]
   },
@@ -1682,6 +2346,10 @@
     "id": "020002000e00",
     "zz": "15",
     "comment": "AutoOffMode Heizkreis 1",
+    "tr": {
+      "en": "AutoOffMode Heizkreis 1",
+      "de": "AutoOffMode Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1694,7 +2362,11 @@
           "0": "eco",
           "1": "night"
         },
-        "comment": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        "comment": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat",
+        "tr": {
+          "en": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat",
+          "de": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        }
       }
     ]
   },
@@ -1706,6 +2378,10 @@
     "id": "020102000e00",
     "zz": "15",
     "comment": "AutoOffMode Heizkreis 1",
+    "tr": {
+      "en": "AutoOffMode Heizkreis 1",
+      "de": "AutoOffMode Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
@@ -1714,7 +2390,11 @@
           "0": "eco",
           "1": "night"
         },
-        "comment": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        "comment": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat",
+        "tr": {
+          "en": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat",
+          "de": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        }
       }
     ]
   },
@@ -1726,6 +2406,10 @@
     "id": "020002000f00",
     "zz": "15",
     "comment": "Heizkurve Heizkreis 1",
+    "tr": {
+      "en": "Heizkurve Heizkreis 1",
+      "de": "Heizkurve Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1734,7 +2418,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "heating curve of Hc1"
+        "comment": "heating curve of Hc1",
+        "tr": {
+          "en": "heating curve of Hc1",
+          "de": "heating curve of Hc1"
+        }
       }
     ]
   },
@@ -1746,11 +2434,19 @@
     "id": "020102000f00",
     "zz": "15",
     "comment": "Heizkurve Heizkreis 1",
+    "tr": {
+      "en": "Heizkurve Heizkreis 1",
+      "de": "Heizkurve Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
-        "comment": "heating curve of Hc1"
+        "comment": "heating curve of Hc1",
+        "tr": {
+          "en": "heating curve of Hc1",
+          "de": "heating curve of Hc1"
+        }
       }
     ]
   },
@@ -1762,6 +2458,10 @@
     "id": "020002001000",
     "zz": "15",
     "comment": "MaxFlowTempDesired Heizkreis 1",
+    "tr": {
+      "en": "MaxFlowTempDesired Heizkreis 1",
+      "de": "MaxFlowTempDesired Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1771,7 +2471,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint (end emphasis) of Hc1"
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc1",
+        "tr": {
+          "en": "maximum flow temperature setpoint (end emphasis) of Hc1",
+          "de": "maximum flow temperature setpoint (end emphasis) of Hc1"
+        }
       }
     ]
   },
@@ -1783,12 +2487,20 @@
     "id": "020102001000",
     "zz": "15",
     "comment": "MaxFlowTempDesired Heizkreis 1",
+    "tr": {
+      "en": "MaxFlowTempDesired Heizkreis 1",
+      "de": "MaxFlowTempDesired Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint (end emphasis) of Hc1"
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc1",
+        "tr": {
+          "en": "maximum flow temperature setpoint (end emphasis) of Hc1",
+          "de": "maximum flow temperature setpoint (end emphasis) of Hc1"
+        }
       }
     ]
   },
@@ -1800,6 +2512,10 @@
     "id": "020002001100",
     "zz": "15",
     "comment": "MinCoolingTempDesired Heizkreis 1",
+    "tr": {
+      "en": "MinCoolingTempDesired Heizkreis 1",
+      "de": "MinCoolingTempDesired Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1809,7 +2525,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum cooling temperature setpoint Hc1"
+        "comment": "minimum cooling temperature setpoint Hc1",
+        "tr": {
+          "en": "minimum cooling temperature setpoint Hc1",
+          "de": "minimum cooling temperature setpoint Hc1"
+        }
       }
     ]
   },
@@ -1821,12 +2541,20 @@
     "id": "020102001100",
     "zz": "15",
     "comment": "MinCoolingTempDesired Heizkreis 1",
+    "tr": {
+      "en": "MinCoolingTempDesired Heizkreis 1",
+      "de": "MinCoolingTempDesired Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum cooling temperature setpoint Hc1"
+        "comment": "minimum cooling temperature setpoint Hc1",
+        "tr": {
+          "en": "minimum cooling temperature setpoint Hc1",
+          "de": "minimum cooling temperature setpoint Hc1"
+        }
       }
     ]
   },
@@ -1838,6 +2566,10 @@
     "id": "020002001200",
     "zz": "15",
     "comment": "MinFlowTempDesired Heizkreis 1",
+    "tr": {
+      "en": "MinFlowTempDesired Heizkreis 1",
+      "de": "MinFlowTempDesired Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1847,7 +2579,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum flow temperature setpoint (end emphasis) of Hc1"
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc1",
+        "tr": {
+          "en": "minimum flow temperature setpoint (end emphasis) of Hc1",
+          "de": "minimum flow temperature setpoint (end emphasis) of Hc1"
+        }
       }
     ]
   },
@@ -1859,12 +2595,20 @@
     "id": "020102001200",
     "zz": "15",
     "comment": "MinFlowTempDesired Heizkreis 1",
+    "tr": {
+      "en": "MinFlowTempDesired Heizkreis 1",
+      "de": "MinFlowTempDesired Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum flow temperature setpoint (end emphasis) of Hc1"
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc1",
+        "tr": {
+          "en": "minimum flow temperature setpoint (end emphasis) of Hc1",
+          "de": "minimum flow temperature setpoint (end emphasis) of Hc1"
+        }
       }
     ]
   },
@@ -1876,6 +2620,10 @@
     "id": "020002001400",
     "zz": "15",
     "comment": "AT-Abschaltgrenze Heizkreis 1",
+    "tr": {
+      "en": "AT-Abschaltgrenze Heizkreis 1",
+      "de": "AT-Abschaltgrenze Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1885,7 +2633,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+        "tr": {
+          "en": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+          "de": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        }
       }
     ]
   },
@@ -1897,12 +2649,20 @@
     "id": "020102001400",
     "zz": "15",
     "comment": "AT-Abschaltgrenze Heizkreis 1",
+    "tr": {
+      "en": "AT-Abschaltgrenze Heizkreis 1",
+      "de": "AT-Abschaltgrenze Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+        "tr": {
+          "en": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+          "de": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        }
       }
     ]
   },
@@ -1914,6 +2674,10 @@
     "id": "020002001500",
     "zz": "15",
     "comment": "RoomTempSwitchOn Heizkreis 1",
+    "tr": {
+      "en": "RoomTempSwitchOn Heizkreis 1",
+      "de": "RoomTempSwitchOn Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1927,7 +2691,11 @@
           "1": "modulating",
           "2": "thermostat"
         },
-        "comment": "room temperature modulation of Hc1"
+        "comment": "room temperature modulation of Hc1",
+        "tr": {
+          "en": "room temperature modulation of Hc1",
+          "de": "room temperature modulation of Hc1"
+        }
       }
     ]
   },
@@ -1939,6 +2707,10 @@
     "id": "020102001500",
     "zz": "15",
     "comment": "RoomTempSwitchOn Heizkreis 1",
+    "tr": {
+      "en": "RoomTempSwitchOn Heizkreis 1",
+      "de": "RoomTempSwitchOn Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
@@ -1948,7 +2720,11 @@
           "1": "modulating",
           "2": "thermostat"
         },
-        "comment": "room temperature modulation of Hc1"
+        "comment": "room temperature modulation of Hc1",
+        "tr": {
+          "en": "room temperature modulation of Hc1",
+          "de": "room temperature modulation of Hc1"
+        }
       }
     ]
   },
@@ -1960,6 +2736,10 @@
     "id": "020002001a00",
     "zz": "15",
     "comment": "MixerMovement Heizkreis 1",
+    "tr": {
+      "en": "MixerMovement Heizkreis 1",
+      "de": "MixerMovement Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1968,7 +2748,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "status of mixer (<0 closing, >0 opening)"
+        "comment": "status of mixer (<0 closing, >0 opening)",
+        "tr": {
+          "en": "status of mixer (<0 closing, >0 opening)",
+          "de": "status of mixer (<0 closing, >0 opening)"
+        }
       }
     ]
   },
@@ -1980,6 +2764,10 @@
     "id": "020002001c00",
     "zz": "15",
     "comment": "Anpassung Heizkurve Heizkreis 1",
+    "tr": {
+      "en": "Anpassung Heizkurve Heizkreis 1",
+      "de": "Anpassung Heizkurve Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1988,7 +2776,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "adaption applied to heating curve of Hc1"
+        "comment": "adaption applied to heating curve of Hc1",
+        "tr": {
+          "en": "adaption applied to heating curve of Hc1",
+          "de": "adaption applied to heating curve of Hc1"
+        }
       }
     ]
   },
@@ -2000,6 +2792,10 @@
     "id": "020002001b00",
     "zz": "15",
     "comment": "Status Heizkreis 1",
+    "tr": {
+      "en": "Status Heizkreis 1",
+      "de": "Status Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2008,7 +2804,11 @@
       {
         "name": "value",
         "type": "UCH",
-        "comment": "status of zone 1"
+        "comment": "status of zone 1",
+        "tr": {
+          "en": "status of zone 1",
+          "de": "status of zone 1"
+        }
       }
     ]
   },
@@ -2020,11 +2820,19 @@
     "id": "020102001b00",
     "zz": "15",
     "comment": "Status Heizkreis 1",
+    "tr": {
+      "en": "Status Heizkreis 1",
+      "de": "Status Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UCH",
-        "comment": "status of zone 1"
+        "comment": "status of zone 1",
+        "tr": {
+          "en": "status of zone 1",
+          "de": "status of zone 1"
+        }
       }
     ]
   },
@@ -2036,6 +2844,10 @@
     "id": "020002001e00",
     "zz": "15",
     "comment": "PumpStatus Heizkreis 1",
+    "tr": {
+      "en": "PumpStatus Heizkreis 1",
+      "de": "PumpStatus Heizkreis 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2044,7 +2856,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "pump status of zone 1"
+        "comment": "pump status of zone 1",
+        "tr": {
+          "en": "pump status of zone 1",
+          "de": "pump status of zone 1"
+        }
       }
     ]
   },
@@ -2056,11 +2872,19 @@
     "id": "020102001e00",
     "zz": "15",
     "comment": "PumpStatus Heizkreis 1",
+    "tr": {
+      "en": "PumpStatus Heizkreis 1",
+      "de": "PumpStatus Heizkreis 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
-        "comment": "pump status of zone 1"
+        "comment": "pump status of zone 1",
+        "tr": {
+          "en": "pump status of zone 1",
+          "de": "pump status of zone 1"
+        }
       }
     ]
   },
@@ -2072,6 +2896,10 @@
     "id": "020002010200",
     "zz": "15",
     "comment": "CircuitType Heizkreis 2",
+    "tr": {
+      "en": "CircuitType Heizkreis 2",
+      "de": "CircuitType Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2088,7 +2916,11 @@
           "4": "returnincr",
           "5": "pool"
         },
-        "comment": "mixer type"
+        "comment": "mixer type",
+        "tr": {
+          "en": "mixer type",
+          "de": "Mischer Typ"
+        }
       },
       {
         "name": "ign",
@@ -2104,6 +2936,10 @@
     "id": "020002010700",
     "zz": "15",
     "comment": "ActualFlowTempDesired Heizkreis 2",
+    "tr": {
+      "en": "ActualFlowTempDesired Heizkreis 2",
+      "de": "ActualFlowTempDesired Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2113,7 +2949,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current flow temperature setpoint of Hc2"
+        "comment": "current flow temperature setpoint of Hc2",
+        "tr": {
+          "en": "current flow temperature setpoint of Hc2",
+          "de": "current flow temperature setpoint of Hc2"
+        }
       }
     ]
   },
@@ -2125,6 +2965,10 @@
     "id": "020002010800",
     "zz": "15",
     "comment": "FlowTemp Heizkreis 2",
+    "tr": {
+      "en": "FlowTemp Heizkreis 2",
+      "de": "FlowTemp Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2134,7 +2978,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current flow temperature of Hc2"
+        "comment": "current flow temperature of Hc2",
+        "tr": {
+          "en": "current flow temperature of Hc2",
+          "de": "current flow temperature of Hc2"
+        }
       }
     ]
   },
@@ -2146,6 +2994,10 @@
     "id": "020002010b00",
     "zz": "15",
     "comment": "ExcessTemp Heizkreis 2",
+    "tr": {
+      "en": "ExcessTemp Heizkreis 2",
+      "de": "ExcessTemp Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2155,7 +3007,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        "comment": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+        "tr": {
+          "en": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+          "de": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        }
       }
     ]
   },
@@ -2167,12 +3023,20 @@
     "id": "020102010b00",
     "zz": "15",
     "comment": "ExcessTemp Heizkreis 2",
+    "tr": {
+      "en": "ExcessTemp Heizkreis 2",
+      "de": "ExcessTemp Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        "comment": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+        "tr": {
+          "en": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+          "de": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        }
       }
     ]
   },
@@ -2184,6 +3048,10 @@
     "id": "020002010e00",
     "zz": "15",
     "comment": "AutoOffMode Heizkreis 2",
+    "tr": {
+      "en": "AutoOffMode Heizkreis 2",
+      "de": "AutoOffMode Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2196,7 +3064,11 @@
           "0": "eco",
           "1": "night"
         },
-        "comment": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        "comment": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat",
+        "tr": {
+          "en": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat",
+          "de": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        }
       }
     ]
   },
@@ -2208,6 +3080,10 @@
     "id": "020102010e00",
     "zz": "15",
     "comment": "AutoOffMode Heizkreis 2",
+    "tr": {
+      "en": "AutoOffMode Heizkreis 2",
+      "de": "AutoOffMode Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
@@ -2216,7 +3092,11 @@
           "0": "eco",
           "1": "night"
         },
-        "comment": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        "comment": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat",
+        "tr": {
+          "en": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat",
+          "de": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        }
       }
     ]
   },
@@ -2228,6 +3108,10 @@
     "id": "020002010f00",
     "zz": "15",
     "comment": "Heizkurve Heizkreis 2",
+    "tr": {
+      "en": "Heizkurve Heizkreis 2",
+      "de": "Heizkurve Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2236,7 +3120,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "heating curve of Hc2"
+        "comment": "heating curve of Hc2",
+        "tr": {
+          "en": "heating curve of Hc2",
+          "de": "heating curve of Hc2"
+        }
       }
     ]
   },
@@ -2248,11 +3136,19 @@
     "id": "020102010f00",
     "zz": "15",
     "comment": "Heizkurve Heizkreis 2",
+    "tr": {
+      "en": "Heizkurve Heizkreis 2",
+      "de": "Heizkurve Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
-        "comment": "heating curve of Hc2"
+        "comment": "heating curve of Hc2",
+        "tr": {
+          "en": "heating curve of Hc2",
+          "de": "heating curve of Hc2"
+        }
       }
     ]
   },
@@ -2264,6 +3160,10 @@
     "id": "020002011000",
     "zz": "15",
     "comment": "MaxFlowTempDesired Heizkreis 2",
+    "tr": {
+      "en": "MaxFlowTempDesired Heizkreis 2",
+      "de": "MaxFlowTempDesired Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2273,7 +3173,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint (end emphasis) of Hc2"
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc2",
+        "tr": {
+          "en": "maximum flow temperature setpoint (end emphasis) of Hc2",
+          "de": "maximum flow temperature setpoint (end emphasis) of Hc2"
+        }
       }
     ]
   },
@@ -2285,12 +3189,20 @@
     "id": "020102011000",
     "zz": "15",
     "comment": "MaxFlowTempDesired Heizkreis 2",
+    "tr": {
+      "en": "MaxFlowTempDesired Heizkreis 2",
+      "de": "MaxFlowTempDesired Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint (end emphasis) of Hc2"
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc2",
+        "tr": {
+          "en": "maximum flow temperature setpoint (end emphasis) of Hc2",
+          "de": "maximum flow temperature setpoint (end emphasis) of Hc2"
+        }
       }
     ]
   },
@@ -2302,6 +3214,10 @@
     "id": "020002011100",
     "zz": "15",
     "comment": "MinCoolingTempDesired Heizkreis 2",
+    "tr": {
+      "en": "MinCoolingTempDesired Heizkreis 2",
+      "de": "MinCoolingTempDesired Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2311,7 +3227,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum cooling temperature setpoint Hc2"
+        "comment": "minimum cooling temperature setpoint Hc2",
+        "tr": {
+          "en": "minimum cooling temperature setpoint Hc2",
+          "de": "minimum cooling temperature setpoint Hc2"
+        }
       }
     ]
   },
@@ -2323,12 +3243,20 @@
     "id": "020102011100",
     "zz": "15",
     "comment": "MinCoolingTempDesired Heizkreis 2",
+    "tr": {
+      "en": "MinCoolingTempDesired Heizkreis 2",
+      "de": "MinCoolingTempDesired Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum cooling temperature setpoint Hc2"
+        "comment": "minimum cooling temperature setpoint Hc2",
+        "tr": {
+          "en": "minimum cooling temperature setpoint Hc2",
+          "de": "minimum cooling temperature setpoint Hc2"
+        }
       }
     ]
   },
@@ -2340,6 +3268,10 @@
     "id": "020002011200",
     "zz": "15",
     "comment": "MinFlowTempDesired Heizkreis 2",
+    "tr": {
+      "en": "MinFlowTempDesired Heizkreis 2",
+      "de": "MinFlowTempDesired Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2349,7 +3281,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum flow temperature setpoint (end emphasis) of Hc2"
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc2",
+        "tr": {
+          "en": "minimum flow temperature setpoint (end emphasis) of Hc2",
+          "de": "minimum flow temperature setpoint (end emphasis) of Hc2"
+        }
       }
     ]
   },
@@ -2361,12 +3297,20 @@
     "id": "020102011200",
     "zz": "15",
     "comment": "MinFlowTempDesired Heizkreis 2",
+    "tr": {
+      "en": "MinFlowTempDesired Heizkreis 2",
+      "de": "MinFlowTempDesired Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum flow temperature setpoint (end emphasis) of Hc2"
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc2",
+        "tr": {
+          "en": "minimum flow temperature setpoint (end emphasis) of Hc2",
+          "de": "minimum flow temperature setpoint (end emphasis) of Hc2"
+        }
       }
     ]
   },
@@ -2378,6 +3322,10 @@
     "id": "020002011400",
     "zz": "15",
     "comment": "AT-Abschaltgrenze Heizkreis 2",
+    "tr": {
+      "en": "AT-Abschaltgrenze Heizkreis 2",
+      "de": "AT-Abschaltgrenze Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2387,7 +3335,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+        "tr": {
+          "en": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+          "de": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        }
       }
     ]
   },
@@ -2399,12 +3351,20 @@
     "id": "020102011400",
     "zz": "15",
     "comment": "AT-Abschaltgrenze Heizkreis 2",
+    "tr": {
+      "en": "AT-Abschaltgrenze Heizkreis 2",
+      "de": "AT-Abschaltgrenze Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+        "tr": {
+          "en": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+          "de": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        }
       }
     ]
   },
@@ -2416,6 +3376,10 @@
     "id": "020002011500",
     "zz": "15",
     "comment": "RoomTempSwitchOn Heizkreis 2",
+    "tr": {
+      "en": "RoomTempSwitchOn Heizkreis 2",
+      "de": "RoomTempSwitchOn Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2429,7 +3393,11 @@
           "1": "modulating",
           "2": "thermostat"
         },
-        "comment": "room temperature modulation of Hc2"
+        "comment": "room temperature modulation of Hc2",
+        "tr": {
+          "en": "room temperature modulation of Hc2",
+          "de": "room temperature modulation of Hc2"
+        }
       }
     ]
   },
@@ -2441,6 +3409,10 @@
     "id": "020102011500",
     "zz": "15",
     "comment": "RoomTempSwitchOn Heizkreis 2",
+    "tr": {
+      "en": "RoomTempSwitchOn Heizkreis 2",
+      "de": "RoomTempSwitchOn Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
@@ -2450,7 +3422,11 @@
           "1": "modulating",
           "2": "thermostat"
         },
-        "comment": "room temperature modulation of Hc2"
+        "comment": "room temperature modulation of Hc2",
+        "tr": {
+          "en": "room temperature modulation of Hc2",
+          "de": "room temperature modulation of Hc2"
+        }
       }
     ]
   },
@@ -2462,6 +3438,10 @@
     "id": "020002011a00",
     "zz": "15",
     "comment": "MixerMovement Heizkreis 2",
+    "tr": {
+      "en": "MixerMovement Heizkreis 2",
+      "de": "MixerMovement Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2470,7 +3450,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "status of mixer (<0 closing, >0 opening)"
+        "comment": "status of mixer (<0 closing, >0 opening)",
+        "tr": {
+          "en": "status of mixer (<0 closing, >0 opening)",
+          "de": "status of mixer (<0 closing, >0 opening)"
+        }
       }
     ]
   },
@@ -2482,6 +3466,10 @@
     "id": "020002011c00",
     "zz": "15",
     "comment": "Anpassung Heizkurve Heizkreis 2",
+    "tr": {
+      "en": "Anpassung Heizkurve Heizkreis 2",
+      "de": "Anpassung Heizkurve Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2490,7 +3478,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "adaption applied to heating curve of Hc2"
+        "comment": "adaption applied to heating curve of Hc2",
+        "tr": {
+          "en": "adaption applied to heating curve of Hc2",
+          "de": "adaption applied to heating curve of Hc2"
+        }
       }
     ]
   },
@@ -2502,6 +3494,10 @@
     "id": "020002011b00",
     "zz": "15",
     "comment": "Status Heizkreis 2",
+    "tr": {
+      "en": "Status Heizkreis 2",
+      "de": "Status Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2510,7 +3506,11 @@
       {
         "name": "value",
         "type": "UCH",
-        "comment": "status of zone 2"
+        "comment": "status of zone 2",
+        "tr": {
+          "en": "status of zone 2",
+          "de": "status of zone 2"
+        }
       }
     ]
   },
@@ -2522,11 +3522,19 @@
     "id": "020102011b00",
     "zz": "15",
     "comment": "Status Heizkreis 2",
+    "tr": {
+      "en": "Status Heizkreis 2",
+      "de": "Status Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UCH",
-        "comment": "status of zone 2"
+        "comment": "status of zone 2",
+        "tr": {
+          "en": "status of zone 2",
+          "de": "status of zone 2"
+        }
       }
     ]
   },
@@ -2538,6 +3546,10 @@
     "id": "020002011e00",
     "zz": "15",
     "comment": "PumpStatus Heizkreis 2",
+    "tr": {
+      "en": "PumpStatus Heizkreis 2",
+      "de": "PumpStatus Heizkreis 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2546,7 +3558,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "pump status of zone 2"
+        "comment": "pump status of zone 2",
+        "tr": {
+          "en": "pump status of zone 2",
+          "de": "pump status of zone 2"
+        }
       }
     ]
   },
@@ -2558,11 +3574,19 @@
     "id": "020102011e00",
     "zz": "15",
     "comment": "PumpStatus Heizkreis 2",
+    "tr": {
+      "en": "PumpStatus Heizkreis 2",
+      "de": "PumpStatus Heizkreis 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
-        "comment": "pump status of zone 2"
+        "comment": "pump status of zone 2",
+        "tr": {
+          "en": "pump status of zone 2",
+          "de": "pump status of zone 2"
+        }
       }
     ]
   },
@@ -2574,6 +3598,10 @@
     "id": "020002020200",
     "zz": "15",
     "comment": "CircuitType Heizkreis 3",
+    "tr": {
+      "en": "CircuitType Heizkreis 3",
+      "de": "CircuitType Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2590,7 +3618,11 @@
           "4": "returnincr",
           "5": "pool"
         },
-        "comment": "mixer type"
+        "comment": "mixer type",
+        "tr": {
+          "en": "mixer type",
+          "de": "Mischer Typ"
+        }
       },
       {
         "name": "ign",
@@ -2606,6 +3638,10 @@
     "id": "020002020700",
     "zz": "15",
     "comment": "ActualFlowTempDesired Heizkreis 3",
+    "tr": {
+      "en": "ActualFlowTempDesired Heizkreis 3",
+      "de": "ActualFlowTempDesired Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2615,7 +3651,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current flow temperature setpoint of Hc3"
+        "comment": "current flow temperature setpoint of Hc3",
+        "tr": {
+          "en": "current flow temperature setpoint of Hc3",
+          "de": "current flow temperature setpoint of Hc3"
+        }
       }
     ]
   },
@@ -2627,6 +3667,10 @@
     "id": "020002020b00",
     "zz": "15",
     "comment": "ExcessTemp Heizkreis 3",
+    "tr": {
+      "en": "ExcessTemp Heizkreis 3",
+      "de": "ExcessTemp Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2636,7 +3680,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        "comment": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+        "tr": {
+          "en": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+          "de": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        }
       }
     ]
   },
@@ -2648,12 +3696,20 @@
     "id": "020102020b00",
     "zz": "15",
     "comment": "ExcessTemp Heizkreis 3",
+    "tr": {
+      "en": "ExcessTemp Heizkreis 3",
+      "de": "ExcessTemp Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "K",
-        "comment": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        "comment": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+        "tr": {
+          "en": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)",
+          "de": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+        }
       }
     ]
   },
@@ -2665,6 +3721,10 @@
     "id": "020002020e00",
     "zz": "15",
     "comment": "AutoOffMode Heizkreis 3",
+    "tr": {
+      "en": "AutoOffMode Heizkreis 3",
+      "de": "AutoOffMode Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2677,7 +3737,11 @@
           "0": "eco",
           "1": "night"
         },
-        "comment": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        "comment": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat",
+        "tr": {
+          "en": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat",
+          "de": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        }
       }
     ]
   },
@@ -2689,6 +3753,10 @@
     "id": "020102020e00",
     "zz": "15",
     "comment": "AutoOffMode Heizkreis 3",
+    "tr": {
+      "en": "AutoOffMode Heizkreis 3",
+      "de": "AutoOffMode Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
@@ -2697,7 +3765,11 @@
           "0": "eco",
           "1": "night"
         },
-        "comment": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        "comment": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat",
+        "tr": {
+          "en": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat",
+          "de": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat"
+        }
       }
     ]
   },
@@ -2709,6 +3781,10 @@
     "id": "020002020f00",
     "zz": "15",
     "comment": "Heizkurve Heizkreis 3",
+    "tr": {
+      "en": "Heizkurve Heizkreis 3",
+      "de": "Heizkurve Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2717,7 +3793,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "heating curve of Hc3"
+        "comment": "heating curve of Hc3",
+        "tr": {
+          "en": "heating curve of Hc3",
+          "de": "heating curve of Hc3"
+        }
       }
     ]
   },
@@ -2729,11 +3809,19 @@
     "id": "020102020f00",
     "zz": "15",
     "comment": "Heizkurve Heizkreis 3",
+    "tr": {
+      "en": "Heizkurve Heizkreis 3",
+      "de": "Heizkurve Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
-        "comment": "heating curve of Hc3"
+        "comment": "heating curve of Hc3",
+        "tr": {
+          "en": "heating curve of Hc3",
+          "de": "heating curve of Hc3"
+        }
       }
     ]
   },
@@ -2745,6 +3833,10 @@
     "id": "020002021000",
     "zz": "15",
     "comment": "MaxFlowTempDesired Heizkreis 3",
+    "tr": {
+      "en": "MaxFlowTempDesired Heizkreis 3",
+      "de": "MaxFlowTempDesired Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2754,7 +3846,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint (end emphasis) of Hc3"
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc3",
+        "tr": {
+          "en": "maximum flow temperature setpoint (end emphasis) of Hc3",
+          "de": "maximum flow temperature setpoint (end emphasis) of Hc3"
+        }
       }
     ]
   },
@@ -2766,12 +3862,20 @@
     "id": "020102021000",
     "zz": "15",
     "comment": "MaxFlowTempDesired Heizkreis 3",
+    "tr": {
+      "en": "MaxFlowTempDesired Heizkreis 3",
+      "de": "MaxFlowTempDesired Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "maximum flow temperature setpoint (end emphasis) of Hc3"
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc3",
+        "tr": {
+          "en": "maximum flow temperature setpoint (end emphasis) of Hc3",
+          "de": "maximum flow temperature setpoint (end emphasis) of Hc3"
+        }
       }
     ]
   },
@@ -2783,6 +3887,10 @@
     "id": "020002021100",
     "zz": "15",
     "comment": "MinCoolingTempDesired Heizkreis 3",
+    "tr": {
+      "en": "MinCoolingTempDesired Heizkreis 3",
+      "de": "MinCoolingTempDesired Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2792,7 +3900,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum cooling temperature setpoint Hc3"
+        "comment": "minimum cooling temperature setpoint Hc3",
+        "tr": {
+          "en": "minimum cooling temperature setpoint Hc3",
+          "de": "minimum cooling temperature setpoint Hc3"
+        }
       }
     ]
   },
@@ -2804,12 +3916,20 @@
     "id": "020102021100",
     "zz": "15",
     "comment": "MinCoolingTempDesired Heizkreis 3",
+    "tr": {
+      "en": "MinCoolingTempDesired Heizkreis 3",
+      "de": "MinCoolingTempDesired Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum cooling temperature setpoint Hc3"
+        "comment": "minimum cooling temperature setpoint Hc3",
+        "tr": {
+          "en": "minimum cooling temperature setpoint Hc3",
+          "de": "minimum cooling temperature setpoint Hc3"
+        }
       }
     ]
   },
@@ -2821,6 +3941,10 @@
     "id": "020002021200",
     "zz": "15",
     "comment": "MinFlowTempDesired Heizkreis 3",
+    "tr": {
+      "en": "MinFlowTempDesired Heizkreis 3",
+      "de": "MinFlowTempDesired Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2830,7 +3954,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum flow temperature setpoint (end emphasis) of Hc3"
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc3",
+        "tr": {
+          "en": "minimum flow temperature setpoint (end emphasis) of Hc3",
+          "de": "minimum flow temperature setpoint (end emphasis) of Hc3"
+        }
       }
     ]
   },
@@ -2842,12 +3970,20 @@
     "id": "020102021200",
     "zz": "15",
     "comment": "MinFlowTempDesired Heizkreis 3",
+    "tr": {
+      "en": "MinFlowTempDesired Heizkreis 3",
+      "de": "MinFlowTempDesired Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "minimum flow temperature setpoint (end emphasis) of Hc3"
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc3",
+        "tr": {
+          "en": "minimum flow temperature setpoint (end emphasis) of Hc3",
+          "de": "minimum flow temperature setpoint (end emphasis) of Hc3"
+        }
       }
     ]
   },
@@ -2859,6 +3995,10 @@
     "id": "020002021400",
     "zz": "15",
     "comment": "AT-Abschaltgrenze Heizkreis 3",
+    "tr": {
+      "en": "AT-Abschaltgrenze Heizkreis 3",
+      "de": "AT-Abschaltgrenze Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2868,7 +4008,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+        "tr": {
+          "en": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+          "de": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        }
       }
     ]
   },
@@ -2880,12 +4024,20 @@
     "id": "020102021400",
     "zz": "15",
     "comment": "AT-Abschaltgrenze Heizkreis 3",
+    "tr": {
+      "en": "AT-Abschaltgrenze Heizkreis 3",
+      "de": "AT-Abschaltgrenze Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+        "tr": {
+          "en": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint",
+          "de": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+        }
       }
     ]
   },
@@ -2897,6 +4049,10 @@
     "id": "020002021500",
     "zz": "15",
     "comment": "RoomTempSwitchOn Heizkreis 3",
+    "tr": {
+      "en": "RoomTempSwitchOn Heizkreis 3",
+      "de": "RoomTempSwitchOn Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2910,7 +4066,11 @@
           "1": "modulating",
           "2": "thermostat"
         },
-        "comment": "room temperature modulation of Hc3"
+        "comment": "room temperature modulation of Hc3",
+        "tr": {
+          "en": "room temperature modulation of Hc3",
+          "de": "room temperature modulation of Hc3"
+        }
       }
     ]
   },
@@ -2922,6 +4082,10 @@
     "id": "020102021500",
     "zz": "15",
     "comment": "RoomTempSwitchOn Heizkreis 3",
+    "tr": {
+      "en": "RoomTempSwitchOn Heizkreis 3",
+      "de": "RoomTempSwitchOn Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
@@ -2931,7 +4095,11 @@
           "1": "modulating",
           "2": "thermostat"
         },
-        "comment": "room temperature modulation of Hc3"
+        "comment": "room temperature modulation of Hc3",
+        "tr": {
+          "en": "room temperature modulation of Hc3",
+          "de": "room temperature modulation of Hc3"
+        }
       }
     ]
   },
@@ -2943,6 +4111,10 @@
     "id": "020002021a00",
     "zz": "15",
     "comment": "MixerMovement Heizkreis 3",
+    "tr": {
+      "en": "MixerMovement Heizkreis 3",
+      "de": "MixerMovement Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2951,7 +4123,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "status of mixer (<0 closing, >0 opening)"
+        "comment": "status of mixer (<0 closing, >0 opening)",
+        "tr": {
+          "en": "status of mixer (<0 closing, >0 opening)",
+          "de": "status of mixer (<0 closing, >0 opening)"
+        }
       }
     ]
   },
@@ -2963,6 +4139,10 @@
     "id": "020002021c00",
     "zz": "15",
     "comment": "Anpassung Heizkurve Heizkreis 3",
+    "tr": {
+      "en": "Anpassung Heizkurve Heizkreis 3",
+      "de": "Anpassung Heizkurve Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2971,7 +4151,11 @@
       {
         "name": "value",
         "type": "EXP",
-        "comment": "adaption applied to heating curve of Hc3"
+        "comment": "adaption applied to heating curve of Hc3",
+        "tr": {
+          "en": "adaption applied to heating curve of Hc3",
+          "de": "adaption applied to heating curve of Hc3"
+        }
       }
     ]
   },
@@ -2983,6 +4167,10 @@
     "id": "020002021b00",
     "zz": "15",
     "comment": "Status Heizkreis 3",
+    "tr": {
+      "en": "Status Heizkreis 3",
+      "de": "Status Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -2991,7 +4179,11 @@
       {
         "name": "value",
         "type": "UCH",
-        "comment": "status of zone 2"
+        "comment": "status of zone 2",
+        "tr": {
+          "en": "status of zone 2",
+          "de": "status of zone 2"
+        }
       }
     ]
   },
@@ -3003,11 +4195,19 @@
     "id": "020102021b00",
     "zz": "15",
     "comment": "Status Heizkreis 3",
+    "tr": {
+      "en": "Status Heizkreis 3",
+      "de": "Status Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UCH",
-        "comment": "status of zone 2"
+        "comment": "status of zone 2",
+        "tr": {
+          "en": "status of zone 2",
+          "de": "status of zone 2"
+        }
       }
     ]
   },
@@ -3019,6 +4219,10 @@
     "id": "020002021e00",
     "zz": "15",
     "comment": "PumpStatus Heizkreis 3",
+    "tr": {
+      "en": "PumpStatus Heizkreis 3",
+      "de": "PumpStatus Heizkreis 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3027,7 +4231,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "pump status of zone 3"
+        "comment": "pump status of zone 3",
+        "tr": {
+          "en": "pump status of zone 3",
+          "de": "pump status of zone 3"
+        }
       }
     ]
   },
@@ -3039,11 +4247,19 @@
     "id": "020102021e00",
     "zz": "15",
     "comment": "PumpStatus Heizkreis 3",
+    "tr": {
+      "en": "PumpStatus Heizkreis 3",
+      "de": "PumpStatus Heizkreis 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
-        "comment": "pump status of zone 3"
+        "comment": "pump status of zone 3",
+        "tr": {
+          "en": "pump status of zone 3",
+          "de": "pump status of zone 3"
+        }
       }
     ]
   },
@@ -3055,6 +4271,10 @@
     "id": "020003000200",
     "zz": "15",
     "comment": "Kühlsolltemperatur Zone 1",
+    "tr": {
+      "en": "Kühlsolltemperatur Zone 1",
+      "de": "Kühlsolltemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3064,7 +4284,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "desired cooling setpoint for zone 1"
+        "comment": "desired cooling setpoint for zone 1",
+        "tr": {
+          "en": "desired cooling setpoint for zone 1",
+          "de": "desired cooling setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3076,12 +4300,20 @@
     "id": "020103000200",
     "zz": "15",
     "comment": "Kühlsolltemperatur Zone 1",
+    "tr": {
+      "en": "Kühlsolltemperatur Zone 1",
+      "de": "Kühlsolltemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "desired cooling setpoint for zone 1"
+        "comment": "desired cooling setpoint for zone 1",
+        "tr": {
+          "en": "desired cooling setpoint for zone 1",
+          "de": "desired cooling setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3093,6 +4325,10 @@
     "id": "020003000300",
     "zz": "15",
     "comment": "Ferienzeitraum Start Zone 1",
+    "tr": {
+      "en": "Ferienzeitraum Start Zone 1",
+      "de": "Ferienzeitraum Start Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3101,7 +4337,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays for zone 1"
+        "comment": "start date of holidays for zone 1",
+        "tr": {
+          "en": "start date of holidays for zone 1",
+          "de": "start date of holidays for zone 1"
+        }
       }
     ]
   },
@@ -3113,11 +4353,19 @@
     "id": "020103000300",
     "zz": "15",
     "comment": "Ferienzeitraum Start Zone 1",
+    "tr": {
+      "en": "Ferienzeitraum Start Zone 1",
+      "de": "Ferienzeitraum Start Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays for zone 1"
+        "comment": "start date of holidays for zone 1",
+        "tr": {
+          "en": "start date of holidays for zone 1",
+          "de": "start date of holidays for zone 1"
+        }
       }
     ]
   },
@@ -3129,6 +4377,10 @@
     "id": "020003000400",
     "zz": "15",
     "comment": "Ferienzeitraum Ende Zone 1",
+    "tr": {
+      "en": "Ferienzeitraum Ende Zone 1",
+      "de": "Ferienzeitraum Ende Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3137,7 +4389,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays for zone 1"
+        "comment": "end date of holidays for zone 1",
+        "tr": {
+          "en": "end date of holidays for zone 1",
+          "de": "end date of holidays for zone 1"
+        }
       }
     ]
   },
@@ -3149,11 +4405,19 @@
     "id": "020103000400",
     "zz": "15",
     "comment": "Ferienzeitraum Ende Zone 1",
+    "tr": {
+      "en": "Ferienzeitraum Ende Zone 1",
+      "de": "Ferienzeitraum Ende Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays for zone 1"
+        "comment": "end date of holidays for zone 1",
+        "tr": {
+          "en": "end date of holidays for zone 1",
+          "de": "end date of holidays for zone 1"
+        }
       }
     ]
   },
@@ -3165,6 +4429,10 @@
     "id": "020003000500",
     "zz": "15",
     "comment": "Raumsollwert Ferienbetrieb Zone 1",
+    "tr": {
+      "en": "Raumsollwert Ferienbetrieb Zone 1",
+      "de": "Raumsollwert Ferienbetrieb Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3174,7 +4442,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "holiday setpoint for zone 1"
+        "comment": "holiday setpoint for zone 1",
+        "tr": {
+          "en": "holiday setpoint for zone 1",
+          "de": "holiday setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3186,12 +4458,20 @@
     "id": "020103000500",
     "zz": "15",
     "comment": "Raumsollwert Ferienbetrieb Zone 1",
+    "tr": {
+      "en": "Raumsollwert Ferienbetrieb Zone 1",
+      "de": "Raumsollwert Ferienbetrieb Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "holiday setpoint for zone 1"
+        "comment": "holiday setpoint for zone 1",
+        "tr": {
+          "en": "holiday setpoint for zone 1",
+          "de": "holiday setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3203,6 +4483,10 @@
     "id": "020003000600",
     "zz": "15",
     "comment": "Betriebsart Zone 1",
+    "tr": {
+      "en": "Betriebsart Zone 1",
+      "de": "Betriebsart Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3217,7 +4501,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of zone 1"
+        "comment": "operation mode of zone 1",
+        "tr": {
+          "en": "operation mode of zone 1",
+          "de": "operation mode of zone 1"
+        }
       }
     ]
   },
@@ -3229,6 +4517,10 @@
     "id": "020103000600",
     "zz": "15",
     "comment": "Betriebsart Zone 1",
+    "tr": {
+      "en": "Betriebsart Zone 1",
+      "de": "Betriebsart Zone 1"
+    },
     "fields": [
       {
         "name": "value",
@@ -3239,7 +4531,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of zone 1"
+        "comment": "operation mode of zone 1",
+        "tr": {
+          "en": "operation mode of zone 1",
+          "de": "operation mode of zone 1"
+        }
       }
     ]
   },
@@ -3251,6 +4547,10 @@
     "id": "020003000800",
     "zz": "15",
     "comment": "Quick Veto Temperatur Zone 1",
+    "tr": {
+      "en": "Quick Veto Temperatur Zone 1",
+      "de": "Quick Veto Temperatur Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3260,7 +4560,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "manual override setpoint for zone 1"
+        "comment": "manual override setpoint for zone 1",
+        "tr": {
+          "en": "manual override setpoint for zone 1",
+          "de": "manual override setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3272,12 +4576,20 @@
     "id": "020103000800",
     "zz": "15",
     "comment": "Quick Veto Temperatur Zone 1",
+    "tr": {
+      "en": "Quick Veto Temperatur Zone 1",
+      "de": "Quick Veto Temperatur Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "manual override setpoint for zone 1"
+        "comment": "manual override setpoint for zone 1",
+        "tr": {
+          "en": "manual override setpoint for zone 1",
+          "de": "manual override setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3289,6 +4601,10 @@
     "id": "020003002600",
     "zz": "15",
     "comment": "Duration of Quick Veto mode Zone 1",
+    "tr": {
+      "en": "Duration of Quick Veto mode Zone 1",
+      "de": "Duration of Quick Veto mode Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3298,7 +4614,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "h",
-        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+        "tr": {
+          "en": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+          "de": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        }
       }
     ]
   },
@@ -3310,12 +4630,20 @@
     "id": "020103002600",
     "zz": "15",
     "comment": "Duration of Quick Veto mode Zone 1",
+    "tr": {
+      "en": "Duration of Quick Veto mode Zone 1",
+      "de": "Duration of Quick Veto mode Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "h",
-        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+        "tr": {
+          "en": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+          "de": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        }
       }
     ]
   },
@@ -3327,6 +4655,10 @@
     "id": "020003001e00",
     "zz": "15",
     "comment": "Quick Veto end time Zone 1",
+    "tr": {
+      "en": "Quick Veto end time Zone 1",
+      "de": "Quick Veto end time Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3346,6 +4678,10 @@
     "id": "020003002400",
     "zz": "15",
     "comment": "Quick Veto end date Zone 1",
+    "tr": {
+      "en": "Quick Veto end date Zone 1",
+      "de": "Quick Veto end date Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3354,7 +4690,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "date"
+        "comment": "date",
+        "tr": {
+          "en": "date",
+          "de": "Datum"
+        }
       }
     ]
   },
@@ -3366,6 +4706,10 @@
     "id": "020003000900",
     "zz": "15",
     "comment": "Absenktemperatur Zone 1",
+    "tr": {
+      "en": "Absenktemperatur Zone 1",
+      "de": "Absenktemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3375,7 +4719,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "night setpoint for zone 1"
+        "comment": "night setpoint for zone 1",
+        "tr": {
+          "en": "night setpoint for zone 1",
+          "de": "night setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3387,12 +4735,20 @@
     "id": "020103000900",
     "zz": "15",
     "comment": "Absenktemperatur Zone 1",
+    "tr": {
+      "en": "Absenktemperatur Zone 1",
+      "de": "Absenktemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "night setpoint for zone 1"
+        "comment": "night setpoint for zone 1",
+        "tr": {
+          "en": "night setpoint for zone 1",
+          "de": "night setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3404,6 +4760,10 @@
     "id": "020003000e00",
     "zz": "15",
     "comment": "SF mode zone 1",
+    "tr": {
+      "en": "SF mode zone 1",
+      "de": "SFMode Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3432,6 +4792,10 @@
     "id": "020103000e00",
     "zz": "15",
     "comment": "SF mode zone 1",
+    "tr": {
+      "en": "SF mode zone 1",
+      "de": "SFMode Zone 1"
+    },
     "fields": [
       {
         "name": "value",
@@ -3456,6 +4820,10 @@
     "id": "020003000f00",
     "zz": "15",
     "comment": "Raumisttemperatur Zone 1",
+    "tr": {
+      "en": "Raumisttemperatur Zone 1",
+      "de": "Raumisttemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3465,7 +4833,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "aktuelle Raumtemperatur in Zone 1"
+        "comment": "aktuelle Raumtemperatur in Zone 1",
+        "tr": {
+          "en": "aktuelle Raumtemperatur in Zone 1",
+          "de": "aktuelle Raumtemperatur in Zone 1"
+        }
       }
     ]
   },
@@ -3477,6 +4849,10 @@
     "id": "020003001200",
     "zz": "15",
     "comment": "Ventilstatus Zone 1",
+    "tr": {
+      "en": "Ventilstatus Zone 1",
+      "de": "Ventilstatus Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3485,7 +4861,11 @@
       {
         "name": "value",
         "type": "UCH",
-        "comment": "valve status of zone 1"
+        "comment": "valve status of zone 1",
+        "tr": {
+          "en": "valve status of zone 1",
+          "de": "valve status of zone 1"
+        }
       }
     ]
   },
@@ -3497,11 +4877,19 @@
     "id": "020103001200",
     "zz": "15",
     "comment": "Ventilstatus Zone 1",
+    "tr": {
+      "en": "Ventilstatus Zone 1",
+      "de": "Ventilstatus Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UCH",
-        "comment": "valve status of zone 1"
+        "comment": "valve status of zone 1",
+        "tr": {
+          "en": "valve status of zone 1",
+          "de": "valve status of zone 1"
+        }
       }
     ]
   },
@@ -3513,6 +4901,10 @@
     "id": "020003001300",
     "zz": "15",
     "comment": "Raumregler Zuordnung Zone 1",
+    "tr": {
+      "en": "Raumregler Zuordnung Zone 1",
+      "de": "Raumregler Zuordnung Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3528,7 +4920,11 @@
           "3": "VR91_2",
           "4": "VR91_3"
         },
-        "comment": "configures which room temperature is assigned to zone 1"
+        "comment": "configures which room temperature is assigned to zone 1",
+        "tr": {
+          "en": "configures which room temperature is assigned to zone 1",
+          "de": "configures which room temperature is assigned to zone 1"
+        }
       }
     ]
   },
@@ -3540,6 +4936,10 @@
     "id": "020103001300",
     "zz": "15",
     "comment": "Raumregler Zuordnung Zone 1",
+    "tr": {
+      "en": "Raumregler Zuordnung Zone 1",
+      "de": "Raumregler Zuordnung Zone 1"
+    },
     "fields": [
       {
         "name": "value",
@@ -3551,7 +4951,11 @@
           "3": "VR91_2",
           "4": "VR91_3"
         },
-        "comment": "configures which room temperature is assigned to zone 1"
+        "comment": "configures which room temperature is assigned to zone 1",
+        "tr": {
+          "en": "configures which room temperature is assigned to zone 1",
+          "de": "configures which room temperature is assigned to zone 1"
+        }
       }
     ]
   },
@@ -3563,6 +4967,10 @@
     "id": "020003001400",
     "zz": "15",
     "comment": "Raumsolltemperatur Zone 1",
+    "tr": {
+      "en": "Raumsolltemperatur Zone 1",
+      "de": "Raumsolltemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3572,7 +4980,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms",
+        "tr": {
+          "en": "current room setpoint considering all basic conditions passed to the control algorithms",
+          "de": "current room setpoint considering all basic conditions passed to the control algorithms"
+        }
       }
     ]
   },
@@ -3584,12 +4996,20 @@
     "id": "020103001400",
     "zz": "15",
     "comment": "Raumsolltemperatur Zone 1",
+    "tr": {
+      "en": "Raumsolltemperatur Zone 1",
+      "de": "Raumsolltemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms",
+        "tr": {
+          "en": "current room setpoint considering all basic conditions passed to the control algorithms",
+          "de": "current room setpoint considering all basic conditions passed to the control algorithms"
+        }
       }
     ]
   },
@@ -3601,6 +5021,10 @@
     "id": "020003001600",
     "zz": "15",
     "comment": "Kurzbezeichnung zone 1",
+    "tr": {
+      "en": "Kurzbezeichnung zone 1",
+      "de": "Kurzbezeichnung Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3609,7 +5033,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "short name of zone 1"
+        "comment": "short name of zone 1",
+        "tr": {
+          "en": "short name of zone 1",
+          "de": "short name of zone 1"
+        }
       }
     ]
   },
@@ -3621,11 +5049,19 @@
     "id": "020103001600",
     "zz": "15",
     "comment": "Kurzbezeichnung zone 1",
+    "tr": {
+      "en": "Kurzbezeichnung zone 1",
+      "de": "Kurzbezeichnung Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:6",
-        "comment": "short name of zone 1"
+        "comment": "short name of zone 1",
+        "tr": {
+          "en": "short name of zone 1",
+          "de": "short name of zone 1"
+        }
       }
     ]
   },
@@ -3637,6 +5073,10 @@
     "id": "020003001700",
     "zz": "15",
     "comment": "Bezeichnung Zone 1 Teil 1",
+    "tr": {
+      "en": "Bezeichnung Zone 1 Teil 1",
+      "de": "Bezeichnung Zone 1 Teil 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3645,7 +5085,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "name of zone 1"
+        "comment": "name of zone 1",
+        "tr": {
+          "en": "name of zone 1",
+          "de": "name of zone 1"
+        }
       }
     ]
   },
@@ -3657,11 +5101,19 @@
     "id": "020103001700",
     "zz": "15",
     "comment": "Bezeichnung Zone 1 Teil 1",
+    "tr": {
+      "en": "Bezeichnung Zone 1 Teil 1",
+      "de": "Bezeichnung Zone 1 Teil 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:5",
-        "comment": "name of zone 1"
+        "comment": "name of zone 1",
+        "tr": {
+          "en": "name of zone 1",
+          "de": "name of zone 1"
+        }
       }
     ]
   },
@@ -3673,6 +5125,10 @@
     "id": "020003001800",
     "zz": "15",
     "comment": "Bezeichnung Zone 1 Teil 2",
+    "tr": {
+      "en": "Bezeichnung Zone 1 Teil 2",
+      "de": "Bezeichnung Zone 1 Teil 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3681,7 +5137,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "name of zone 1"
+        "comment": "name of zone 1",
+        "tr": {
+          "en": "name of zone 1",
+          "de": "name of zone 1"
+        }
       }
     ]
   },
@@ -3693,11 +5153,19 @@
     "id": "020103001800",
     "zz": "15",
     "comment": "Bezeichnung Zone 1 Teil 2",
+    "tr": {
+      "en": "Bezeichnung Zone 1 Teil 2",
+      "de": "Bezeichnung Zone 1 Teil 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:5",
-        "comment": "name of zone 1"
+        "comment": "name of zone 1",
+        "tr": {
+          "en": "name of zone 1",
+          "de": "name of zone 1"
+        }
       }
     ]
   },
@@ -3709,6 +5177,10 @@
     "id": "020003002200",
     "zz": "15",
     "comment": "Solltemperatur Zone 1",
+    "tr": {
+      "en": "Solltemperatur Zone 1",
+      "de": "Solltemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3718,7 +5190,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "day setpoint for zone 1"
+        "comment": "day setpoint for zone 1",
+        "tr": {
+          "en": "day setpoint for zone 1",
+          "de": "day setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3730,12 +5206,20 @@
     "id": "020103002200",
     "zz": "15",
     "comment": "Solltemperatur Zone 1",
+    "tr": {
+      "en": "Solltemperatur Zone 1",
+      "de": "Solltemperatur Zone 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "day setpoint for zone 1"
+        "comment": "day setpoint for zone 1",
+        "tr": {
+          "en": "day setpoint for zone 1",
+          "de": "day setpoint for zone 1"
+        }
       }
     ]
   },
@@ -3747,6 +5231,10 @@
     "id": "020003010200",
     "zz": "15",
     "comment": "Kühlsolltemperatur Zone 2",
+    "tr": {
+      "en": "Kühlsolltemperatur Zone 2",
+      "de": "Kühlsolltemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3756,7 +5244,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "desired cooling setpoint for zone 2"
+        "comment": "desired cooling setpoint for zone 2",
+        "tr": {
+          "en": "desired cooling setpoint for zone 2",
+          "de": "desired cooling setpoint for zone 2"
+        }
       }
     ]
   },
@@ -3768,12 +5260,20 @@
     "id": "020103010200",
     "zz": "15",
     "comment": "Kühlsolltemperatur Zone 2",
+    "tr": {
+      "en": "Kühlsolltemperatur Zone 2",
+      "de": "Kühlsolltemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "desired cooling setpoint for zone 2"
+        "comment": "desired cooling setpoint for zone 2",
+        "tr": {
+          "en": "desired cooling setpoint for zone 2",
+          "de": "desired cooling setpoint for zone 2"
+        }
       }
     ]
   },
@@ -3785,6 +5285,10 @@
     "id": "020003010300",
     "zz": "15",
     "comment": "Ferienzeitraum Start Zone 2",
+    "tr": {
+      "en": "Ferienzeitraum Start Zone 2",
+      "de": "Ferienzeitraum Start Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3793,7 +5297,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays for zone 2"
+        "comment": "start date of holidays for zone 2",
+        "tr": {
+          "en": "start date of holidays for zone 2",
+          "de": "start date of holidays for zone 2"
+        }
       }
     ]
   },
@@ -3805,11 +5313,19 @@
     "id": "020103010300",
     "zz": "15",
     "comment": "Ferienzeitraum Start Zone 2",
+    "tr": {
+      "en": "Ferienzeitraum Start Zone 2",
+      "de": "Ferienzeitraum Start Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays for zone 2"
+        "comment": "start date of holidays for zone 2",
+        "tr": {
+          "en": "start date of holidays for zone 2",
+          "de": "start date of holidays for zone 2"
+        }
       }
     ]
   },
@@ -3821,6 +5337,10 @@
     "id": "020003010400",
     "zz": "15",
     "comment": "Ferienzeitraum Ende Zone 2",
+    "tr": {
+      "en": "Ferienzeitraum Ende Zone 2",
+      "de": "Ferienzeitraum Ende Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3829,7 +5349,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays for zone 2"
+        "comment": "end date of holidays for zone 2",
+        "tr": {
+          "en": "end date of holidays for zone 2",
+          "de": "end date of holidays for zone 2"
+        }
       }
     ]
   },
@@ -3841,11 +5365,19 @@
     "id": "020103010400",
     "zz": "15",
     "comment": "Ferienzeitraum Ende Zone 2",
+    "tr": {
+      "en": "Ferienzeitraum Ende Zone 2",
+      "de": "Ferienzeitraum Ende Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays for zone 2"
+        "comment": "end date of holidays for zone 2",
+        "tr": {
+          "en": "end date of holidays for zone 2",
+          "de": "end date of holidays for zone 2"
+        }
       }
     ]
   },
@@ -3857,6 +5389,10 @@
     "id": "020003010500",
     "zz": "15",
     "comment": "Raumsollwert Ferienbetrieb Zone 2",
+    "tr": {
+      "en": "Raumsollwert Ferienbetrieb Zone 2",
+      "de": "Raumsollwert Ferienbetrieb Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3866,7 +5402,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "holiday setpoint for zone 2"
+        "comment": "holiday setpoint for zone 2",
+        "tr": {
+          "en": "holiday setpoint for zone 2",
+          "de": "holiday setpoint for zone 2"
+        }
       }
     ]
   },
@@ -3878,12 +5418,20 @@
     "id": "020103010500",
     "zz": "15",
     "comment": "Raumsollwert Ferienbetrieb Zone 2",
+    "tr": {
+      "en": "Raumsollwert Ferienbetrieb Zone 2",
+      "de": "Raumsollwert Ferienbetrieb Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "holiday setpoint for zone 2"
+        "comment": "holiday setpoint for zone 2",
+        "tr": {
+          "en": "holiday setpoint for zone 2",
+          "de": "holiday setpoint for zone 2"
+        }
       }
     ]
   },
@@ -3895,6 +5443,10 @@
     "id": "020003010600",
     "zz": "15",
     "comment": "Betriebsart Zone 2",
+    "tr": {
+      "en": "Betriebsart Zone 2",
+      "de": "Betriebsart Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3909,7 +5461,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of zone 2"
+        "comment": "operation mode of zone 2",
+        "tr": {
+          "en": "operation mode of zone 2",
+          "de": "operation mode of zone 2"
+        }
       }
     ]
   },
@@ -3921,6 +5477,10 @@
     "id": "020103010600",
     "zz": "15",
     "comment": "Betriebsart Zone 2",
+    "tr": {
+      "en": "Betriebsart Zone 2",
+      "de": "Betriebsart Zone 2"
+    },
     "fields": [
       {
         "name": "value",
@@ -3931,7 +5491,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of zone 2"
+        "comment": "operation mode of zone 2",
+        "tr": {
+          "en": "operation mode of zone 2",
+          "de": "operation mode of zone 2"
+        }
       }
     ]
   },
@@ -3943,6 +5507,10 @@
     "id": "020003010800",
     "zz": "15",
     "comment": "Quick Veto Temperatur Zone 2",
+    "tr": {
+      "en": "Quick Veto Temperatur Zone 2",
+      "de": "Quick Veto Temperatur Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3952,7 +5520,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "manual override setpoint for zone 2"
+        "comment": "manual override setpoint for zone 2",
+        "tr": {
+          "en": "manual override setpoint for zone 2",
+          "de": "manual override setpoint for zone 2"
+        }
       }
     ]
   },
@@ -3964,12 +5536,20 @@
     "id": "020103010800",
     "zz": "15",
     "comment": "Quick Veto Temperatur Zone 2",
+    "tr": {
+      "en": "Quick Veto Temperatur Zone 2",
+      "de": "Quick Veto Temperatur Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "manual override setpoint for zone 2"
+        "comment": "manual override setpoint for zone 2",
+        "tr": {
+          "en": "manual override setpoint for zone 2",
+          "de": "manual override setpoint for zone 2"
+        }
       }
     ]
   },
@@ -3981,6 +5561,10 @@
     "id": "020003012600",
     "zz": "15",
     "comment": "Duration of Quick Veto mode Zone 2",
+    "tr": {
+      "en": "Duration of Quick Veto mode Zone 2",
+      "de": "Duration of Quick Veto mode Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -3990,7 +5574,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "h",
-        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+        "tr": {
+          "en": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+          "de": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        }
       }
     ]
   },
@@ -4002,12 +5590,20 @@
     "id": "020103012600",
     "zz": "15",
     "comment": "Duration of Quick Veto mode Zone 2",
+    "tr": {
+      "en": "Duration of Quick Veto mode Zone 2",
+      "de": "Duration of Quick Veto mode Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "h",
-        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+        "tr": {
+          "en": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+          "de": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        }
       }
     ]
   },
@@ -4019,6 +5615,10 @@
     "id": "020003011e00",
     "zz": "15",
     "comment": "Quick Veto end time Zone 2",
+    "tr": {
+      "en": "Quick Veto end time Zone 2",
+      "de": "Quick Veto end time Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4038,6 +5638,10 @@
     "id": "020003012400",
     "zz": "15",
     "comment": "Quick Veto end date Zone 2",
+    "tr": {
+      "en": "Quick Veto end date Zone 2",
+      "de": "Quick Veto end date Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4046,7 +5650,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "date"
+        "comment": "date",
+        "tr": {
+          "en": "date",
+          "de": "Datum"
+        }
       }
     ]
   },
@@ -4058,6 +5666,10 @@
     "id": "020003010900",
     "zz": "15",
     "comment": "Absenktemperatur Zone 2",
+    "tr": {
+      "en": "Absenktemperatur Zone 2",
+      "de": "Absenktemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4067,7 +5679,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "night setpoint for zone 2"
+        "comment": "night setpoint for zone 2",
+        "tr": {
+          "en": "night setpoint for zone 2",
+          "de": "night setpoint for zone 2"
+        }
       }
     ]
   },
@@ -4079,12 +5695,20 @@
     "id": "020103010900",
     "zz": "15",
     "comment": "Absenktemperatur Zone 2",
+    "tr": {
+      "en": "Absenktemperatur Zone 2",
+      "de": "Absenktemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "night setpoint for zone 2"
+        "comment": "night setpoint for zone 2",
+        "tr": {
+          "en": "night setpoint for zone 2",
+          "de": "night setpoint for zone 2"
+        }
       }
     ]
   },
@@ -4096,6 +5720,10 @@
     "id": "020003010e00",
     "zz": "15",
     "comment": "SF mode zone 2",
+    "tr": {
+      "en": "SF mode zone 2",
+      "de": "SFMode Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4124,6 +5752,10 @@
     "id": "020103010e00",
     "zz": "15",
     "comment": "SF mode zone 2",
+    "tr": {
+      "en": "SF mode zone 2",
+      "de": "SFMode Zone 2"
+    },
     "fields": [
       {
         "name": "value",
@@ -4148,6 +5780,10 @@
     "id": "020003010f00",
     "zz": "15",
     "comment": "Raumisttemperatur Zone 2",
+    "tr": {
+      "en": "Raumisttemperatur Zone 2",
+      "de": "Raumisttemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4157,7 +5793,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "aktuelle Raumtemperatur in Zone 2"
+        "comment": "aktuelle Raumtemperatur in Zone 2",
+        "tr": {
+          "en": "aktuelle Raumtemperatur in Zone 2",
+          "de": "aktuelle Raumtemperatur in Zone 2"
+        }
       }
     ]
   },
@@ -4169,6 +5809,10 @@
     "id": "020003011200",
     "zz": "15",
     "comment": "Ventilstatus Zone 2",
+    "tr": {
+      "en": "Ventilstatus Zone 2",
+      "de": "Ventilstatus Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4177,7 +5821,11 @@
       {
         "name": "value",
         "type": "UCH",
-        "comment": "valve status of zone 2"
+        "comment": "valve status of zone 2",
+        "tr": {
+          "en": "valve status of zone 2",
+          "de": "valve status of zone 2"
+        }
       }
     ]
   },
@@ -4189,11 +5837,19 @@
     "id": "020103011200",
     "zz": "15",
     "comment": "Ventilstatus Zone 2",
+    "tr": {
+      "en": "Ventilstatus Zone 2",
+      "de": "Ventilstatus Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UCH",
-        "comment": "valve status of zone 2"
+        "comment": "valve status of zone 2",
+        "tr": {
+          "en": "valve status of zone 2",
+          "de": "valve status of zone 2"
+        }
       }
     ]
   },
@@ -4205,6 +5861,10 @@
     "id": "020003011300",
     "zz": "15",
     "comment": "Raumregler Zuordnung Zone 2",
+    "tr": {
+      "en": "Raumregler Zuordnung Zone 2",
+      "de": "Raumregler Zuordnung Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4220,7 +5880,11 @@
           "3": "VR91_2",
           "4": "VR91_3"
         },
-        "comment": "configures which room temperature is assigned to zone 2"
+        "comment": "configures which room temperature is assigned to zone 2",
+        "tr": {
+          "en": "configures which room temperature is assigned to zone 2",
+          "de": "configures which room temperature is assigned to zone 2"
+        }
       }
     ]
   },
@@ -4232,6 +5896,10 @@
     "id": "020103011300",
     "zz": "15",
     "comment": "Raumregler Zuordnung Zone 2",
+    "tr": {
+      "en": "Raumregler Zuordnung Zone 2",
+      "de": "Raumregler Zuordnung Zone 2"
+    },
     "fields": [
       {
         "name": "value",
@@ -4243,7 +5911,11 @@
           "3": "VR91_2",
           "4": "VR91_3"
         },
-        "comment": "configures which room temperature is assigned to zone 2"
+        "comment": "configures which room temperature is assigned to zone 2",
+        "tr": {
+          "en": "configures which room temperature is assigned to zone 2",
+          "de": "configures which room temperature is assigned to zone 2"
+        }
       }
     ]
   },
@@ -4255,6 +5927,10 @@
     "id": "020003011400",
     "zz": "15",
     "comment": "Raumsolltemperatur Zone 2",
+    "tr": {
+      "en": "Raumsolltemperatur Zone 2",
+      "de": "Raumsolltemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4264,7 +5940,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms",
+        "tr": {
+          "en": "current room setpoint considering all basic conditions passed to the control algorithms",
+          "de": "current room setpoint considering all basic conditions passed to the control algorithms"
+        }
       }
     ]
   },
@@ -4276,12 +5956,20 @@
     "id": "020103011400",
     "zz": "15",
     "comment": "Raumsolltemperatur Zone 2",
+    "tr": {
+      "en": "Raumsolltemperatur Zone 2",
+      "de": "Raumsolltemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms",
+        "tr": {
+          "en": "current room setpoint considering all basic conditions passed to the control algorithms",
+          "de": "current room setpoint considering all basic conditions passed to the control algorithms"
+        }
       }
     ]
   },
@@ -4293,6 +5981,10 @@
     "id": "020003011600",
     "zz": "15",
     "comment": "Kurzbezeichnung zone 2",
+    "tr": {
+      "en": "Kurzbezeichnung zone 2",
+      "de": "Kurzbezeichnung Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4301,7 +5993,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "short name of zone 2"
+        "comment": "short name of zone 2",
+        "tr": {
+          "en": "short name of zone 2",
+          "de": "short name of zone 2"
+        }
       }
     ]
   },
@@ -4313,11 +6009,19 @@
     "id": "020103011600",
     "zz": "15",
     "comment": "Kurzbezeichnung zone 2",
+    "tr": {
+      "en": "Kurzbezeichnung zone 2",
+      "de": "Kurzbezeichnung Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:6",
-        "comment": "short name of zone 2"
+        "comment": "short name of zone 2",
+        "tr": {
+          "en": "short name of zone 2",
+          "de": "short name of zone 2"
+        }
       }
     ]
   },
@@ -4329,6 +6033,10 @@
     "id": "020003011700",
     "zz": "15",
     "comment": "Bezeichnung Zone 2 Teil 1",
+    "tr": {
+      "en": "Bezeichnung Zone 2 Teil 1",
+      "de": "Bezeichnung Zone 2 Teil 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4337,7 +6045,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "name of zone 2"
+        "comment": "name of zone 2",
+        "tr": {
+          "en": "name of zone 2",
+          "de": "name of zone 2"
+        }
       }
     ]
   },
@@ -4349,11 +6061,19 @@
     "id": "020103011700",
     "zz": "15",
     "comment": "Bezeichnung Zone 2 Teil 1",
+    "tr": {
+      "en": "Bezeichnung Zone 2 Teil 1",
+      "de": "Bezeichnung Zone 2 Teil 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:5",
-        "comment": "name of zone 2"
+        "comment": "name of zone 2",
+        "tr": {
+          "en": "name of zone 2",
+          "de": "name of zone 2"
+        }
       }
     ]
   },
@@ -4365,6 +6085,10 @@
     "id": "020003011800",
     "zz": "15",
     "comment": "Bezeichnung Zone 2 Teil 2",
+    "tr": {
+      "en": "Bezeichnung Zone 2 Teil 2",
+      "de": "Bezeichnung Zone 2 Teil 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4373,7 +6097,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "name of zone 2"
+        "comment": "name of zone 2",
+        "tr": {
+          "en": "name of zone 2",
+          "de": "name of zone 2"
+        }
       }
     ]
   },
@@ -4385,11 +6113,19 @@
     "id": "020103011800",
     "zz": "15",
     "comment": "Bezeichnung Zone 2 Teil 2",
+    "tr": {
+      "en": "Bezeichnung Zone 2 Teil 2",
+      "de": "Bezeichnung Zone 2 Teil 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:5",
-        "comment": "name of zone 2"
+        "comment": "name of zone 2",
+        "tr": {
+          "en": "name of zone 2",
+          "de": "name of zone 2"
+        }
       }
     ]
   },
@@ -4401,6 +6137,10 @@
     "id": "020003012200",
     "zz": "15",
     "comment": "Solltemperatur Zone 2",
+    "tr": {
+      "en": "Solltemperatur Zone 2",
+      "de": "Solltemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4410,7 +6150,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "day setpoint for zone 2"
+        "comment": "day setpoint for zone 2",
+        "tr": {
+          "en": "day setpoint for zone 2",
+          "de": "day setpoint for zone 2"
+        }
       }
     ]
   },
@@ -4422,12 +6166,20 @@
     "id": "020103012200",
     "zz": "15",
     "comment": "Solltemperatur Zone 2",
+    "tr": {
+      "en": "Solltemperatur Zone 2",
+      "de": "Solltemperatur Zone 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "day setpoint for zone 2"
+        "comment": "day setpoint for zone 2",
+        "tr": {
+          "en": "day setpoint for zone 2",
+          "de": "day setpoint for zone 2"
+        }
       }
     ]
   },
@@ -4439,6 +6191,10 @@
     "id": "020003020300",
     "zz": "15",
     "comment": "Ferienzeitraum Start Zone 3",
+    "tr": {
+      "en": "Ferienzeitraum Start Zone 3",
+      "de": "Ferienzeitraum Start Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4447,7 +6203,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays for zone 3"
+        "comment": "start date of holidays for zone 3",
+        "tr": {
+          "en": "start date of holidays for zone 3",
+          "de": "start date of holidays for zone 3"
+        }
       }
     ]
   },
@@ -4459,11 +6219,19 @@
     "id": "020103020300",
     "zz": "15",
     "comment": "Ferienzeitraum Start Zone 3",
+    "tr": {
+      "en": "Ferienzeitraum Start Zone 3",
+      "de": "Ferienzeitraum Start Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "start date of holidays for zone 3"
+        "comment": "start date of holidays for zone 3",
+        "tr": {
+          "en": "start date of holidays for zone 3",
+          "de": "start date of holidays for zone 3"
+        }
       }
     ]
   },
@@ -4475,6 +6243,10 @@
     "id": "020003020400",
     "zz": "15",
     "comment": "Ferienzeitraum Ende Zone 3",
+    "tr": {
+      "en": "Ferienzeitraum Ende Zone 3",
+      "de": "Ferienzeitraum Ende Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4483,7 +6255,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays for zone 3"
+        "comment": "end date of holidays for zone 3",
+        "tr": {
+          "en": "end date of holidays for zone 3",
+          "de": "end date of holidays for zone 3"
+        }
       }
     ]
   },
@@ -4495,11 +6271,19 @@
     "id": "020103020400",
     "zz": "15",
     "comment": "Ferienzeitraum Ende Zone 3",
+    "tr": {
+      "en": "Ferienzeitraum Ende Zone 3",
+      "de": "Ferienzeitraum Ende Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "end date of holidays for zone 3"
+        "comment": "end date of holidays for zone 3",
+        "tr": {
+          "en": "end date of holidays for zone 3",
+          "de": "end date of holidays for zone 3"
+        }
       }
     ]
   },
@@ -4511,6 +6295,10 @@
     "id": "020003020500",
     "zz": "15",
     "comment": "Raumsollwert Ferienbetrieb Zone 3",
+    "tr": {
+      "en": "Raumsollwert Ferienbetrieb Zone 3",
+      "de": "Raumsollwert Ferienbetrieb Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4520,7 +6308,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "holiday setpoint for zone 3"
+        "comment": "holiday setpoint for zone 3",
+        "tr": {
+          "en": "holiday setpoint for zone 3",
+          "de": "holiday setpoint for zone 3"
+        }
       }
     ]
   },
@@ -4532,12 +6324,20 @@
     "id": "020103020500",
     "zz": "15",
     "comment": "Raumsollwert Ferienbetrieb Zone 3",
+    "tr": {
+      "en": "Raumsollwert Ferienbetrieb Zone 3",
+      "de": "Raumsollwert Ferienbetrieb Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "holiday setpoint for zone 3"
+        "comment": "holiday setpoint for zone 3",
+        "tr": {
+          "en": "holiday setpoint for zone 3",
+          "de": "holiday setpoint for zone 3"
+        }
       }
     ]
   },
@@ -4549,6 +6349,10 @@
     "id": "020003020600",
     "zz": "15",
     "comment": "Betriebsart Zone 3",
+    "tr": {
+      "en": "Betriebsart Zone 3",
+      "de": "Betriebsart Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4563,7 +6367,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of zone 3"
+        "comment": "operation mode of zone 3",
+        "tr": {
+          "en": "operation mode of zone 3",
+          "de": "operation mode of zone 3"
+        }
       }
     ]
   },
@@ -4575,6 +6383,10 @@
     "id": "020103020600",
     "zz": "15",
     "comment": "Betriebsart Zone 3",
+    "tr": {
+      "en": "Betriebsart Zone 3",
+      "de": "Betriebsart Zone 3"
+    },
     "fields": [
       {
         "name": "value",
@@ -4585,7 +6397,11 @@
           "2": "day",
           "3": "night"
         },
-        "comment": "operation mode of zone 3"
+        "comment": "operation mode of zone 3",
+        "tr": {
+          "en": "operation mode of zone 3",
+          "de": "operation mode of zone 3"
+        }
       }
     ]
   },
@@ -4597,6 +6413,10 @@
     "id": "020003020800",
     "zz": "15",
     "comment": "Quick Veto Temperatur Zone 3",
+    "tr": {
+      "en": "Quick Veto Temperatur Zone 3",
+      "de": "Quick Veto Temperatur Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4606,7 +6426,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "manual override setpoint for zone 3"
+        "comment": "manual override setpoint for zone 3",
+        "tr": {
+          "en": "manual override setpoint for zone 3",
+          "de": "manual override setpoint for zone 3"
+        }
       }
     ]
   },
@@ -4618,12 +6442,20 @@
     "id": "020103020800",
     "zz": "15",
     "comment": "Quick Veto Temperatur Zone 3",
+    "tr": {
+      "en": "Quick Veto Temperatur Zone 3",
+      "de": "Quick Veto Temperatur Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "manual override setpoint for zone 3"
+        "comment": "manual override setpoint for zone 3",
+        "tr": {
+          "en": "manual override setpoint for zone 3",
+          "de": "manual override setpoint for zone 3"
+        }
       }
     ]
   },
@@ -4635,6 +6467,10 @@
     "id": "020003022600",
     "zz": "15",
     "comment": "Duration of Quick Veto mode Zone 3",
+    "tr": {
+      "en": "Duration of Quick Veto mode Zone 3",
+      "de": "Duration of Quick Veto mode Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4644,7 +6480,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "h",
-        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+        "tr": {
+          "en": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+          "de": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        }
       }
     ]
   },
@@ -4656,12 +6496,20 @@
     "id": "020103022600",
     "zz": "15",
     "comment": "Duration of Quick Veto mode Zone 3",
+    "tr": {
+      "en": "Duration of Quick Veto mode Zone 3",
+      "de": "Duration of Quick Veto mode Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "h",
-        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+        "tr": {
+          "en": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode",
+          "de": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+        }
       }
     ]
   },
@@ -4673,6 +6521,10 @@
     "id": "020003021e00",
     "zz": "15",
     "comment": "Quick Veto end time Zone 3",
+    "tr": {
+      "en": "Quick Veto end time Zone 3",
+      "de": "Quick Veto end time Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4692,6 +6544,10 @@
     "id": "020003022400",
     "zz": "15",
     "comment": "Quick Veto end date Zone 3",
+    "tr": {
+      "en": "Quick Veto end date Zone 3",
+      "de": "Quick Veto end date Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4700,7 +6556,11 @@
       {
         "name": "value",
         "type": "HDA:3",
-        "comment": "date"
+        "comment": "date",
+        "tr": {
+          "en": "date",
+          "de": "Datum"
+        }
       }
     ]
   },
@@ -4712,6 +6572,10 @@
     "id": "020003020900",
     "zz": "15",
     "comment": "Absenktemperatur Zone 3",
+    "tr": {
+      "en": "Absenktemperatur Zone 3",
+      "de": "Absenktemperatur Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4721,7 +6585,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "night setpoint for zone 3"
+        "comment": "night setpoint for zone 3",
+        "tr": {
+          "en": "night setpoint for zone 3",
+          "de": "night setpoint for zone 3"
+        }
       }
     ]
   },
@@ -4733,12 +6601,20 @@
     "id": "020103020900",
     "zz": "15",
     "comment": "Absenktemperatur Zone 3",
+    "tr": {
+      "en": "Absenktemperatur Zone 3",
+      "de": "Absenktemperatur Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "night setpoint for zone 3"
+        "comment": "night setpoint for zone 3",
+        "tr": {
+          "en": "night setpoint for zone 3",
+          "de": "night setpoint for zone 3"
+        }
       }
     ]
   },
@@ -4750,6 +6626,10 @@
     "id": "020003020e00",
     "zz": "15",
     "comment": "SF mode zone 3",
+    "tr": {
+      "en": "SF mode zone 3",
+      "de": "SFMode Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4778,6 +6658,10 @@
     "id": "020103020e00",
     "zz": "15",
     "comment": "SF mode zone 3",
+    "tr": {
+      "en": "SF mode zone 3",
+      "de": "SFMode Zone 3"
+    },
     "fields": [
       {
         "name": "value",
@@ -4802,6 +6686,10 @@
     "id": "020003021200",
     "zz": "15",
     "comment": "Ventilstatus Zone 3",
+    "tr": {
+      "en": "Ventilstatus Zone 3",
+      "de": "Ventilstatus Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4810,7 +6698,11 @@
       {
         "name": "value",
         "type": "UCH",
-        "comment": "valve status of zone 3"
+        "comment": "valve status of zone 3",
+        "tr": {
+          "en": "valve status of zone 3",
+          "de": "valve status of zone 3"
+        }
       }
     ]
   },
@@ -4822,11 +6714,19 @@
     "id": "020103021200",
     "zz": "15",
     "comment": "Ventilstatus Zone 3",
+    "tr": {
+      "en": "Ventilstatus Zone 3",
+      "de": "Ventilstatus Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "UCH",
-        "comment": "valve status of zone 3"
+        "comment": "valve status of zone 3",
+        "tr": {
+          "en": "valve status of zone 3",
+          "de": "valve status of zone 3"
+        }
       }
     ]
   },
@@ -4838,6 +6738,10 @@
     "id": "020003021300",
     "zz": "15",
     "comment": "Raumregler Zuordnung Zone 3",
+    "tr": {
+      "en": "Raumregler Zuordnung Zone 3",
+      "de": "Raumregler Zuordnung Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4853,7 +6757,11 @@
           "3": "VR91_2",
           "4": "VR91_3"
         },
-        "comment": "configures which room temperature is assigned to zone 3"
+        "comment": "configures which room temperature is assigned to zone 3",
+        "tr": {
+          "en": "configures which room temperature is assigned to zone 3",
+          "de": "configures which room temperature is assigned to zone 3"
+        }
       }
     ]
   },
@@ -4865,6 +6773,10 @@
     "id": "020103021300",
     "zz": "15",
     "comment": "Raumregler Zuordnung Zone 3",
+    "tr": {
+      "en": "Raumregler Zuordnung Zone 3",
+      "de": "Raumregler Zuordnung Zone 3"
+    },
     "fields": [
       {
         "name": "value",
@@ -4876,7 +6788,11 @@
           "3": "VR91_2",
           "4": "VR91_3"
         },
-        "comment": "configures which room temperature is assigned to zone 3"
+        "comment": "configures which room temperature is assigned to zone 3",
+        "tr": {
+          "en": "configures which room temperature is assigned to zone 3",
+          "de": "configures which room temperature is assigned to zone 3"
+        }
       }
     ]
   },
@@ -4888,6 +6804,10 @@
     "id": "020003021400",
     "zz": "15",
     "comment": "Raumsolltemperatur Zone 3",
+    "tr": {
+      "en": "Raumsolltemperatur Zone 3",
+      "de": "Raumsolltemperatur Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4897,7 +6817,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms",
+        "tr": {
+          "en": "current room setpoint considering all basic conditions passed to the control algorithms",
+          "de": "current room setpoint considering all basic conditions passed to the control algorithms"
+        }
       }
     ]
   },
@@ -4909,12 +6833,20 @@
     "id": "020103021400",
     "zz": "15",
     "comment": "Raumsolltemperatur Zone 3",
+    "tr": {
+      "en": "Raumsolltemperatur Zone 3",
+      "de": "Raumsolltemperatur Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms",
+        "tr": {
+          "en": "current room setpoint considering all basic conditions passed to the control algorithms",
+          "de": "current room setpoint considering all basic conditions passed to the control algorithms"
+        }
       }
     ]
   },
@@ -4926,6 +6858,10 @@
     "id": "020003021600",
     "zz": "15",
     "comment": "Kurzbezeichnung Zone 3",
+    "tr": {
+      "en": "Kurzbezeichnung Zone 3",
+      "de": "Kurzbezeichnung Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4934,7 +6870,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "short name of zone 3"
+        "comment": "short name of zone 3",
+        "tr": {
+          "en": "short name of zone 3",
+          "de": "short name of zone 3"
+        }
       }
     ]
   },
@@ -4946,11 +6886,19 @@
     "id": "020103021600",
     "zz": "15",
     "comment": "Kurzbezeichnung Zone 3",
+    "tr": {
+      "en": "Kurzbezeichnung Zone 3",
+      "de": "Kurzbezeichnung Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:6",
-        "comment": "short name of zone 3"
+        "comment": "short name of zone 3",
+        "tr": {
+          "en": "short name of zone 3",
+          "de": "short name of zone 3"
+        }
       }
     ]
   },
@@ -4962,6 +6910,10 @@
     "id": "020003021700",
     "zz": "15",
     "comment": "Bezeichnung Zone 3 Teil 1",
+    "tr": {
+      "en": "Bezeichnung Zone 3 Teil 1",
+      "de": "Bezeichnung Zone 3 Teil 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -4970,7 +6922,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "name of zone 3"
+        "comment": "name of zone 3",
+        "tr": {
+          "en": "name of zone 3",
+          "de": "name of zone 3"
+        }
       }
     ]
   },
@@ -4982,11 +6938,19 @@
     "id": "020103021700",
     "zz": "15",
     "comment": "Bezeichnung Zone 3 Teil 1",
+    "tr": {
+      "en": "Bezeichnung Zone 3 Teil 1",
+      "de": "Bezeichnung Zone 3 Teil 1"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:5",
-        "comment": "name of zone 3"
+        "comment": "name of zone 3",
+        "tr": {
+          "en": "name of zone 3",
+          "de": "name of zone 3"
+        }
       }
     ]
   },
@@ -4998,6 +6962,10 @@
     "id": "020003021800",
     "zz": "15",
     "comment": "Bezeichnung Zone 3 Teil 2",
+    "tr": {
+      "en": "Bezeichnung Zone 3 Teil 2",
+      "de": "Bezeichnung Zone 3 Teil 2"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5006,7 +6974,11 @@
       {
         "name": "value",
         "type": "STR:*",
-        "comment": "name of zone 3"
+        "comment": "name of zone 3",
+        "tr": {
+          "en": "name of zone 3",
+          "de": "name of zone 3"
+        }
       }
     ]
   },
@@ -5018,11 +6990,19 @@
     "id": "020103021800",
     "zz": "15",
     "comment": "Bezeichnung Zone 3 Teil 2",
+    "tr": {
+      "en": "Bezeichnung Zone 3 Teil 2",
+      "de": "Bezeichnung Zone 3 Teil 2"
+    },
     "fields": [
       {
         "name": "value",
         "type": "STR:5",
-        "comment": "name of zone 3"
+        "comment": "name of zone 3",
+        "tr": {
+          "en": "name of zone 3",
+          "de": "name of zone 3"
+        }
       }
     ]
   },
@@ -5034,6 +7014,10 @@
     "id": "020003022200",
     "zz": "15",
     "comment": "Solltemperatur Zone 3",
+    "tr": {
+      "en": "Solltemperatur Zone 3",
+      "de": "Solltemperatur Zone 3"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5043,7 +7027,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "day setpoint for zone 3"
+        "comment": "day setpoint for zone 3",
+        "tr": {
+          "en": "day setpoint for zone 3",
+          "de": "day setpoint for zone 3"
+        }
       }
     ]
   },
@@ -5055,12 +7043,20 @@
     "id": "020103022200",
     "zz": "15",
     "comment": "Solltemperatur Zone 3",
+    "tr": {
+      "en": "Solltemperatur Zone 3",
+      "de": "Solltemperatur Zone 3"
+    },
     "fields": [
       {
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "day setpoint for zone 3"
+        "comment": "day setpoint for zone 3",
+        "tr": {
+          "en": "day setpoint for zone 3",
+          "de": "day setpoint for zone 3"
+        }
       }
     ]
   },
@@ -5072,46 +7068,82 @@
     "id": "a40002",
     "zz": "15",
     "comment": "timer count hot water",
+    "tr": {
+      "en": "timer count hot water",
+      "de": "timer count hot water"
+    },
     "fields": [
       {
         "name": "ign",
         "type": "IGN:1",
-        "comment": "Number of configured slots per weekday"
+        "comment": "Number of configured slots per weekday",
+        "tr": {
+          "en": "Number of configured slots per weekday",
+          "de": "Number of configured slots per weekday"
+        }
       },
       {
         "name": "slotcount",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_1",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_2",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_3",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_4",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_5",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_6",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "ign_1",
@@ -5127,6 +7159,10 @@
     "id": "a500020000",
     "zz": "15",
     "comment": "timer monday 1",
+    "tr": {
+      "en": "timer monday 1",
+      "de": "Zeitfenster Montag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5145,7 +7181,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5157,6 +7197,10 @@
     "id": "a500020100",
     "zz": "15",
     "comment": "timer tuesday 1",
+    "tr": {
+      "en": "timer tuesday 1",
+      "de": "Zeitfenster Dienstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5175,7 +7219,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5187,6 +7235,10 @@
     "id": "a500020200",
     "zz": "15",
     "comment": "timer wednesday 1",
+    "tr": {
+      "en": "timer wednesday 1",
+      "de": "Zeitfenster Mittwoch 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5205,7 +7257,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5217,6 +7273,10 @@
     "id": "a500020300",
     "zz": "15",
     "comment": "timer thursday 1",
+    "tr": {
+      "en": "timer thursday 1",
+      "de": "Zeitfenster Donnerstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5235,7 +7295,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5247,6 +7311,10 @@
     "id": "a500020400",
     "zz": "15",
     "comment": "timer friday 1",
+    "tr": {
+      "en": "timer friday 1",
+      "de": "Zeitfenster Freitag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5265,7 +7333,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5277,6 +7349,10 @@
     "id": "a500020500",
     "zz": "15",
     "comment": "timer saturday 1",
+    "tr": {
+      "en": "timer saturday 1",
+      "de": "Zeitfenster Samstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5295,7 +7371,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5307,6 +7387,10 @@
     "id": "a500020600",
     "zz": "15",
     "comment": "timer sunday 1",
+    "tr": {
+      "en": "timer sunday 1",
+      "de": "Zeitfenster Sonntag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5325,7 +7409,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5337,46 +7425,82 @@
     "id": "a40003",
     "zz": "15",
     "comment": "timer count circulation",
+    "tr": {
+      "en": "timer count circulation",
+      "de": "timer count circulation"
+    },
     "fields": [
       {
         "name": "ign",
         "type": "IGN:1",
-        "comment": "Number of configured slots per weekday"
+        "comment": "Number of configured slots per weekday",
+        "tr": {
+          "en": "Number of configured slots per weekday",
+          "de": "Number of configured slots per weekday"
+        }
       },
       {
         "name": "slotcount",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_1",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_2",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_3",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_4",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_5",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_6",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "ign_1",
@@ -5392,6 +7516,10 @@
     "id": "a500030000",
     "zz": "15",
     "comment": "timer monday 1",
+    "tr": {
+      "en": "timer monday 1",
+      "de": "Zeitfenster Montag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5419,6 +7547,10 @@
     "id": "a500030100",
     "zz": "15",
     "comment": "timer tuesday 1",
+    "tr": {
+      "en": "timer tuesday 1",
+      "de": "Zeitfenster Dienstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5446,6 +7578,10 @@
     "id": "a500030200",
     "zz": "15",
     "comment": "timer wednesday 1",
+    "tr": {
+      "en": "timer wednesday 1",
+      "de": "Zeitfenster Mittwoch 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5473,6 +7609,10 @@
     "id": "a500030300",
     "zz": "15",
     "comment": "timer thursday 1",
+    "tr": {
+      "en": "timer thursday 1",
+      "de": "Zeitfenster Donnerstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5500,6 +7640,10 @@
     "id": "a500030400",
     "zz": "15",
     "comment": "timer friday 1",
+    "tr": {
+      "en": "timer friday 1",
+      "de": "Zeitfenster Freitag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5527,6 +7671,10 @@
     "id": "a500030500",
     "zz": "15",
     "comment": "timer saturday 1",
+    "tr": {
+      "en": "timer saturday 1",
+      "de": "Zeitfenster Samstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5554,6 +7702,10 @@
     "id": "a500030600",
     "zz": "15",
     "comment": "timer sunday 1",
+    "tr": {
+      "en": "timer sunday 1",
+      "de": "Zeitfenster Sonntag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5581,46 +7733,82 @@
     "id": "a40000",
     "zz": "15",
     "comment": "timer count zone 1",
+    "tr": {
+      "en": "timer count zone 1",
+      "de": "timer count zone 1"
+    },
     "fields": [
       {
         "name": "ign",
         "type": "IGN:1",
-        "comment": "Number of configured slots per weekday"
+        "comment": "Number of configured slots per weekday",
+        "tr": {
+          "en": "Number of configured slots per weekday",
+          "de": "Number of configured slots per weekday"
+        }
       },
       {
         "name": "slotcount",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_1",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_2",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_3",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_4",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_5",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_6",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "ign_1",
@@ -5636,6 +7824,10 @@
     "id": "a500000000",
     "zz": "15",
     "comment": "timer heating monday 1",
+    "tr": {
+      "en": "timer heating monday 1",
+      "de": "Zeitfenster Montag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5654,7 +7846,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5666,6 +7862,10 @@
     "id": "a500000100",
     "zz": "15",
     "comment": "timer heating tuesday 1",
+    "tr": {
+      "en": "timer heating tuesday 1",
+      "de": "Zeitfenster Dienstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5684,7 +7884,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5696,6 +7900,10 @@
     "id": "a500000200",
     "zz": "15",
     "comment": "timer heating wednesday 1",
+    "tr": {
+      "en": "timer heating wednesday 1",
+      "de": "Zeitfenster Mittwoch 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5714,7 +7922,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5726,6 +7938,10 @@
     "id": "a500000300",
     "zz": "15",
     "comment": "timer heating thursday 1",
+    "tr": {
+      "en": "timer heating thursday 1",
+      "de": "Zeitfenster Donnerstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5744,7 +7960,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5756,6 +7976,10 @@
     "id": "a500000400",
     "zz": "15",
     "comment": "timer heating friday 1",
+    "tr": {
+      "en": "timer heating friday 1",
+      "de": "Zeitfenster Freitag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5774,7 +7998,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5786,6 +8014,10 @@
     "id": "a500000500",
     "zz": "15",
     "comment": "timer heating saturday 1",
+    "tr": {
+      "en": "timer heating saturday 1",
+      "de": "Zeitfenster Samstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5804,7 +8036,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5816,6 +8052,10 @@
     "id": "a500000600",
     "zz": "15",
     "comment": "timer heating sunday 1",
+    "tr": {
+      "en": "timer heating sunday 1",
+      "de": "Zeitfenster Sonntag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5834,7 +8074,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5846,46 +8090,82 @@
     "id": "a40100",
     "zz": "15",
     "comment": "timer count zone 2",
+    "tr": {
+      "en": "timer count zone 2",
+      "de": "timer count zone 2"
+    },
     "fields": [
       {
         "name": "ign",
         "type": "IGN:1",
-        "comment": "Number of configured slots per weekday"
+        "comment": "Number of configured slots per weekday",
+        "tr": {
+          "en": "Number of configured slots per weekday",
+          "de": "Number of configured slots per weekday"
+        }
       },
       {
         "name": "slotcount",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_1",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_2",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_3",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_4",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_5",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "slotcount_6",
         "type": "UCH",
-        "comment": "number of slots on a day"
+        "comment": "number of slots on a day",
+        "tr": {
+          "en": "number of slots on a day",
+          "de": "Anzahl der Slots an einem Tag"
+        }
       },
       {
         "name": "ign_1",
@@ -5901,6 +8181,10 @@
     "id": "a501000000",
     "zz": "15",
     "comment": "timer heating monday 1",
+    "tr": {
+      "en": "timer heating monday 1",
+      "de": "Zeitfenster Montag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5919,7 +8203,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5931,6 +8219,10 @@
     "id": "a501000100",
     "zz": "15",
     "comment": "timer heating tuesday 1",
+    "tr": {
+      "en": "timer heating tuesday 1",
+      "de": "Zeitfenster Dienstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5949,7 +8241,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5961,6 +8257,10 @@
     "id": "a501000200",
     "zz": "15",
     "comment": "timer heating wednesday 1",
+    "tr": {
+      "en": "timer heating wednesday 1",
+      "de": "Zeitfenster Mittwoch 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -5979,7 +8279,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -5991,6 +8295,10 @@
     "id": "a501000300",
     "zz": "15",
     "comment": "timer heating thursday 1",
+    "tr": {
+      "en": "timer heating thursday 1",
+      "de": "Zeitfenster Donnerstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -6009,7 +8317,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -6021,6 +8333,10 @@
     "id": "a501000400",
     "zz": "15",
     "comment": "timer heating friday 1",
+    "tr": {
+      "en": "timer heating friday 1",
+      "de": "Zeitfenster Freitag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -6039,7 +8355,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -6051,6 +8371,10 @@
     "id": "a501000500",
     "zz": "15",
     "comment": "timer heating saturday 1",
+    "tr": {
+      "en": "timer heating saturday 1",
+      "de": "Zeitfenster Samstag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -6069,7 +8393,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },
@@ -6081,6 +8409,10 @@
     "id": "a501000600",
     "zz": "15",
     "comment": "timer heating sunday 1",
+    "tr": {
+      "en": "timer heating sunday 1",
+      "de": "Zeitfenster Sonntag 1"
+    },
     "fields": [
       {
         "name": "ign",
@@ -6099,7 +8431,11 @@
         "type": "UIN",
         "divisor": 10,
         "unit": "°C",
-        "comment": "desired temperature of a slot"
+        "comment": "desired temperature of a slot",
+        "tr": {
+          "en": "desired temperature of a slot",
+          "de": "Solltemperatur eines Slots"
+        }
       }
     ]
   },

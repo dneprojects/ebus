@@ -7,6 +7,10 @@
     "id": "00",
     "zz": "fe",
     "comment": "date/time",
+    "tr": {
+      "en": "date/time",
+      "de": "Datum Uhrzeit"
+    },
     "fields": [
       {
         "name": "time",
@@ -26,6 +30,10 @@
     "id": "00",
     "zz": "fe",
     "comment": "date/time",
+    "tr": {
+      "en": "date/time",
+      "de": "Datum Uhrzeit"
+    },
     "fields": [
       {
         "name": "time",
@@ -45,12 +53,20 @@
     "id": "01",
     "zz": "fe",
     "comment": "outside temperature",
+    "tr": {
+      "en": "outside temperature",
+      "de": "Außentemperatur"
+    },
     "fields": [
       {
         "name": "value",
         "type": "D2B",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   }

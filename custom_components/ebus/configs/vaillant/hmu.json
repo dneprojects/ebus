@@ -221,6 +221,10 @@
     "id": "05ff3216",
     "zz": "08",
     "comment": "energy yield hot water",
+    "tr": {
+      "en": "energy yield hot water",
+      "de": "energy yield hot water"
+    },
     "fields": [
       {
         "name": "ign",
@@ -260,6 +264,10 @@
     "id": "05ff3240",
     "zz": "08",
     "comment": "operation hours",
+    "tr": {
+      "en": "operation hours",
+      "de": "Betriebsstunden"
+    },
     "fields": [
       {
         "name": "ign",
@@ -269,7 +277,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -281,6 +293,10 @@
     "id": "05ff3241",
     "zz": "08",
     "comment": "operation hours heating",
+    "tr": {
+      "en": "operation hours heating",
+      "de": "operation hours heating"
+    },
     "fields": [
       {
         "name": "ign",
@@ -290,7 +306,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -302,6 +322,10 @@
     "id": "05ff3243",
     "zz": "08",
     "comment": "operation hours cooling",
+    "tr": {
+      "en": "operation hours cooling",
+      "de": "operation hours cooling"
+    },
     "fields": [
       {
         "name": "ign",
@@ -311,7 +335,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -323,6 +351,10 @@
     "id": "05ff3244",
     "zz": "08",
     "comment": "operation hours hot water",
+    "tr": {
+      "en": "operation hours hot water",
+      "de": "operation hours hot water"
+    },
     "fields": [
       {
         "name": "ign",
@@ -332,7 +364,11 @@
         "name": "value",
         "type": "ULG",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -344,6 +380,10 @@
     "id": "05ff321f",
     "zz": "08",
     "comment": "target flow temperature",
+    "tr": {
+      "en": "target flow temperature",
+      "de": "target flow temperature"
+    },
     "fields": [
       {
         "name": "ign",
@@ -353,7 +393,11 @@
         "name": "value",
         "type": "D2C",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },
@@ -365,6 +409,10 @@
     "id": "05ff3220",
     "zz": "08",
     "comment": "current flow temperature",
+    "tr": {
+      "en": "current flow temperature",
+      "de": "current flow temperature"
+    },
     "fields": [
       {
         "name": "ign",
@@ -374,7 +422,11 @@
         "name": "value",
         "type": "D2C",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },
@@ -386,6 +438,10 @@
     "id": "05ff3221",
     "zz": "08",
     "comment": "current energy integral",
+    "tr": {
+      "en": "current energy integral",
+      "de": "current energy integral"
+    },
     "fields": [
       {
         "name": "ign",
@@ -406,6 +462,10 @@
     "id": "05ff3223",
     "zz": "08",
     "comment": "current yielded energy from the environment",
+    "tr": {
+      "en": "current yielded energy from the environment",
+      "de": "current yielded energy from the environment"
+    },
     "fields": [
       {
         "name": "ign",
@@ -427,6 +487,10 @@
     "id": "05ff3224",
     "zz": "08",
     "comment": "current power consumption",
+    "tr": {
+      "en": "current power consumption",
+      "de": "current power consumption"
+    },
     "fields": [
       {
         "name": "ign",
@@ -448,6 +512,10 @@
     "id": "05ff3225",
     "zz": "08",
     "comment": "current compressor utilization",
+    "tr": {
+      "en": "current compressor utilization",
+      "de": "current compressor utilization"
+    },
     "fields": [
       {
         "name": "ign",
@@ -534,7 +602,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -572,7 +644,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -610,7 +686,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -648,7 +728,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -686,7 +770,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -735,6 +823,10 @@
     "id": "540200280a",
     "zz": "08",
     "comment": "(EEV Position in different scale?)",
+    "tr": {
+      "en": "(EEV Position in different scale?)",
+      "de": "(EEV Position in different scale?)"
+    },
     "fields": [
       {
         "name": "ign",
@@ -854,7 +946,11 @@
           "581": "connection_fault_frequency_converter",
           "590": "four_port_valve_position_fault"
         },
-        "comment": "HMU Status code"
+        "comment": "HMU Status code",
+        "tr": {
+          "en": "HMU Status code",
+          "de": "HMU Status code"
+        }
       }
     ]
   },
@@ -874,7 +970,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "W",
-        "comment": "current electrical power consumption (Watt)"
+        "comment": "current electrical power consumption (Watt)",
+        "tr": {
+          "en": "current electrical power consumption (Watt)",
+          "de": "current electrical power consumption (Watt)"
+        }
       }
     ]
   },
@@ -894,7 +994,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "bar",
-        "comment": "pressure"
+        "comment": "pressure",
+        "tr": {
+          "en": "pressure",
+          "de": "Druck"
+        }
       }
     ]
   },
@@ -914,7 +1018,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },
@@ -934,7 +1042,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },
@@ -954,7 +1066,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },
@@ -974,7 +1090,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current flow temp, accurate to 2 decimal places"
+        "comment": "current flow temp, accurate to 2 decimal places",
+        "tr": {
+          "en": "current flow temp, accurate to 2 decimal places",
+          "de": "current flow temp, accurate to 2 decimal places"
+        }
       }
     ]
   },
@@ -994,7 +1114,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "current return temp, accurate to 2 decimal places"
+        "comment": "current return temp, accurate to 2 decimal places",
+        "tr": {
+          "en": "current return temp, accurate to 2 decimal places",
+          "de": "current return temp, accurate to 2 decimal places"
+        }
       }
     ]
   },
@@ -1014,7 +1138,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -1034,7 +1162,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -1054,7 +1186,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "total runtime of Hwc mode"
+        "comment": "total runtime of Hwc mode",
+        "tr": {
+          "en": "total runtime of Hwc mode",
+          "de": "total runtime of Hwc mode"
+        }
       }
     ]
   },
@@ -1074,7 +1210,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -1093,7 +1233,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1113,7 +1257,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -1151,7 +1299,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "total starts of building circuit pump"
+        "comment": "total starts of building circuit pump",
+        "tr": {
+          "en": "total starts of building circuit pump",
+          "de": "total starts of building circuit pump"
+        }
       }
     ]
   },
@@ -1171,7 +1323,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -1190,7 +1346,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1210,7 +1370,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -1229,7 +1393,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1249,7 +1417,11 @@
         "name": "value",
         "type": "UIN",
         "unit": "h",
-        "comment": "hours"
+        "comment": "hours",
+        "tr": {
+          "en": "hours",
+          "de": "Stunden"
+        }
       }
     ]
   },
@@ -1268,7 +1440,11 @@
       {
         "name": "value",
         "type": "UIN",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1288,7 +1464,11 @@
         "name": "value",
         "type": "EXP",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },
@@ -1300,6 +1480,10 @@
     "id": "1801",
     "zz": "08",
     "comment": "compressor runtime in min and starts in Hc mode",
+    "tr": {
+      "en": "compressor runtime in min and starts in Hc mode",
+      "de": "compressor runtime in min and starts in Hc mode"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1309,12 +1493,20 @@
         "name": "runtime",
         "type": "ULG",
         "unit": "min",
-        "comment": "minutes"
+        "comment": "minutes",
+        "tr": {
+          "en": "minutes",
+          "de": "Minuten"
+        }
       },
       {
         "name": "cycles",
         "type": "ULG",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1326,6 +1518,10 @@
     "id": "1802",
     "zz": "08",
     "comment": "compressor runtime in min and starts in Hwc mode",
+    "tr": {
+      "en": "compressor runtime in min and starts in Hwc mode",
+      "de": "compressor runtime in min and starts in Hwc mode"
+    },
     "fields": [
       {
         "name": "ign",
@@ -1335,12 +1531,20 @@
         "name": "runtime",
         "type": "ULG",
         "unit": "min",
-        "comment": "minutes"
+        "comment": "minutes",
+        "tr": {
+          "en": "minutes",
+          "de": "Minuten"
+        }
       },
       {
         "name": "cycles",
         "type": "ULG",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1352,6 +1556,10 @@
     "id": "00",
     "zz": "08",
     "comment": "date/time",
+    "tr": {
+      "en": "date/time",
+      "de": "Datum Uhrzeit"
+    },
     "fields": [
       {
         "name": "dcfstate",
@@ -1362,23 +1570,39 @@
           "2": "sync",
           "3": "valid"
         },
-        "comment": "DCF receiver state"
+        "comment": "DCF receiver state",
+        "tr": {
+          "en": "DCF receiver state",
+          "de": "DCF Empfängerstatus"
+        }
       },
       {
         "name": "btime",
         "type": "BTI",
-        "comment": "time"
+        "comment": "time",
+        "tr": {
+          "en": "time",
+          "de": "Uhrzeit"
+        }
       },
       {
         "name": "bdate",
         "type": "BDA",
-        "comment": "date"
+        "comment": "date",
+        "tr": {
+          "en": "date",
+          "de": "Datum"
+        }
       },
       {
         "name": "temp",
         "type": "D2B",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },
@@ -1390,6 +1614,10 @@
     "id": "00",
     "zz": "08",
     "comment": "Operation mode",
+    "tr": {
+      "en": "Operation mode",
+      "de": "Betriebsmodus"
+    },
     "fields": [
       {
         "name": "hcmode",
@@ -1400,25 +1628,41 @@
           "2": "heat",
           "3": "water"
         },
-        "comment": "boiler mode"
+        "comment": "boiler mode",
+        "tr": {
+          "en": "boiler mode",
+          "de": "Boiler Modus"
+        }
       },
       {
         "name": "flowtempdesired",
         "type": "D1C",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       },
       {
         "name": "hwctempdesired",
         "type": "D1C",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       },
       {
         "name": "hwcflowtempdesired",
         "type": "UCH",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       },
       {
         "name": "ign",
@@ -1463,6 +1707,10 @@
     "zz": "08",
     "level": "install",
     "comment": "Operation mode",
+    "tr": {
+      "en": "Operation mode",
+      "de": "Betriebsmodus"
+    },
     "fields": [
       {
         "name": "hcmode",
@@ -1473,25 +1721,41 @@
           "2": "heat",
           "3": "water"
         },
-        "comment": "boiler mode"
+        "comment": "boiler mode",
+        "tr": {
+          "en": "boiler mode",
+          "de": "Boiler Modus"
+        }
       },
       {
         "name": "flowtempdesired",
         "type": "D1C",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       },
       {
         "name": "hwctempdesired",
         "type": "D1C",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       },
       {
         "name": "hwcflowtempdesired",
         "type": "UCH",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       },
       {
         "name": "ign",
@@ -1535,36 +1799,60 @@
     "id": "01",
     "zz": "08",
     "comment": "Vorlauftemperatur/Rücklauftemperatur/Aussentemperatur/WW Temperatur/Speichertemperatur/Pumpenstatus",
+    "tr": {
+      "en": "Vorlauftemperatur/Rücklauftemperatur/Aussentemperatur/WW Temperatur/Speichertemperatur/Pumpenstatus",
+      "de": "Vorlauftemperatur/Rücklauftemperatur/Aussentemperatur/WW Temperatur/Speichertemperatur/Pumpenstatus"
+    },
     "fields": [
       {
         "name": "temp",
         "type": "D1C",
         "unit": "°C",
-        "comment": "flow temperature"
+        "comment": "flow temperature",
+        "tr": {
+          "en": "flow temperature",
+          "de": "flow temperature"
+        }
       },
       {
         "name": "temp_1",
         "type": "D1C",
         "unit": "°C",
-        "comment": "return temperature"
+        "comment": "return temperature",
+        "tr": {
+          "en": "return temperature",
+          "de": "return temperature"
+        }
       },
       {
         "name": "temp_2",
         "type": "D2B",
         "unit": "°C",
-        "comment": "outside temperature"
+        "comment": "outside temperature",
+        "tr": {
+          "en": "outside temperature",
+          "de": "Außentemperatur"
+        }
       },
       {
         "name": "temp_3",
         "type": "D1C",
         "unit": "°C",
-        "comment": "hot water temperature"
+        "comment": "hot water temperature",
+        "tr": {
+          "en": "hot water temperature",
+          "de": "hot water temperature"
+        }
       },
       {
         "name": "temp_4",
         "type": "D1C",
         "unit": "°C",
-        "comment": "storage temperature"
+        "comment": "storage temperature",
+        "tr": {
+          "en": "storage temperature",
+          "de": "storage temperature"
+        }
       },
       {
         "name": "pumpstate",
@@ -1575,7 +1863,11 @@
           "2": "overrun",
           "4": "hwc"
         },
-        "comment": "pump status"
+        "comment": "pump status",
+        "tr": {
+          "en": "pump status",
+          "de": "pump status"
+        }
       }
     ]
   },
@@ -1587,6 +1879,10 @@
     "id": "00",
     "zz": "08",
     "comment": "Status circulation pump",
+    "tr": {
+      "en": "Status circulation pump",
+      "de": "Status Zirkulationspumpe"
+    },
     "fields": [
       {
         "name": "value",
@@ -1617,12 +1913,20 @@
         "name": "runtime",
         "type": "ULG",
         "unit": "min",
-        "comment": "minutes"
+        "comment": "minutes",
+        "tr": {
+          "en": "minutes",
+          "de": "Minuten"
+        }
       },
       {
         "name": "cycles",
         "type": "ULG",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1645,12 +1949,20 @@
         "name": "runtime",
         "type": "ULG",
         "unit": "min",
-        "comment": "minutes"
+        "comment": "minutes",
+        "tr": {
+          "en": "minutes",
+          "de": "Minuten"
+        }
       },
       {
         "name": "cycles",
         "type": "ULG",
-        "comment": "start count"
+        "comment": "start count",
+        "tr": {
+          "en": "start count",
+          "de": "Anzahl Starts"
+        }
       }
     ]
   },
@@ -1689,7 +2001,11 @@
         "name": "value",
         "type": "D2C",
         "unit": "°C",
-        "comment": "temperature"
+        "comment": "temperature",
+        "tr": {
+          "en": "temperature",
+          "de": "Temperatur"
+        }
       }
     ]
   },

@@ -93,22 +93,28 @@ def _cap(text: str) -> str:
     return text[:1].upper() + text[1:] if text else text
 
 
+def _good(text) -> str | None:
+    """Keep an upstream comment only if it reads as a short display label, not a
+    sentence or a 'Name: description' / value-list blob (which make poor entity
+    names). Those are rejected so the caller falls back to the technical name."""
+    t = (text or "").strip()
+    return t if t and len(t) <= 40 and ": " not in t else None
+
+
 def _en_name(m, f) -> str:
-    """English display name: the message's own English text from `tr`, else its
-    technical name; a multi-field entity keeps the field suffix."""
-    base = (m.tr or {}).get("en") or m.name
+    """English display name: the message's English text from `tr` when it reads as
+    a label, else the technical name; a multi-field entity keeps the field suffix."""
+    base = _good((m.tr or {}).get("en")) or m.name
     return _cap(base if f.name == "value" else f"{base} {f.name}")
 
 
 def _de_name(m, f, key) -> str | None:
-    """German display name from `tr`, else the curated NAME_DE override, else None
-    (so de.json omits it and HA falls back to the English name)."""
-    de = (m.tr or {}).get("de")
-    if de:
-        return _cap(de if f.name == "value" else f"{de} {f.name}")
-    if key in NAME_DE:
-        return _cap(NAME_DE[key])
-    return None
+    """German display name from `tr` (when it reads as a label), else the curated
+    NAME_DE override, else None (so de.json omits it and HA falls back to English)."""
+    base = _good((m.tr or {}).get("de")) or NAME_DE.get(key)
+    if not base:
+        return None
+    return _cap(base if f.name == "value" else f"{base} {f.name}")
 
 
 def build_entities(msgs) -> tuple[dict, dict]:
