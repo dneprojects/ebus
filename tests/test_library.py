@@ -120,6 +120,29 @@ def test_per_device_condition_resolution():
     assert lo["Foo"].fields[0].type == "D2C"   # falls back to unconditional base
 
 
+def test_label_for_localizes_from_tr_with_fallback():
+    # a message whose lone 'value' field carries German/English display text
+    defs = [
+        {"direction": "r", "name": "ContinuousHeating", "pbsb": "b524", "id": "020000000200",
+         "tr": {"en": "continuous heating", "de": "Durchgehendes Heizen"},
+         "fields": [{"name": "value", "type": "EXP", "unit": "°C",
+                     "tr": {"en": "continuous heating", "de": "Durchgehendes Heizen"}}]},
+        {"direction": "r", "name": "Plain", "pbsb": "b524", "id": "020000000300",
+         "fields": [{"name": "value", "type": "UIN"}]},  # no tr -> technical fallback
+    ]
+    d = Path(tempfile.mkdtemp())
+    (d / "15.test.json").write_text(json.dumps(defs), encoding="utf-8")
+    msgs = {m.name: m for m in library.addressed_messages(0x15, _scan("TEST"), d)}
+
+    f = library.fields_of(msgs["ContinuousHeating"])[0]
+    assert library.label_for(f, "de") == "Durchgehendes Heizen"
+    assert library.label_for(f, "en") == "continuous heating"
+    assert library.label_for(f, "fr") == "continuous heating"  # -> en fallback
+
+    plain = library.fields_of(msgs["Plain"])[0]
+    assert library.label_for(plain, "de") == "Plain"  # no tr -> technical label
+
+
 def test_device_messages_direction_and_dedup():
     devices = {0x38: _scan("V32", "9802")}   # resolves to our bundled eloblock
     reads = library.device_messages(devices, "r")

@@ -18,6 +18,7 @@ from aioebus.convert import from_dicts
 from aioebus.engine import value_key
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
+from aioebus.translations import localized
 
 _CONFIG_DIR: Final = Path(__file__).parent / "configs" / "vaillant"
 
@@ -176,6 +177,17 @@ def _label(msg: MessageDef, field: FieldDef, fields: list[FieldDef]) -> str:
 def fields_of(msg: MessageDef) -> list[Field]:
     fields = _decodable_fields(msg)
     return [Field(msg, f, _label(msg, f, fields)) for f in fields]
+
+
+def label_for(field: Field, lang: str) -> str:
+    """Localized display name for a field's entity, from the definition's own
+    ``tr`` translations with fallback to the technical label. An entity named
+    after the whole message (a lone 'value' field) takes the message translation;
+    a multi-field entity takes the field translation. Until a definition carries
+    ``tr`` (populated at import), this returns the technical label unchanged."""
+    if field.label == field.msg.name:  # named after the message (lone value)
+        return localized(field.msg.tr, lang, field.label)
+    return localized(field.field.tr, lang, field.label)
 
 
 def device_messages(devices: dict[int, ScanResult], direction: str,
