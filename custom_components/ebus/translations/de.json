@@ -7,12 +7,16 @@
         "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port).",
         "data": {
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "allow_write": "Schreiben von Einstellungen auf den Bus erlauben"
         }
       },
       "zeroconf_confirm": {
         "title": "eBUS-Adapter gefunden",
-        "description": "Den unter {host} gefundenen eBUS-Adapter einrichten?"
+        "description": "Ein eBUS-Adapter wurde unter {host} erkannt. Einrichten?",
+        "data": {
+          "allow_write": "Schreiben von Einstellungen auf den Bus erlauben"
+        }
       }
     },
     "error": {

@@ -7,12 +7,16 @@
         "description": "Connect to an enhanced eBUS adapter (enh:host:port).",
         "data": {
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "allow_write": "Allow writing settings to the bus"
         }
       },
       "zeroconf_confirm": {
         "title": "eBUS adapter discovered",
-        "description": "Set up the eBUS adapter found at {host}?"
+        "description": "An eBUS adapter was detected at {host}. Set it up?",
+        "data": {
+          "allow_write": "Allow writing settings to the bus"
+        }
       }
     },
     "error": {

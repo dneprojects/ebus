@@ -28,9 +28,10 @@ async def test_user_flow_creates_entry(hass: HomeAssistant):
         init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER})
         result = await hass.config_entries.flow.async_configure(
-            init["flow_id"], {"host": "1.2.3.4", "port": 9999})
+            init["flow_id"], {"host": "1.2.3.4", "port": 9999, "allow_write": True})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "1.2.3.4", "port": 9999}
+    assert result["options"] == {"allow_write": True}
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant):
@@ -63,9 +64,11 @@ async def test_zeroconf_discovery_confirm_creates_entry(hass: HomeAssistant):
             DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=_discovery())
         assert init["type"] is FlowResultType.FORM
         assert init["step_id"] == "zeroconf_confirm"
-        result = await hass.config_entries.flow.async_configure(init["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"], {"allow_write": False})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "192.168.178.179", "port": 9999}
+    assert result["options"] == {"allow_write": False}
 
 
 async def test_zeroconf_aborts_when_not_an_adapter(hass: HomeAssistant):

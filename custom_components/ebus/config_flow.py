@@ -80,12 +80,14 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
             probe = await _probe_adapter(host, port)
             if probe is None:
                 return self.async_create_entry(
-                    title=f"eBUS ({host})", data={CONF_HOST: host, CONF_PORT: port})
+                    title=f"eBUS ({host})", data={CONF_HOST: host, CONF_PORT: port},
+                    options={CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE]})
             errors["base"] = probe
 
         schema = vol.Schema({
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            vol.Required(CONF_ALLOW_WRITE, default=DEFAULT_ALLOW_WRITE): bool,
         })
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -108,12 +110,18 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm adding the discovered adapter."""
+        """Confirm adding the discovered adapter (and set the write opt-in)."""
         host = self._discovered[CONF_HOST]
         if user_input is not None:
-            return self.async_create_entry(title=f"eBUS ({host})", data=self._discovered)
+            return self.async_create_entry(
+                title=f"eBUS ({host})", data=self._discovered,
+                options={CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE]})
+        schema = vol.Schema({
+            vol.Required(CONF_ALLOW_WRITE, default=DEFAULT_ALLOW_WRITE): bool,
+        })
         return self.async_show_form(
-            step_id="zeroconf_confirm", description_placeholders={"host": host})
+            step_id="zeroconf_confirm", data_schema=schema,
+            description_placeholders={"host": host})
 
     @staticmethod
     @callback

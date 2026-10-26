@@ -25,10 +25,12 @@ CONFIG_EN = {
             "user": {
                 "title": "eBUS adapter",
                 "description": "Connect to an enhanced eBUS adapter (enh:host:port).",
-                "data": {"host": "Host", "port": "Port"}},
+                "data": {"host": "Host", "port": "Port",
+                         "allow_write": "Allow writing settings to the bus"}},
             "zeroconf_confirm": {
                 "title": "eBUS adapter discovered",
-                "description": "Set up the eBUS adapter found at {host}?"}},
+                "description": "An eBUS adapter was detected at {host}. Set it up?",
+                "data": {"allow_write": "Allow writing settings to the bus"}}},
         "error": {
             "cannot_connect": "Could not reach the adapter at this host and port.",
             "no_ebus_data": "Reached the adapter, but no eBUS data is coming through. "
@@ -53,10 +55,12 @@ CONFIG_DE = {
             "user": {
                 "title": "eBUS-Adapter",
                 "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port).",
-                "data": {"host": "Host", "port": "Port"}},
+                "data": {"host": "Host", "port": "Port",
+                         "allow_write": "Schreiben von Einstellungen auf den Bus erlauben"}},
             "zeroconf_confirm": {
                 "title": "eBUS-Adapter gefunden",
-                "description": "Den unter {host} gefundenen eBUS-Adapter einrichten?"}},
+                "description": "Ein eBUS-Adapter wurde unter {host} erkannt. Einrichten?",
+                "data": {"allow_write": "Schreiben von Einstellungen auf den Bus erlauben"}}},
         "error": {
             "cannot_connect": "Adapter unter diesem Host/Port nicht erreichbar.",
             "no_ebus_data": "Adapter erreichbar, aber es kommen keine eBUS-Daten an. "

@@ -29,7 +29,7 @@ from .library import _index, all_messages, resolve_file
 
 _LOGGER = logging.getLogger(__name__)
 _CDN = "https://ebus.github.io"
-_SCHEMA = 2  # bump to force regeneration when the generated structure changes
+_SCHEMA = 3  # bump to force regeneration when the generated structure changes
 _PKG = Path(__file__).parent
 _TDIR = _PKG / "translations"
 _MARKER = _TDIR / ".ebus_gen"
