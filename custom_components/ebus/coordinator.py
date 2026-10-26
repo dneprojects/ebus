@@ -140,10 +140,6 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 self.devices[zz] = await scanner.scan(zz, timeout=timeout)
             except Exception as err:  # noqa: BLE001 - a missing device is normal
                 _LOGGER.debug("scan %#04x failed: %s", zz, err)
-        # remember devices found beyond the base, so they survive turning deep scan off
-        found_extras = sorted(set(self.devices) - set(SCAN_ADDRESSES))
-        if found_extras != sorted(extras):
-            await self._addr_store.async_save(found_extras)
         # the extended Vaillant identification (article/serial) -- the model the
         # shared control-board id hides. Best-effort, Vaillant devices only.
         for zz, scan in list(self.devices.items()):
@@ -156,6 +152,33 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 continue
             if ident is not None:
                 self.idents[zz] = ident
+        # drop phantom addresses: a device answering on several addresses with the
+        # same serial is one physical device. Keep a known base address (else the
+        # lowest) and discard the duplicates, also from the device registry.
+        registry = dr.async_get(self.hass)
+        primary: dict[str, int] = {}
+        for zz in sorted(self.devices):
+            ident = self.idents.get(zz)
+            if ident is None or not ident.serial:
+                continue
+            prev = primary.get(ident.serial)
+            if prev is None:
+                primary[ident.serial] = zz
+                continue
+            drop = zz if (prev in SCAN_ADDRESSES or zz not in SCAN_ADDRESSES) else prev
+            if drop == prev:
+                primary[ident.serial] = zz
+            self.devices.pop(drop, None)
+            self.idents.pop(drop, None)
+            dev = registry.async_get_device(identifiers={(DOMAIN, f"{drop:02x}")})
+            if dev is not None:
+                registry.async_remove_device(dev.id)
+            _LOGGER.debug("eBUS: dropped duplicate %#04x (serial %s)", drop, ident.serial)
+        # remember devices found beyond the base (after dedup), so they survive
+        # turning the deep scan off without re-adding the phantoms
+        found_extras = sorted(set(self.devices) - set(SCAN_ADDRESSES))
+        if found_extras != sorted(extras):
+            await self._addr_store.async_save(found_extras)
         # the broadcast circuit is not a scanned device: inject it so bus
         # broadcasts (outside temperature, date/time) become entities too
         self.devices[BROADCAST_ADDRESS] = ScanResult(
