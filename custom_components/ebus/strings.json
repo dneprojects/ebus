@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "eBUS adapter ({host})",
     "step": {
       "user": {
         "title": "eBUS adapter",
@@ -8,6 +9,10 @@
           "host": "Host",
           "port": "Port"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "eBUS adapter discovered",
+        "description": "Set up the eBUS adapter found at {host}?"
       }
     },
     "error": {
@@ -15,7 +20,8 @@
       "no_ebus_data": "Reached the adapter, but no eBUS data is coming through. Another client (e.g. ebusd) may be using the adapter — stop it first, then retry."
     },
     "abort": {
-      "already_configured": "This adapter is already configured."
+      "already_configured": "This adapter is already configured.",
+      "no_ebus_data": "The discovered device is not a usable eBUS adapter (no eBUS data), or it is in use by another client."
     }
   },
   "options": {

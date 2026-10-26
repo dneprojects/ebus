@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "eBUS-Adapter ({host})",
     "step": {
       "user": {
         "title": "eBUS-Adapter",
@@ -8,6 +9,10 @@
           "host": "Host",
           "port": "Port"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "eBUS-Adapter gefunden",
+        "description": "Den unter {host} gefundenen eBUS-Adapter einrichten?"
       }
     },
     "error": {
@@ -15,7 +20,8 @@
       "no_ebus_data": "Adapter erreichbar, aber es kommen keine eBUS-Daten an. Vermutlich nutzt ein anderer Dienst (z. B. ebusd) den Adapter — diesen zuerst stoppen und erneut versuchen."
     },
     "abort": {
-      "already_configured": "Dieser Adapter ist bereits eingerichtet."
+      "already_configured": "Dieser Adapter ist bereits eingerichtet.",
+      "no_ebus_data": "Das gefundene Gerät ist kein nutzbarer eBUS-Adapter (keine eBUS-Daten) oder wird von einem anderen Client belegt."
     }
   },
   "options": {

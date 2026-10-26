@@ -20,17 +20,25 @@ from aioebus.translations import _slug, translation_key
 # language not listed here)
 CONFIG_EN = {
     "config": {
-        "step": {"user": {
-            "title": "eBUS adapter",
-            "description": "Connect to an enhanced eBUS adapter (enh:host:port).",
-            "data": {"host": "Host", "port": "Port"}}},
+        "flow_title": "eBUS adapter ({host})",
+        "step": {
+            "user": {
+                "title": "eBUS adapter",
+                "description": "Connect to an enhanced eBUS adapter (enh:host:port).",
+                "data": {"host": "Host", "port": "Port"}},
+            "zeroconf_confirm": {
+                "title": "eBUS adapter discovered",
+                "description": "Set up the eBUS adapter found at {host}?"}},
         "error": {
             "cannot_connect": "Could not reach the adapter at this host and port.",
             "no_ebus_data": "Reached the adapter, but no eBUS data is coming through. "
                             "Another client (e.g. ebusd) may be using the adapter — "
                             "stop it first, then retry.",
         },
-        "abort": {"already_configured": "This adapter is already configured."},
+        "abort": {
+            "already_configured": "This adapter is already configured.",
+            "no_ebus_data": "The discovered device is not a usable eBUS adapter "
+                            "(no eBUS data), or it is in use by another client."},
     },
     "options": {"step": {"init": {
         "title": "eBUS options",
@@ -40,17 +48,25 @@ CONFIG_EN = {
 }
 CONFIG_DE = {
     "config": {
-        "step": {"user": {
-            "title": "eBUS-Adapter",
-            "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port).",
-            "data": {"host": "Host", "port": "Port"}}},
+        "flow_title": "eBUS-Adapter ({host})",
+        "step": {
+            "user": {
+                "title": "eBUS-Adapter",
+                "description": "Mit einem Enhanced-eBUS-Adapter verbinden (enh:host:port).",
+                "data": {"host": "Host", "port": "Port"}},
+            "zeroconf_confirm": {
+                "title": "eBUS-Adapter gefunden",
+                "description": "Den unter {host} gefundenen eBUS-Adapter einrichten?"}},
         "error": {
             "cannot_connect": "Adapter unter diesem Host/Port nicht erreichbar.",
             "no_ebus_data": "Adapter erreichbar, aber es kommen keine eBUS-Daten an. "
                             "Vermutlich nutzt ein anderer Dienst (z. B. ebusd) den "
                             "Adapter — diesen zuerst stoppen und erneut versuchen.",
         },
-        "abort": {"already_configured": "Dieser Adapter ist bereits eingerichtet."},
+        "abort": {
+            "already_configured": "Dieser Adapter ist bereits eingerichtet.",
+            "no_ebus_data": "Das gefundene Gerät ist kein nutzbarer eBUS-Adapter "
+                            "(keine eBUS-Daten) oder wird von einem anderen Client belegt."},
     },
     "options": {"step": {"init": {
         "title": "eBUS-Optionen",

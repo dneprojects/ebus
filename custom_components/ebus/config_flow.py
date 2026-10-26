@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
 from typing import Any
 
 import voluptuous as vol
@@ -16,6 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_ALLOW_WRITE,
@@ -26,10 +26,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from .provision import DEFS_DIRNAME, download_and_convert
 
 _LOGGER = logging.getLogger(__name__)
-CONF_DOWNLOAD_DEFS = "download_defs"  # flow-only; triggers a one-off local download
 
 
 async def _probe_adapter(host: str, port: int) -> str | None:
@@ -63,9 +61,12 @@ async def _probe_adapter(host: str, port: int) -> str | None:
 
 
 class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Ask for the enhanced adapter's host and port."""
+    """Ask for the enhanced adapter's host and port, or confirm a discovered one."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        self._discovered: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,26 +79,41 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             probe = await _probe_adapter(host, port)
             if probe is None:
-                options: dict[str, Any] = {}
-                if user_input.get(CONF_DOWNLOAD_DEFS):
-                    dest = Path(self.hass.config.path(DEFS_DIRNAME))
-                    try:
-                        count = await download_and_convert(self.hass, dest)
-                        options[CONF_CONFIG_DIR] = str(dest)
-                        _LOGGER.info("eBUS: downloaded %d device definitions to %s", count, dest)
-                    except Exception as err:  # noqa: BLE001 - never fail setup over this
-                        _LOGGER.warning("eBUS: definition download failed (%s); "
-                                        "you can retry later in the options", err)
-                data = {CONF_HOST: host, CONF_PORT: port}
-                return self.async_create_entry(title=f"eBUS ({host})", data=data, options=options)
+                return self.async_create_entry(
+                    title=f"eBUS ({host})", data={CONF_HOST: host, CONF_PORT: port})
             errors["base"] = probe
 
         schema = vol.Schema({
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            vol.Required(CONF_DOWNLOAD_DEFS, default=True): bool,
         })
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle an adapter found via mDNS (it advertises _ebusd._tcp)."""
+        host = discovery_info.host
+        port = discovery_info.port or DEFAULT_PORT
+        await self.async_set_unique_id(f"{host}:{port}")
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
+        # only offer it if it is really a usable enh adapter (filters out an ebusd
+        # daemon advertising the same service, and an adapter held by another client)
+        if await _probe_adapter(host, port) is not None:
+            return self.async_abort(reason="no_ebus_data")
+        self._discovered = {CONF_HOST: host, CONF_PORT: port}
+        self.context["title_placeholders"] = {"host": host}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm adding the discovered adapter."""
+        host = self._discovered[CONF_HOST]
+        if user_input is not None:
+            return self.async_create_entry(title=f"eBUS ({host})", data=self._discovered)
+        return self.async_show_form(
+            step_id="zeroconf_confirm", description_placeholders={"host": host})
 
     @staticmethod
     @callback
