@@ -1,17 +1,18 @@
-"""The strings generator takes entity names from each definition's `tr`, emits a
-German name only where one exists (so HA falls back to English otherwise), and
-keeps translated enum states. Loaded by path -- it is a tool, not a package."""
+"""strings_gen builds per-language entity names from each definition's `tr`:
+English always has a name (technical fallback), other languages only where a
+translation exists (so HA falls back to English per user), and enum states use
+the curated table. Loaded by path -- it imports only aioebus + stdlib."""
 import importlib.util
 import sys
 from pathlib import Path
 
 from aioebus.messages import FieldDef, MessageDef
 
-_TOOL = Path(__file__).resolve().parents[1] / "tools" / "gen_strings.py"
-_spec = importlib.util.spec_from_file_location("gen_strings", _TOOL)
-gen = importlib.util.module_from_spec(_spec)
-sys.modules["gen_strings"] = gen
-_spec.loader.exec_module(gen)
+_MOD = Path(__file__).resolve().parents[1] / "custom_components" / "ebus" / "strings_gen.py"
+_spec = importlib.util.spec_from_file_location("ebus_strings_gen", _MOD)
+sg = importlib.util.module_from_spec(_spec)
+sys.modules["ebus_strings_gen"] = sg
+_spec.loader.exec_module(sg)
 
 
 def _msg(name, direction="r", fields=None, tr=None):
@@ -23,22 +24,38 @@ def test_names_come_from_tr_capitalized():
     m = _msg("ContinuousHeating",
              tr={"en": "continuous heating", "de": "Durchgehendes Heizen"},
              fields=[FieldDef("value", "", "EXP", None, None, "°C", "")])
-    en, de = gen.build_entities([m])
-    assert en["entity"]["sensor"]["continuousheating"]["name"] == "Continuous heating"
-    assert de["entity"]["sensor"]["continuousheating"]["name"] == "Durchgehendes Heizen"
+    en = sg.build_entities([m], "en")
+    de = sg.build_entities([m], "de")
+    assert en["sensor"]["continuousheating"]["name"] == "Continuous heating"
+    assert de["sensor"]["continuousheating"]["name"] == "Durchgehendes Heizen"
 
 
-def test_de_omitted_without_translation_so_ha_falls_back_to_english():
+def test_de_omitted_without_translation_so_ha_falls_back():
     m = _msg("FooBar", fields=[FieldDef("value", "", "UIN", None, None, "", "")])
-    en, de = gen.build_entities([m])
-    assert en["entity"]["sensor"]["foobar"]["name"] == "FooBar"  # technical fallback
-    assert "foobar" not in de["entity"]["sensor"]  # no German -> HA uses English
+    en = sg.build_entities([m], "en")
+    de = sg.build_entities([m], "de")
+    assert en["sensor"]["foobar"]["name"] == "FooBar"  # technical fallback
+    assert "foobar" not in de["sensor"]  # no German -> HA uses English
+
+
+def test_long_or_blob_comments_are_rejected():
+    m = _msg("State", tr={"en": "State_X: Aktuelle Zustandsnummer der Steuerung X"},
+             fields=[FieldDef("value", "", "UCH", None, None, "", "")])
+    en = sg.build_entities([m], "en")
+    assert en["sensor"]["state"]["name"] == "State"  # blob rejected -> technical name
 
 
 def test_select_keeps_de_states_but_omits_english_name():
     m = _msg("HwcOpMode", direction="w",
              fields=[FieldDef("value", "", "UCH", None, {0: "off", 1: "auto"}, "", "")])
-    en, de = gen.build_entities([m])
-    assert en["entity"]["select"]["hwcopmode"]["name"] == "HwcOpMode"
-    assert "name" not in de["entity"]["select"]["hwcopmode"]  # no fake German name
-    assert de["entity"]["select"]["hwcopmode"]["state"] == {"off": "Aus", "auto": "Auto"}
+    en = sg.build_entities([m], "en")
+    de = sg.build_entities([m], "de")
+    assert en["select"]["hwcopmode"]["name"] == "HwcOpMode"
+    assert "name" not in de["select"]["hwcopmode"]
+    assert de["select"]["hwcopmode"]["state"] == {"off": "Aus", "auto": "Auto"}
+
+
+def test_build_strings_includes_ui_section():
+    data = sg.build_strings([], "de")
+    assert data["config"]["step"]["user"]["title"] == "eBUS-Adapter"
+    assert data["entity"] == {"sensor": {}, "number": {}, "select": {}}

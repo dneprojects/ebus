@@ -51,6 +51,7 @@ from .library import (
     select_polled,
     timer_schedules,
 )
+from .translate import async_update_translations
 
 _LOGGER = logging.getLogger(__name__)
 _RECONNECT_BACKOFF: Final = 10  # seconds between reconnect attempts
@@ -139,6 +140,12 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             identifiers={(DOMAIN, f"{BROADCAST_ADDRESS:02x}")})
         if stale is not None:
             registry.async_remove_device(stale.id)
+        # generate localized entity names on the user's machine from the upstream
+        # CDN (never bundled): best-effort, so a CDN hiccup just leaves names English
+        try:
+            await async_update_translations(self.hass, self.devices, self.user_dir)
+        except Exception as err:  # noqa: BLE001 - names are cosmetic, never block setup
+            _LOGGER.debug("eBUS: translation generation skipped: %s", err)
         self.read_messages = device_messages(self.devices, "r", self.user_dir)
         self.write_messages = (
             device_messages(self.devices, "w", self.user_dir) if self.allow_write else [])

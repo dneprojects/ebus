@@ -12,6 +12,15 @@
     "hmu.json": "Wärmepumpe",
     "v32.hp.json": "Wärmepumpe 2"
   },
+  "cdn": {
+    "_comment": "Definition file -> upstream ebus.github.io source path(s) (without the /<lang>/ prefix and .csv suffix). Used at runtime, on the user's own machine, to fetch the per-language display text and generate local translation files -- the GPL-3.0 upstream text is never stored in this repo. eloblock/netx3 are our own definitions with no upstream source.",
+    "ctlv3.json": ["vaillant/15.ctlv3"],
+    "hmu.json": ["vaillant/08.hmu", "vaillant/08.hmu.HW5103"],
+    "pmw.json": ["vaillant/0a.pmw.hwc"],
+    "vr_71.json": ["vaillant/26.vr_71"],
+    "v32.hp.json": ["vaillant/08.v3x"],
+    "broadcast.json": ["broadcast", "vaillant/broadcast"]
+  },
   "climate": {
     "_comment": "Bundle per-zone registers into a climate entity (one per heating zone). For each zone N, '<prefix>N<target>' is the writable comfort setpoint (target temperature), '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode (off/auto -> HVAC off/auto, others -> heat + preset). A zone is created only if it has data.",
     "ctlv3.json": {
