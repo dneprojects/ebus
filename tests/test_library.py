@@ -173,3 +173,12 @@ def test_broadcast_updates_surface_as_reads():
     assert "Outsidetemp" in names
     assert all(m.zz == "fe" for m in reads)
     assert not writes
+
+
+def test_scan_all_covers_known_addresses():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ebus_const", _PKG / "const.py")
+    const = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(const)
+    assert set(const.SCAN_ADDRESSES) <= set(const.SCAN_ALL_ADDRESSES)
+    assert len(const.SCAN_ALL_ADDRESSES) == 49  # 7 high x 7 low nibble families

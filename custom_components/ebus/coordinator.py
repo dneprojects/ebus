@@ -35,12 +35,15 @@ from .const import (
     BROADCAST_IDENT,
     CONF_ALLOW_WRITE,
     CONF_CONFIG_DIR,
+    CONF_DEEP_SCAN,
     CONF_SCAN_INTERVAL,
     DEFAULT_ALLOW_WRITE,
+    DEFAULT_DEEP_SCAN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLAIN_READ_PRIORITY,
     SCAN_ADDRESSES,
+    SCAN_ALL_ADDRESSES,
     SOURCE_ADDRESS,
 )
 from .device import adapter_identifier
@@ -81,6 +84,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self.host = host
         self.port = port
         self.allow_write = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
+        self.deep_scan = entry.options.get(CONF_DEEP_SCAN, DEFAULT_DEEP_SCAN)
         cfg_dir = entry.options.get(CONF_CONFIG_DIR) or ""
         self.user_dir: Path | None = Path(cfg_dir) if cfg_dir.strip() else None
         self.devices: dict[int, ScanResult] = {}
@@ -99,6 +103,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # restart instead of being unavailable until the bus is read again
         self._store: Store[dict[str, object]] = Store(
             hass, _CACHE_STORAGE_VERSION, f"ebus_cache_{entry.entry_id}")
+        # addresses found beyond the known base (from a deep scan), so later setups
+        # keep scanning them without repeating the full-space probe
+        self._addr_store: Store[list[int]] = Store(
+            hass, _CACHE_STORAGE_VERSION, f"ebus_addrs_{entry.entry_id}")
 
     async def _connect(self) -> tuple[SendFn, RecvFn]:
         reader, writer = await asyncio.open_connection(self.host, self.port)
@@ -117,11 +125,25 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         """Connect, scan the bus, choose entities to expose and start the engine."""
         send, recv = await self._connect()
         scanner = ActiveReader(send, recv, qq=SOURCE_ADDRESS)
-        for zz in SCAN_ADDRESSES:
+        # probe the base addresses (plus any previously discovered) quickly; a deep
+        # scan instead sweeps the whole address space once, with a short per-probe
+        # timeout so absent addresses fail fast
+        cached = await self._addr_store.async_load() or []
+        extras = {a for a in cached if isinstance(a, int)}
+        if self.deep_scan:
+            targets, timeout = sorted(set(SCAN_ALL_ADDRESSES) | extras), 1.5
+            _LOGGER.info("eBUS: deep scan of %d addresses", len(targets))
+        else:
+            targets, timeout = sorted(set(SCAN_ADDRESSES) | extras), 4.0
+        for zz in targets:
             try:
-                self.devices[zz] = await scanner.scan(zz, timeout=4.0)
+                self.devices[zz] = await scanner.scan(zz, timeout=timeout)
             except Exception as err:  # noqa: BLE001 - a missing device is normal
                 _LOGGER.debug("scan %#04x failed: %s", zz, err)
+        # remember devices found beyond the base, so they survive turning deep scan off
+        found_extras = sorted(set(self.devices) - set(SCAN_ADDRESSES))
+        if found_extras != sorted(extras):
+            await self._addr_store.async_save(found_extras)
         # the extended Vaillant identification (article/serial) -- the model the
         # shared control-board id hides. Best-effort, Vaillant devices only.
         for zz, scan in list(self.devices.items()):

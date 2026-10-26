@@ -46,7 +46,8 @@ CONFIG_EN = {
         "title": "eBUS options",
         "data": {"scan_interval": "Base poll interval (s)",
                  "allow_write": "Allow writing settings to the bus",
-                 "config_dir": "Extra device-definition directory (optional)"}}}},
+                 "config_dir": "Extra device-definition directory (optional)",
+                 "deep_scan": "Deep scan (probe all bus addresses once)"}}}},
 }
 CONFIG_DE = {
     "config": {
@@ -76,7 +77,8 @@ CONFIG_DE = {
         "title": "eBUS-Optionen",
         "data": {"scan_interval": "Basis-Abfrageintervall (s)",
                  "allow_write": "Schreiben von Einstellungen auf den Bus erlauben",
-                 "config_dir": "Zusätzliches Definitionsverzeichnis (optional)"}}}},
+                 "config_dir": "Zusätzliches Definitionsverzeichnis (optional)",
+                 "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)"}}}},
 }
 CONFIG = {"en": CONFIG_EN, "de": CONFIG_DE}
 

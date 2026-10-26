@@ -20,8 +20,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     CONF_ALLOW_WRITE,
     CONF_CONFIG_DIR,
+    CONF_DEEP_SCAN,
     CONF_SCAN_INTERVAL,
     DEFAULT_ALLOW_WRITE,
+    DEFAULT_DEEP_SCAN,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -151,5 +153,9 @@ class EbusOptionsFlow(OptionsFlow):
                 CONF_CONFIG_DIR,
                 default=opts.get(CONF_CONFIG_DIR, ""),
             ): str,
+            vol.Required(
+                CONF_DEEP_SCAN,
+                default=opts.get(CONF_DEEP_SCAN, DEFAULT_DEEP_SCAN),
+            ): bool,
         })
         return self.async_show_form(step_id="init", data_schema=schema)

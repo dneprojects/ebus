@@ -21,6 +21,17 @@ DEFAULT_ALLOW_WRITE: Final = False  # writing settings is opt-in
 # device addresses to scan at setup (eBUS slave addresses seen on a Vaillant bus)
 SCAN_ADDRESSES: Final[tuple[int, ...]] = (0x08, 0x0A, 0x15, 0x18, 0x26, 0x38, 0x76, 0xF6)
 
+# a full ("deep") scan probes the whole eBUS device-address space: the high/low
+# nibble families where eBUS slaves live (covers all of SCAN_ADDRESSES and the
+# usual Vaillant addresses). Found devices are cached so later setups stay fast.
+SCAN_ALL_ADDRESSES: Final[tuple[int, ...]] = tuple(
+    (hi << 4) | lo
+    for hi in (0x0, 0x1, 0x2, 0x3, 0x5, 0x7, 0xF)
+    for lo in (0x3, 0x4, 0x5, 0x6, 0x8, 0xA, 0xC)
+)
+CONF_DEEP_SCAN: Final = "deep_scan"  # options: probe the full address space once
+DEFAULT_DEEP_SCAN: Final = False
+
 # master address aioebus uses on the bus; must be free (ebusd's own address, so
 # this integration replaces ebusd rather than running alongside it)
 SOURCE_ADDRESS: Final = 0x31

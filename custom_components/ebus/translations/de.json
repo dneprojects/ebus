@@ -35,7 +35,8 @@
         "data": {
           "scan_interval": "Basis-Abfrageintervall (s)",
           "allow_write": "Schreiben von Einstellungen auf den Bus erlauben",
-          "config_dir": "Zusätzliches Definitionsverzeichnis (optional)"
+          "config_dir": "Zusätzliches Definitionsverzeichnis (optional)",
+          "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)"
         }
       }
     }

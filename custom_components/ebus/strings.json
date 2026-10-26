@@ -35,7 +35,8 @@
         "data": {
           "scan_interval": "Base poll interval (s)",
           "allow_write": "Allow writing settings to the bus",
-          "config_dir": "Extra device-definition directory (optional)"
+          "config_dir": "Extra device-definition directory (optional)",
+          "deep_scan": "Deep scan (probe all bus addresses once)"
         }
       }
     }
