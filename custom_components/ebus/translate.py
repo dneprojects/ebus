@@ -29,7 +29,7 @@ from .library import _index, all_messages, resolve_file
 
 _LOGGER = logging.getLogger(__name__)
 _CDN = "https://ebus.github.io"
-_SCHEMA = 1  # bump to force regeneration when the generated structure changes
+_SCHEMA = 2  # bump to force regeneration when the generated structure changes
 _PKG = Path(__file__).parent
 _TDIR = _PKG / "translations"
 _MARKER = _TDIR / ".ebus_gen"
@@ -74,9 +74,13 @@ def _write_files(files: dict[str, dict], sig: str) -> None:
 
 
 def _clear_cache(hass: HomeAssistant) -> None:
+    """Drop HA's flattened-translation cache so the freshly written files are
+    re-read. The frontend still serves its own cached copy until the page is
+    reloaded, so a restart (or browser refresh) is what actually shows the new
+    names -- this just makes that refresh pick them up instead of the old cache."""
     try:
-        from homeassistant.helpers import translation
-        translation.async_clear_cache(hass)
+        from homeassistant.helpers.translation import TRANSLATION_FLATTEN_CACHE
+        hass.data.pop(TRANSLATION_FLATTEN_CACHE, None)
     except Exception as err:  # noqa: BLE001 - best effort; a restart applies it anyway
         _LOGGER.debug("eBUS: could not clear translation cache: %s", err)
 
