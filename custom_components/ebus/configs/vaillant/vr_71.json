@@ -128,12 +128,7 @@
       {
         "name": "flowtempdesired",
         "type": "D1C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "pump",
@@ -171,12 +166,7 @@
       {
         "name": "flowtempdesired",
         "type": "D1C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "pump",
@@ -206,72 +196,37 @@
       {
         "name": "s1",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s2",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s3",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s4",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s5",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s6",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s7",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "ignore",
@@ -290,62 +245,32 @@
       {
         "name": "s8",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s9",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s10",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s11",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "s12",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "sx",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "ignore",

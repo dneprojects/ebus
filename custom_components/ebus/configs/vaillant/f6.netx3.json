@@ -6,32 +6,26 @@
     "pbsb": "b503",
     "id": "0001",
     "zz": "f6",
-    "comment": "current errors",
     "fields": [
       {
         "name": "error",
-        "type": "UIN",
-        "comment": "error number"
+        "type": "UIN"
       },
       {
         "name": "error_1",
-        "type": "UIN",
-        "comment": "error number"
+        "type": "UIN"
       },
       {
         "name": "error_2",
-        "type": "UIN",
-        "comment": "error number"
+        "type": "UIN"
       },
       {
         "name": "error_3",
-        "type": "UIN",
-        "comment": "error number"
+        "type": "UIN"
       },
       {
         "name": "error_4",
-        "type": "UIN",
-        "comment": "error number"
+        "type": "UIN"
       }
     ]
   }

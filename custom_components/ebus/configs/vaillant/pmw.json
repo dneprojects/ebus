@@ -6,14 +6,9 @@
     "pbsb": "b509",
     "id": "0d4400",
     "zz": "0a",
-    "comment": "Enable SingleTankCharge",
     "conditions": [
       "id_sw>=38"
     ],
-    "tr": {
-      "en": "Enable SingleTankCharge",
-      "de": "1x Speicherladung: Enable SingleTankCharge"
-    },
     "fields": [
       {
         "name": "value",
@@ -32,24 +27,14 @@
     "pbsb": "b509",
     "id": "0d4500",
     "zz": "0a",
-    "comment": "ZaehlerBetriebsStunden: Working Hours",
     "conditions": [
       "id_sw>=38"
     ],
-    "tr": {
-      "en": "ZaehlerBetriebsStunden: Working Hours",
-      "de": "ZaehlerBetriebsStunden: Working Hours"
-    },
     "fields": [
       {
         "name": "value",
         "type": "UIN",
-        "unit": "h",
-        "comment": "hours",
-        "tr": {
-          "en": "hours",
-          "de": "Stunden"
-        }
+        "unit": "h"
       }
     ]
   },
@@ -60,24 +45,14 @@
     "pbsb": "b509",
     "id": "0d4600",
     "zz": "0a",
-    "comment": "TDurchfluss: flow in l/min",
     "conditions": [
       "id_sw>=39"
     ],
-    "tr": {
-      "en": "TDurchfluss: flow in l/min",
-      "de": "Volumenstrom in Liter / Minute"
-    },
     "fields": [
       {
         "name": "value",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -88,14 +63,9 @@
     "pbsb": "b509",
     "id": "0d4b00",
     "zz": "0a",
-    "comment": "VPMW_Mode: 1=VPM 20/25W, 2=VPM 30/35W",
     "conditions": [
       "id_sw>=112"
     ],
-    "tr": {
-      "en": "VPMW_Mode: 1=VPM 20/25W, 2=VPM 30/35W",
-      "de": "VPMW Typ: 1=VPM 20/25W, 2=VPM 30/35W"
-    },
     "fields": [
       {
         "name": "value",
@@ -110,14 +80,9 @@
     "pbsb": "b509",
     "id": "0d4700",
     "zz": "0a",
-    "comment": "HexMonitoringCounter: RO",
     "conditions": [
       "id_sw>=40"
     ],
-    "tr": {
-      "en": "HexMonitoringCounter: RO",
-      "de": "HexMonitoringCounter: RO"
-    },
     "fields": [
       {
         "name": "value",
@@ -132,24 +97,14 @@
     "pbsb": "b509",
     "id": "0d4800",
     "zz": "0a",
-    "comment": "HExThreshold",
     "conditions": [
       "id_sw>=40"
     ],
-    "tr": {
-      "en": "HExThreshold",
-      "de": "HExThreshold"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 100,
-        "comment": "RO",
-        "tr": {
-          "en": "RO",
-          "de": "RO"
-        }
+        "divisor": 100
       }
     ]
   },
@@ -160,24 +115,14 @@
     "pbsb": "b509",
     "id": "0d4a00",
     "zz": "0a",
-    "comment": "HExIndex",
     "conditions": [
       "id_sw>=40"
     ],
-    "tr": {
-      "en": "HExIndex",
-      "de": "HExIndex"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 100,
-        "comment": "RO",
-        "tr": {
-          "en": "RO",
-          "de": "RO"
-        }
+        "divisor": 100
       }
     ]
   },
@@ -188,24 +133,14 @@
     "pbsb": "b509",
     "id": "0d4e00",
     "zz": "0a",
-    "comment": "Krm_Faktor_Small",
     "conditions": [
       "id_sw>=114"
     ],
-    "tr": {
-      "en": "Krm_Faktor_Small",
-      "de": "Krm_Faktor_Small"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "Krm Verstärkungsfaktor Small (1/1000)",
-        "tr": {
-          "en": "Krm Verstärkungsfaktor Small (1/1000)",
-          "de": "Krm Verstärkungsfaktor Small (1/1000)"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -216,24 +151,14 @@
     "pbsb": "b509",
     "id": "0d4f00",
     "zz": "0a",
-    "comment": "Krm_Faktor_Middl",
     "conditions": [
       "id_sw>=114"
     ],
-    "tr": {
-      "en": "Krm_Faktor_Middl",
-      "de": "Krm_Faktor_Middl"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "Krm Verstärkungsfaktor Middl (1/1000)",
-        "tr": {
-          "en": "Krm Verstärkungsfaktor Middl (1/1000)",
-          "de": "Krm Verstärkungsfaktor Middl (1/1000)"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -244,24 +169,14 @@
     "pbsb": "b509",
     "id": "0d5000",
     "zz": "0a",
-    "comment": "Tnm_Faktor_Small",
     "conditions": [
       "id_sw>=114"
     ],
-    "tr": {
-      "en": "Tnm_Faktor_Small",
-      "de": "Tnm_Faktor_Small"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "Tnm Verstärkungsfaktor Small (1/1000)",
-        "tr": {
-          "en": "Tnm Verstärkungsfaktor Small (1/1000)",
-          "de": "Tnm Verstärkungsfaktor Small (1/1000)"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -272,24 +187,14 @@
     "pbsb": "b509",
     "id": "0d5100",
     "zz": "0a",
-    "comment": "Tnm_Faktor_Middl",
     "conditions": [
       "id_sw>=114"
     ],
-    "tr": {
-      "en": "Tnm_Faktor_Middl",
-      "de": "Tnm_Faktor_Middl"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "Tnm Verstärkungsfaktor Middl (1/1000)",
-        "tr": {
-          "en": "Tnm Verstärkungsfaktor Middl (1/1000)",
-          "de": "Tnm Verstärkungsfaktor Middl (1/1000)"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -300,21 +205,11 @@
     "pbsb": "b509",
     "id": "0d0000",
     "zz": "0a",
-    "comment": "Ntc1Sensor: T1 Temperature",
-    "tr": {
-      "en": "Ntc1Sensor: T1 Temperature",
-      "de": "NTC 1 Sensor: T1 Temperature"
-    },
     "fields": [
       {
         "name": "temp",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "sensor",
@@ -323,11 +218,6 @@
           "0": "ok",
           "85": "circuit",
           "170": "cutoff"
-        },
-        "comment": "sensor status",
-        "tr": {
-          "en": "sensor status",
-          "de": "Fühlerstatus"
         }
       }
     ]
@@ -339,21 +229,11 @@
     "pbsb": "b509",
     "id": "0d0100",
     "zz": "0a",
-    "comment": "Ntc2Sensor: T2 Temperature",
-    "tr": {
-      "en": "Ntc2Sensor: T2 Temperature",
-      "de": "NTC 2 Sensor: T2 Temperature"
-    },
     "fields": [
       {
         "name": "temp",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "sensor",
@@ -362,11 +242,6 @@
           "0": "ok",
           "85": "circuit",
           "170": "cutoff"
-        },
-        "comment": "sensor status",
-        "tr": {
-          "en": "sensor status",
-          "de": "Fühlerstatus"
         }
       }
     ]
@@ -378,21 +253,11 @@
     "pbsb": "b509",
     "id": "0d0200",
     "zz": "0a",
-    "comment": "Ntc3Sensor: T3 Temperature",
-    "tr": {
-      "en": "Ntc3Sensor: T3 Temperature",
-      "de": "NTC 3 Sensor: T3 Temperature"
-    },
     "fields": [
       {
         "name": "temp",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "sensor",
@@ -401,11 +266,6 @@
           "0": "ok",
           "85": "circuit",
           "170": "cutoff"
-        },
-        "comment": "sensor status",
-        "tr": {
-          "en": "sensor status",
-          "de": "Fühlerstatus"
         }
       }
     ]
@@ -417,11 +277,6 @@
     "pbsb": "b509",
     "id": "0d0400",
     "zz": "0a",
-    "comment": "CircoPump: Power in %",
-    "tr": {
-      "en": "CircoPump: Power in %",
-      "de": "Zirkulationspumpe: Leistung in %"
-    },
     "fields": [
       {
         "name": "value",
@@ -437,11 +292,6 @@
     "pbsb": "b509",
     "id": "0d0500",
     "zz": "0a",
-    "comment": "Pump_ED: Power in %",
-    "tr": {
-      "en": "Pump_ED: Power in %",
-      "de": "Einschaltdauer Pumpe: Leistung in %"
-    },
     "fields": [
       {
         "name": "value",
@@ -457,11 +307,6 @@
     "pbsb": "b509",
     "id": "0d0600",
     "zz": "0a",
-    "comment": "CalculatedMixerPosition: 0: primary open; 220: primary closed",
-    "tr": {
-      "en": "CalculatedMixerPosition: 0: primary open; 220: primary closed",
-      "de": "Berechnete Mischerposition: 0 : primär offen .. 220 primär geschlossen"
-    },
     "fields": [
       {
         "name": "value",
@@ -476,11 +321,6 @@
     "pbsb": "b509",
     "id": "0d0800",
     "zz": "0a",
-    "comment": "ElectricalHeater",
-    "tr": {
-      "en": "ElectricalHeater",
-      "de": "Elektrischer Heizstab"
-    },
     "fields": [
       {
         "name": "value",
@@ -499,21 +339,11 @@
     "pbsb": "b509",
     "id": "0d0900",
     "zz": "0a",
-    "comment": "HeatDemand",
-    "tr": {
-      "en": "HeatDemand",
-      "de": "Wärmeanforderung"
-    },
     "fields": [
       {
         "name": "value",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -524,11 +354,6 @@
     "pbsb": "b509",
     "id": "0d0a00",
     "zz": "0a",
-    "comment": "OperatingMode",
-    "tr": {
-      "en": "OperatingMode",
-      "de": "Betriebsart"
-    },
     "fields": [
       {
         "name": "value",
@@ -538,11 +363,6 @@
           "1": "on",
           "2": "auto",
           "3": "manual"
-        },
-        "comment": "hot water mode",
-        "tr": {
-          "en": "hot water mode",
-          "de": "Warmwasser Modus"
         }
       }
     ]
@@ -555,11 +375,6 @@
     "id": "0e0a00",
     "zz": "0a",
     "level": "install",
-    "comment": "OperatingMode",
-    "tr": {
-      "en": "OperatingMode",
-      "de": "Betriebsart"
-    },
     "fields": [
       {
         "name": "value",
@@ -569,11 +384,6 @@
           "1": "on",
           "2": "auto",
           "3": "manual"
-        },
-        "comment": "hot water mode",
-        "tr": {
-          "en": "hot water mode",
-          "de": "Warmwasser Modus"
         }
       }
     ]
@@ -585,21 +395,11 @@
     "pbsb": "b509",
     "id": "0d0b00",
     "zz": "0a",
-    "comment": "ManualTappingSetpoint",
-    "tr": {
-      "en": "ManualTappingSetpoint",
-      "de": "ManualTappingSetpoint"
-    },
     "fields": [
       {
         "name": "value",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -611,21 +411,11 @@
     "id": "0e0b00",
     "zz": "0a",
     "level": "install",
-    "comment": "ManualTappingSetpoint",
-    "tr": {
-      "en": "ManualTappingSetpoint",
-      "de": "ManualTappingSetpoint"
-    },
     "fields": [
       {
         "name": "value",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -636,21 +426,11 @@
     "pbsb": "b509",
     "id": "0d0c00",
     "zz": "0a",
-    "comment": "AutoTappingSetpoint",
-    "tr": {
-      "en": "AutoTappingSetpoint",
-      "de": "Automatischer Zapfsollwert"
-    },
     "fields": [
       {
         "name": "value",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -661,21 +441,11 @@
     "pbsb": "b509",
     "id": "0d0d00",
     "zz": "0a",
-    "comment": "QuickVetoSetpoint",
-    "tr": {
-      "en": "QuickVetoSetpoint",
-      "de": "Quick Veto Sollwert"
-    },
     "fields": [
       {
         "name": "value",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -686,21 +456,11 @@
     "pbsb": "b509",
     "id": "0d0e00",
     "zz": "0a",
-    "comment": "ActualTappingSetpoint",
-    "tr": {
-      "en": "ActualTappingSetpoint",
-      "de": "Aktueller Zapfsollwert"
-    },
     "fields": [
       {
         "name": "value",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -711,11 +471,6 @@
     "pbsb": "b509",
     "id": "0d0f00",
     "zz": "0a",
-    "comment": "QuickVetoStart",
-    "tr": {
-      "en": "QuickVetoStart",
-      "de": "Quick Veto start"
-    },
     "fields": [
       {
         "name": "value",
@@ -734,20 +489,10 @@
     "pbsb": "b509",
     "id": "0d1000",
     "zz": "0a",
-    "comment": "LegioStartDay",
-    "tr": {
-      "en": "LegioStartDay",
-      "de": "Starttag Legionellenschutz"
-    },
     "fields": [
       {
         "name": "value",
-        "type": "UCH",
-        "comment": "0=Monday, 1=Tue, … 6=Sunday, 7=LegioProtect off, 8=every day",
-        "tr": {
-          "en": "0=Monday, 1=Tue, … 6=Sunday, 7=LegioProtect off, 8=every day",
-          "de": "0=Montag1 = Dienstag..6 = Sonntag7 = Legionellenschutz aus8 = täglich"
-        }
+        "type": "UCH"
       }
     ]
   },
@@ -758,20 +503,10 @@
     "pbsb": "b509",
     "id": "0d1100",
     "zz": "0a",
-    "comment": "LegioStartTime: Time when LegioProtect starts on specific day",
-    "tr": {
-      "en": "LegioStartTime: Time when LegioProtect starts on specific day",
-      "de": "Startzeit Legionellenschutz: Time when LegioProtect starts on specific day"
-    },
     "fields": [
       {
         "name": "value",
-        "type": "VTI",
-        "comment": "time",
-        "tr": {
-          "en": "time",
-          "de": "Uhrzeit"
-        }
+        "type": "VTI"
       }
     ]
   },
@@ -782,11 +517,6 @@
     "pbsb": "b509",
     "id": "0d1200",
     "zz": "0a",
-    "comment": "PartyStart: Start Party Mode",
-    "tr": {
-      "en": "PartyStart: Start Party Mode",
-      "de": "Start Partyfunktion: Start Party Mode"
-    },
     "fields": [
       {
         "name": "value",
@@ -805,11 +535,6 @@
     "pbsb": "b509",
     "id": "0d1300",
     "zz": "0a",
-    "comment": "HolidayStart: Start Holiday Mode",
-    "tr": {
-      "en": "HolidayStart: Start Holiday Mode",
-      "de": "Start Ferienfunktion: Start Holiday Mode"
-    },
     "fields": [
       {
         "name": "value",
@@ -828,11 +553,6 @@
     "pbsb": "b509",
     "id": "0d1b00",
     "zz": "0a",
-    "comment": "ActorFernsteuerung: TRUE -> RemoteControl of actors",
-    "tr": {
-      "en": "ActorFernsteuerung: TRUE -> RemoteControl of actors",
-      "de": "ActorFernsteuerung: TRUE -> RemoteControl of actors"
-    },
     "fields": [
       {
         "name": "value",
@@ -851,20 +571,10 @@
     "pbsb": "b509",
     "id": "0d2c00",
     "zz": "0a",
-    "comment": "System Time",
-    "tr": {
-      "en": "System Time",
-      "de": "Zeit: System Time"
-    },
     "fields": [
       {
         "name": "value",
-        "type": "VTI",
-        "comment": "time",
-        "tr": {
-          "en": "time",
-          "de": "Uhrzeit"
-        }
+        "type": "VTI"
       }
     ]
   },
@@ -875,20 +585,10 @@
     "pbsb": "b509",
     "id": "0d2d00",
     "zz": "0a",
-    "comment": "System Date",
-    "tr": {
-      "en": "System Date",
-      "de": "Datum: System Date"
-    },
     "fields": [
       {
         "name": "value",
-        "type": "HDA:3",
-        "comment": "date",
-        "tr": {
-          "en": "date",
-          "de": "Datum"
-        }
+        "type": "HDA:3"
       }
     ]
   },
@@ -899,20 +599,10 @@
     "pbsb": "b509",
     "id": "0d2e00",
     "zz": "0a",
-    "comment": "System Weekday (0=Monday, 5=Saturday, 6=Sunday)",
-    "tr": {
-      "en": "System Weekday (0=Monday, 5=Saturday, 6=Sunday)",
-      "de": "Wochentag: System Weekday (0=Monday, 5=Saturday, 6=Sunday)"
-    },
     "fields": [
       {
         "name": "value",
-        "type": "BDY",
-        "comment": "weekday",
-        "tr": {
-          "en": "weekday",
-          "de": "Wochentag"
-        }
+        "type": "BDY"
       }
     ]
   },
@@ -923,11 +613,6 @@
     "pbsb": "b509",
     "id": "0d3900",
     "zz": "0a",
-    "comment": "TeleSwitch",
-    "tr": {
-      "en": "TeleSwitch",
-      "de": "TeleSWITCH"
-    },
     "fields": [
       {
         "name": "value",
@@ -937,11 +622,6 @@
           "1": "on",
           "2": "off",
           "3": "auto"
-        },
-        "comment": "TeleSwitch Operating Mode",
-        "tr": {
-          "en": "TeleSwitch Operating Mode",
-          "de": "TeleSwitch Operating Mode"
         }
       }
     ]
@@ -953,11 +633,6 @@
     "pbsb": "b509",
     "id": "0d3a00",
     "zz": "0a",
-    "comment": "TeleSwitchState: Teleswitch port state",
-    "tr": {
-      "en": "TeleSwitchState: Teleswitch port state",
-      "de": "TeleSwitchState: Teleswitch port state"
-    },
     "fields": [
       {
         "name": "value",
@@ -976,11 +651,6 @@
     "pbsb": "b509",
     "id": "0d4300",
     "zz": "0a",
-    "comment": "EnableDHWOperation: Enable DHW Ooperation",
-    "tr": {
-      "en": "EnableDHWOperation: Enable DHW Ooperation",
-      "de": "EnableDHWOperation: Enable DHW Ooperation"
-    },
     "fields": [
       {
         "name": "value",
@@ -999,21 +669,11 @@
     "pbsb": "b509",
     "id": "0d1400",
     "zz": "0a",
-    "comment": "Krm",
-    "tr": {
-      "en": "Krm",
-      "de": "Krm"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-        "tr": {
-          "en": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-          "de": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -1024,21 +684,11 @@
     "pbsb": "b509",
     "id": "0d1500",
     "zz": "0a",
-    "comment": "Tm",
-    "tr": {
-      "en": "Tm",
-      "de": "Tm"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-        "tr": {
-          "en": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-          "de": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -1049,21 +699,11 @@
     "pbsb": "b509",
     "id": "0d1600",
     "zz": "0a",
-    "comment": "Tnm",
-    "tr": {
-      "en": "Tnm",
-      "de": "Tnm"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-        "tr": {
-          "en": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-          "de": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -1074,21 +714,11 @@
     "pbsb": "b509",
     "id": "0d1700",
     "zz": "0a",
-    "comment": "Tvm",
-    "tr": {
-      "en": "Tvm",
-      "de": "Tvm"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-        "tr": {
-          "en": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-          "de": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -1099,21 +729,11 @@
     "pbsb": "b509",
     "id": "0d1800",
     "zz": "0a",
-    "comment": "Krp",
-    "tr": {
-      "en": "Krp",
-      "de": "Krp"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-        "tr": {
-          "en": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-          "de": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -1124,21 +744,11 @@
     "pbsb": "b509",
     "id": "0d1900",
     "zz": "0a",
-    "comment": "Tvp",
-    "tr": {
-      "en": "Tvp",
-      "de": "Tvp"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-        "tr": {
-          "en": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-          "de": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -1149,21 +759,11 @@
     "pbsb": "b509",
     "id": "0d1a00",
     "zz": "0a",
-    "comment": "Tp",
-    "tr": {
-      "en": "Tp",
-      "de": "Tp"
-    },
     "fields": [
       {
         "name": "value",
         "type": "SIN",
-        "divisor": 1000,
-        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-        "tr": {
-          "en": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5",
-          "de": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
-        }
+        "divisor": 1000
       }
     ]
   },
@@ -1174,11 +774,6 @@
     "pbsb": "b509",
     "id": "0d2f00",
     "zz": "0a",
-    "comment": "State_MainControl: Aktuelle Zustandsnummer MainControl",
-    "tr": {
-      "en": "State_MainControl: Aktuelle Zustandsnummer MainControl",
-      "de": "State_MainControl: Aktuelle Zustandsnummer MainControl"
-    },
     "fields": [
       {
         "name": "value",
@@ -1193,11 +788,6 @@
     "pbsb": "b509",
     "id": "0d3000",
     "zz": "0a",
-    "comment": "State_MixerPumpControl: Aktuelle Zustandsnummer MixerPumpControl",
-    "tr": {
-      "en": "State_MixerPumpControl: Aktuelle Zustandsnummer MixerPumpControl",
-      "de": "State_MixerPumpControl: Aktuelle Zustandsnummer MixerPumpControl"
-    },
     "fields": [
       {
         "name": "value",
@@ -1212,11 +802,6 @@
     "pbsb": "b509",
     "id": "0d3100",
     "zz": "0a",
-    "comment": "State_CircoKick: Aktuelle Zustandsnummer CircoKickControl",
-    "tr": {
-      "en": "State_CircoKick: Aktuelle Zustandsnummer CircoKickControl",
-      "de": "State_CircoKick: Aktuelle Zustandsnummer CircoKickControl"
-    },
     "fields": [
       {
         "name": "value",
@@ -1231,11 +816,6 @@
     "pbsb": "b509",
     "id": "0d3200",
     "zz": "0a",
-    "comment": "State_HExMonitoring: Aktuelle Zustandsnummer HExMonitoring",
-    "tr": {
-      "en": "State_HExMonitoring: Aktuelle Zustandsnummer HExMonitoring",
-      "de": "State_HExMonitoring: Aktuelle Zustandsnummer HExMonitoring"
-    },
     "fields": [
       {
         "name": "value",
@@ -1250,21 +830,11 @@
     "pbsb": "b509",
     "id": "0d3300",
     "zz": "0a",
-    "comment": "TimeTicker: Sekunden des Tages",
-    "tr": {
-      "en": "TimeTicker: Sekunden des Tages",
-      "de": "TimeTicker: Sekunden des Tages"
-    },
     "fields": [
       {
         "name": "value",
         "type": "ULG",
-        "unit": "s",
-        "comment": "seconds",
-        "tr": {
-          "en": "seconds",
-          "de": "Sekunden"
-        }
+        "unit": "s"
       }
     ]
   },
@@ -1275,11 +845,6 @@
     "pbsb": "b509",
     "id": "0d3e00",
     "zz": "0a",
-    "comment": "StLegioStopTimeCounter: End LegioProtect with Stop",
-    "tr": {
-      "en": "StLegioStopTimeCounter: End LegioProtect with Stop",
-      "de": "Legionellenschutz Stop Zähler: End LegioProtect with Stop"
-    },
     "fields": [
       {
         "name": "value",
@@ -1295,11 +860,6 @@
     "id": "0e3e00",
     "zz": "0a",
     "level": "service",
-    "comment": "StLegioStopTimeCounter: End LegioProtect with Stop",
-    "tr": {
-      "en": "StLegioStopTimeCounter: End LegioProtect with Stop",
-      "de": "Legionellenschutz Stop Zähler: End LegioProtect with Stop"
-    },
     "fields": [
       {
         "name": "value",
@@ -1314,11 +874,6 @@
     "pbsb": "b509",
     "id": "0d3f00",
     "zz": "0a",
-    "comment": "StLegioAbortTimeCounter: End LegioProtect with Abort",
-    "tr": {
-      "en": "StLegioAbortTimeCounter: End LegioProtect with Abort",
-      "de": "Legionellenschutz Abbruch Zähler: End LegioProtect with Abort"
-    },
     "fields": [
       {
         "name": "value",
@@ -1334,11 +889,6 @@
     "id": "0e3f00",
     "zz": "0a",
     "level": "service",
-    "comment": "StLegioAbortTimeCounter: End LegioProtect with Abort",
-    "tr": {
-      "en": "StLegioAbortTimeCounter: End LegioProtect with Abort",
-      "de": "Legionellenschutz Abbruch Zähler: End LegioProtect with Abort"
-    },
     "fields": [
       {
         "name": "value",
@@ -1353,11 +903,6 @@
     "pbsb": "b509",
     "id": "0d4000",
     "zz": "0a",
-    "comment": "StFrostProtCounter: FrostProtectCounter",
-    "tr": {
-      "en": "StFrostProtCounter: FrostProtectCounter",
-      "de": "Frostschutz Zähler: FrostProtectCounter"
-    },
     "fields": [
       {
         "name": "value",
@@ -1373,11 +918,6 @@
     "id": "0e4000",
     "zz": "0a",
     "level": "service",
-    "comment": "StFrostProtCounter: FrostProtectCounter",
-    "tr": {
-      "en": "StFrostProtCounter: FrostProtectCounter",
-      "de": "Frostschutz Zähler: FrostProtectCounter"
-    },
     "fields": [
       {
         "name": "value",
@@ -1392,21 +932,11 @@
     "pbsb": "b504",
     "id": "01",
     "zz": "0a",
-    "comment": "Operation mode",
-    "tr": {
-      "en": "Operation mode",
-      "de": "Betriebsmodus"
-    },
     "fields": [
       {
         "name": "temp",
         "type": "UCH",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "hwcmode",
@@ -1416,11 +946,6 @@
           "1": "on",
           "2": "off",
           "3": "auto"
-        },
-        "comment": "hot water mode",
-        "tr": {
-          "en": "hot water mode",
-          "de": "Warmwasser Modus"
         }
       },
       {
@@ -1435,11 +960,6 @@
           "1": "on",
           "2": "off",
           "3": "auto"
-        },
-        "comment": "hot water mode",
-        "tr": {
-          "en": "hot water mode",
-          "de": "Warmwasser Modus"
         }
       },
       {
@@ -1453,11 +973,6 @@
           "4": "returnincr",
           "5": "pool",
           "6": "circulation"
-        },
-        "comment": "mixer type",
-        "tr": {
-          "en": "mixer type",
-          "de": "Mischer Typ"
         }
       },
       {
@@ -1472,11 +987,6 @@
           "1": "day",
           "4": "load",
           "7": "floorpaving"
-        },
-        "comment": "day/night mode",
-        "tr": {
-          "en": "day/night mode",
-          "de": "Tag-/Nachtmodus"
         }
       }
     ]
@@ -1488,21 +998,11 @@
     "pbsb": "b505",
     "id": "01",
     "zz": "0a",
-    "comment": "Set desired temperature",
-    "tr": {
-      "en": "Set desired temperature",
-      "de": "Solltemperatur setzen"
-    },
     "fields": [
       {
         "name": "value",
         "type": "UCH",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -1513,11 +1013,6 @@
     "pbsb": "b505",
     "id": "02",
     "zz": "0a",
-    "comment": "Set operation mode",
-    "tr": {
-      "en": "Set operation mode",
-      "de": "Betriebsart setzen"
-    },
     "fields": [
       {
         "name": "value",
@@ -1527,11 +1022,6 @@
           "1": "on",
           "2": "off",
           "3": "auto"
-        },
-        "comment": "hot water mode",
-        "tr": {
-          "en": "hot water mode",
-          "de": "Warmwasser Modus"
         }
       }
     ]
@@ -1543,21 +1033,11 @@
     "pbsb": "b504",
     "id": "0d",
     "zz": "0a",
-    "comment": "Desired flow/status/flow/desired temperature",
-    "tr": {
-      "en": "Desired flow/status/flow/desired temperature",
-      "de": "Soll/Status/Ist/Soll"
-    },
     "fields": [
       {
         "name": "temp",
         "type": "UCH",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "onoff",
@@ -1570,22 +1050,12 @@
       {
         "name": "temp_1",
         "type": "D2C",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       },
       {
         "name": "temp_2",
         "type": "UCH",
-        "unit": "°C",
-        "comment": "temperature",
-        "tr": {
-          "en": "temperature",
-          "de": "Temperatur"
-        }
+        "unit": "°C"
       }
     ]
   },
@@ -1596,65 +1066,30 @@
     "pbsb": "b505",
     "id": "0901",
     "zz": "0a",
-    "comment": "Periods Monday",
-    "tr": {
-      "en": "Periods Monday",
-      "de": "Zeitfenster Montag"
-    },
     "fields": [
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "daysel",
@@ -1664,11 +1099,6 @@
           "1": "Mo_Fr",
           "2": "Sa_Su",
           "3": "Mo_Su"
-        },
-        "comment": "day selector",
-        "tr": {
-          "en": "day selector",
-          "de": "day selector"
         }
       }
     ]
@@ -1680,65 +1110,30 @@
     "pbsb": "b505",
     "id": "0902",
     "zz": "0a",
-    "comment": "Periods Tuesday",
-    "tr": {
-      "en": "Periods Tuesday",
-      "de": "Zeitfenster Dienstag"
-    },
     "fields": [
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "daysel",
@@ -1748,11 +1143,6 @@
           "1": "Mo_Fr",
           "2": "Sa_Su",
           "3": "Mo_Su"
-        },
-        "comment": "day selector",
-        "tr": {
-          "en": "day selector",
-          "de": "day selector"
         }
       }
     ]
@@ -1764,65 +1154,30 @@
     "pbsb": "b505",
     "id": "0903",
     "zz": "0a",
-    "comment": "Periods Wednesday",
-    "tr": {
-      "en": "Periods Wednesday",
-      "de": "Zeitfenster Mittwoch"
-    },
     "fields": [
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "daysel",
@@ -1832,11 +1187,6 @@
           "1": "Mo_Fr",
           "2": "Sa_Su",
           "3": "Mo_Su"
-        },
-        "comment": "day selector",
-        "tr": {
-          "en": "day selector",
-          "de": "day selector"
         }
       }
     ]
@@ -1848,65 +1198,30 @@
     "pbsb": "b505",
     "id": "0904",
     "zz": "0a",
-    "comment": "Periods Thursday",
-    "tr": {
-      "en": "Periods Thursday",
-      "de": "Zeitfenster Donnerstag"
-    },
     "fields": [
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "daysel",
@@ -1916,11 +1231,6 @@
           "1": "Mo_Fr",
           "2": "Sa_Su",
           "3": "Mo_Su"
-        },
-        "comment": "day selector",
-        "tr": {
-          "en": "day selector",
-          "de": "day selector"
         }
       }
     ]
@@ -1932,65 +1242,30 @@
     "pbsb": "b505",
     "id": "0905",
     "zz": "0a",
-    "comment": "Periods Friday",
-    "tr": {
-      "en": "Periods Friday",
-      "de": "Zeitfenster Freitag"
-    },
     "fields": [
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "daysel",
@@ -2000,11 +1275,6 @@
           "1": "Mo_Fr",
           "2": "Sa_Su",
           "3": "Mo_Su"
-        },
-        "comment": "day selector",
-        "tr": {
-          "en": "day selector",
-          "de": "day selector"
         }
       }
     ]
@@ -2016,65 +1286,30 @@
     "pbsb": "b505",
     "id": "0906",
     "zz": "0a",
-    "comment": "Periods Saturday",
-    "tr": {
-      "en": "Periods Saturday",
-      "de": "Zeitfenster Samstag"
-    },
     "fields": [
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "daysel",
@@ -2084,11 +1319,6 @@
           "1": "Mo_Fr",
           "2": "Sa_Su",
           "3": "Mo_Su"
-        },
-        "comment": "day selector",
-        "tr": {
-          "en": "day selector",
-          "de": "day selector"
         }
       }
     ]
@@ -2100,65 +1330,30 @@
     "pbsb": "b505",
     "id": "0907",
     "zz": "0a",
-    "comment": "Periods Sunday",
-    "tr": {
-      "en": "Periods Sunday",
-      "de": "Zeitfenster Sonntag"
-    },
     "fields": [
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "from",
-        "type": "TTM",
-        "comment": "from",
-        "tr": {
-          "en": "from",
-          "de": "von"
-        }
+        "type": "TTM"
       },
       {
         "name": "to",
-        "type": "TTM",
-        "comment": "to",
-        "tr": {
-          "en": "to",
-          "de": "bis"
-        }
+        "type": "TTM"
       },
       {
         "name": "daysel",
@@ -2168,11 +1363,6 @@
           "1": "Mo_Fr",
           "2": "Sa_Su",
           "3": "Mo_Su"
-        },
-        "comment": "day selector",
-        "tr": {
-          "en": "day selector",
-          "de": "day selector"
         }
       }
     ]
@@ -2184,11 +1374,6 @@
     "pbsb": "b505",
     "id": "05",
     "zz": "0a",
-    "comment": "Quick - party",
-    "tr": {
-      "en": "Quick - party",
-      "de": "Quick - Party"
-    },
     "fields": [
       {
         "name": "value",
@@ -2207,11 +1392,6 @@
     "pbsb": "b505",
     "id": "06",
     "zz": "0a",
-    "comment": "quick - hot water tank filling",
-    "tr": {
-      "en": "quick - hot water tank filling",
-      "de": "Quick - WW Speicherladung"
-    },
     "fields": [
       {
         "name": "value",
