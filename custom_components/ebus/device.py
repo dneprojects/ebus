@@ -5,7 +5,7 @@ from aioebus.scan import ScanResult
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import BROADCAST_ADDRESS, DOMAIN
-from .library import device_name
+from .library import device_model, device_name
 
 
 def adapter_identifier(host: str, port: int) -> tuple[str, str]:
@@ -34,7 +34,7 @@ def device_info(zz: int, scan: ScanResult | None, host: str, port: int) -> Devic
         identifiers={(DOMAIN, f"{zz:02x}")},
         name=device_name(scan) if scan else f"eBUS {zz:#04x}",
         manufacturer=scan.manufacturer if scan else None,
-        model=scan.ident if scan else None,  # keep the raw scan ident as the model
+        model=device_model(scan) if scan else None,  # appliance, not the coupler ident
         sw_version=scan.sw if scan else None,
         hw_version=scan.hw if scan else None,
         via_device=adapter_identifier(host, port),

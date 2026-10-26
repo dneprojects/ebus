@@ -12,6 +12,11 @@
     "hmu.json": "Wärmepumpe",
     "v32.hp.json": "Wärmepumpe 2"
   },
+  "models": {
+    "_comment": "Model shown in HA, keyed by definition file. For devices behind a bus coupler the scan ident is the coupler (both the heat pump and the eloBlock scan as 'V32'); this shows the actual appliance instead.",
+    "v32.hp.json": "aroTHERM plus",
+    "eloblock.json": "eloBlock"
+  },
   "cdn": {
     "_comment": "Definition file -> upstream ebus.github.io source path(s) (without the /<lang>/ prefix and .csv suffix). Used at runtime, on the user's own machine, to fetch the per-language display text and generate local translation files -- the GPL-3.0 upstream text is never stored in this repo. eloblock/netx3 are our own definitions with no upstream source.",
     "ctlv3.json": ["vaillant/15.ctlv3"],

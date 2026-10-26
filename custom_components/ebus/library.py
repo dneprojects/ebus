@@ -90,6 +90,19 @@ def device_name(scan: ScanResult) -> str:
     return scan.ident
 
 
+def device_model(scan: ScanResult) -> str:
+    """Model shown in HA. When a device sits behind a bus coupler the scan ident
+    is the coupler (e.g. 'V32' for both the heat pump and the eloBlock); a
+    'models' map in index.json overrides it with the actual appliance, keyed by
+    the resolved definition file. Falls back to the scan ident."""
+    file = resolve_file(scan.ident, scan.hw)
+    if file:
+        model = _index().get("models", {}).get(file)
+        if isinstance(model, str):
+            return model
+    return scan.ident
+
+
 def resolve_user_file(scan: ScanResult, user_dir: Path) -> Path | None:
     """Find a user-generated definition file for a scanned device, matching the
     scan ident (longest filename ident that is a prefix of the lowercased scan

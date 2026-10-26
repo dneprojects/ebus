@@ -46,6 +46,15 @@ def test_device_name_disambiguates_shared_ident():
     assert library.device_name(_scan("CTLV3", "8004")) == "CTLV3"
 
 
+def test_device_model_overrides_coupler_ident():
+    # both scan as "V32" (the coupler); the model shows the actual appliance
+    assert library.device_model(_scan("V32", "6004")) == "aroTHERM plus"
+    assert library.device_model(_scan("V32", "9802")) == "eloBlock"
+    # devices that report their own ident keep it as the model
+    assert library.device_model(_scan("CTLV3", "8004")) == "CTLV3"
+    assert library.device_model(_scan("HMU00", "5103")) == "HMU00"
+
+
 def test_climate_zones_from_index():
     # the 'climate' declaration in index.json must bundle the Z<n> registers
     devices = {0x15: _scan("CTLV3", "8004", "808")}
