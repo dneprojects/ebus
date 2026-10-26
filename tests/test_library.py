@@ -42,6 +42,7 @@ def test_device_name_disambiguates_shared_ident():
     assert library.device_name(_scan("V32", "9802")) == "eloBlock"
     assert library.device_name(_scan("V32", "6004")) == "Wärmepumpe 2"
     assert library.device_name(_scan("HMU00", "5103")) == "Wärmepumpe"
+    assert library.device_name(_scan("VR_71", "5904")) == "VR 71"
     # no mapped name -> fall back to the scan ident
     assert library.device_name(_scan("CTLV3", "8004")) == "CTLV3"
 
@@ -51,6 +52,7 @@ def test_device_model_overrides_coupler_ident():
     assert library.device_model(_scan("V32", "6004")) == "aroTHERM plus"
     assert library.device_model(_scan("V32", "9802")) == "eloBlock"
     # devices that report their own ident keep it as the model
+    assert library.device_model(_scan("VR_71", "5904")) == "Mischer- und Solarmodul"
     assert library.device_model(_scan("CTLV3", "8004")) == "CTLV3"
     assert library.device_model(_scan("HMU00", "5103")) == "HMU00"
 
