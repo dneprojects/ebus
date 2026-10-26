@@ -92,6 +92,15 @@ async def async_setup_entry(
     if coordinator.adapter_status:  # adapter has a web UI -> add its own metrics
         specs += _ADAPTER_WEB_SENSORS
     entities += [EbusAdapterSensor(coordinator, *spec) for spec in specs]
+    # per-device Vaillant identification (article/serial), static diagnostic values
+    for zz, ident in coordinator.idents.items():
+        entities.append(
+            EbusIdentSensor(coordinator, zz, "Artikelnummer", ident.article, "mdi:barcode"))
+        entities.append(
+            EbusIdentSensor(coordinator, zz, "Seriennummer", ident.serial, "mdi:identifier"))
+        if ident.year:
+            entities.append(EbusIdentSensor(
+                coordinator, zz, "Baujahr", f"{ident.year} KW{ident.week:02d}", "mdi:calendar"))
     async_add_entities(entities)
 
 
@@ -179,3 +188,25 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         return self._value(self.coordinator)
+
+
+class EbusIdentSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
+    """A static identification value (article/serial/year) read once at setup."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self, coordinator: EbusCoordinator, zz: int, name: str, value: str, icon: str
+    ) -> None:
+        super().__init__(coordinator)
+        self._val = value
+        self._attr_name = name
+        self._attr_icon = icon
+        self._attr_unique_id = f"ebus_{zz:02x}_{name.lower()}"
+        self._attr_device_info = device_info(
+            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
+
+    @property
+    def native_value(self) -> StateType:
+        return self._val

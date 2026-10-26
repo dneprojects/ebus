@@ -21,7 +21,7 @@ from aioebus.engine import EbusEngine
 from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
-from aioebus.scan import ScanResult
+from aioebus.scan import Identification, ScanResult
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -84,6 +84,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         cfg_dir = entry.options.get(CONF_CONFIG_DIR) or ""
         self.user_dir: Path | None = Path(cfg_dir) if cfg_dir.strip() else None
         self.devices: dict[int, ScanResult] = {}
+        self.idents: dict[int, Identification] = {}  # per device: article/serial
         self.read_messages: list[MessageDef] = []
         self.write_messages: list[MessageDef] = []
         self.engine: EbusEngine | None = None
@@ -121,6 +122,18 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 self.devices[zz] = await scanner.scan(zz, timeout=4.0)
             except Exception as err:  # noqa: BLE001 - a missing device is normal
                 _LOGGER.debug("scan %#04x failed: %s", zz, err)
+        # the extended Vaillant identification (article/serial) -- the model the
+        # shared control-board id hides. Best-effort, Vaillant devices only.
+        for zz, scan in list(self.devices.items()):
+            if scan.mf != 0xB5:
+                continue
+            try:
+                ident = await scanner.read_identification(zz)
+            except Exception as err:  # noqa: BLE001 - optional, never block setup
+                _LOGGER.debug("ident %#04x failed: %s", zz, err)
+                continue
+            if ident is not None:
+                self.idents[zz] = ident
         # the broadcast circuit is not a scanned device: inject it so bus
         # broadcasts (outside temperature, date/time) become entities too
         self.devices[BROADCAST_ADDRESS] = ScanResult(
