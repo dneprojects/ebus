@@ -92,12 +92,19 @@ NAME_DE = {
     "outsidetemp": "Außentemperatur", "vdatetime": "Datum/Uhrzeit",
     "rundataelectricpowerconsumption": "Stromaufnahme Wärmepumpe",
     "operatinghours": "Betriebsstunden",
-    # Status01 is the status telegram the regulator polls continuously (so these
-    # arrive passively); its first two temperatures behave as flow and return
-    # (the spread opens with the pump). Qualified to not clash with the dedicated
-    # FlowTemp / RunDataReturnTemp entities that come from active polls.
+    # Status01 (b511 01) is the status telegram the regulator polls continuously
+    # (so these arrive passively). Its six slots per the stock 08.hmu.csv layout:
+    # flow, return, outside (D2B), DHW, storage, pump state. The first two behave
+    # as flow and return (the spread opens with the pump); the middle three read
+    # empty (0x8000/ff) on an HMU without those sensors and are disabled by default
+    # in index.json, but are labelled here for installations that do have them.
+    # All qualified "(Status)" so they never clash with the dedicated FlowTemp /
+    # RunDataReturnTemp / hwctemp entities that come from active polls.
     "status01_temp": "Vorlauftemperatur (Status)",
     "status01_temp_1": "Rücklauftemperatur (Status)",
+    "status01_temp_2": "Außentemperatur (Status)",
+    "status01_temp_3": "Warmwassertemperatur (Status)",
+    "status01_temp_4": "Speichertemperatur (Status)",
 }
 STATE_DE = {
     "off": "Aus", "on": "Ein", "auto": "Auto", "yes": "Ja", "no": "Nein",

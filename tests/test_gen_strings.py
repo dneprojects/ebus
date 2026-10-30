@@ -36,10 +36,16 @@ def test_curated_multifield_name_used_verbatim():
     # Locks the Status01 flow/return labels derived from the field behaviour.
     m = _msg("Status01", fields=[
         FieldDef("temp", "", "D1C", None, None, "°C", ""),
-        FieldDef("temp_1", "", "D1C", None, None, "°C", "")])
+        FieldDef("temp_1", "", "D1C", None, None, "°C", ""),
+        FieldDef("temp_2", "", "D2B", None, None, "°C", ""),
+        FieldDef("temp_3", "", "D1C", None, None, "°C", ""),
+        FieldDef("temp_4", "", "D1C", None, None, "°C", "")])
     de = sg.build_entities([m], "de")["sensor"]
     assert de["status01_temp"]["name"] == "Vorlauftemperatur (Status)"
     assert de["status01_temp_1"]["name"] == "Rücklauftemperatur (Status)"
+    assert de["status01_temp_2"]["name"] == "Außentemperatur (Status)"
+    assert de["status01_temp_3"]["name"] == "Warmwassertemperatur (Status)"
+    assert de["status01_temp_4"]["name"] == "Speichertemperatur (Status)"
     # English keeps the technical message+field label (no curated English)
     en = sg.build_entities([m], "en")["sensor"]
     assert en["status01_temp"]["name"] == "Status01 temp"
