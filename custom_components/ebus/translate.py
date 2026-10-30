@@ -95,10 +95,16 @@ async def async_update_translations(
     if not paths:
         return
     languages = sorted({hass.config.language or "en", "en"})
-    sig = hashlib.sha1(  # cache key, not security
-        f"{_SCHEMA}|{','.join(languages)}|{','.join(paths)}".encode()).hexdigest()
+    defs = all_messages(devices, user_dir)
+    # Cache key (not security): regenerate when the schema, languages, CDN paths,
+    # OR the resolved definition set change -- so adding a bundled message (e.g. a
+    # new register) re-localizes on its own, without a manual _SCHEMA bump.
+    sig = hashlib.sha1("|".join((
+        str(_SCHEMA), ",".join(languages), ",".join(paths),
+        ",".join(sorted(f"{m.name}:{m.pbsb}:{m.msgid}" for m in defs)),
+    )).encode()).hexdigest()
     if await hass.async_add_executor_job(_marker_matches, sig):
-        return  # already generated for this device set + language set
+        return  # already generated for this device set + languages + definitions
 
     session = async_get_clientsession(hass)
     by_lang: dict[str, list] = {}
