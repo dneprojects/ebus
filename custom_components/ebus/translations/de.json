@@ -253,8 +253,35 @@
           "on": "Ein"
         }
       },
-      "rundataelectricpowerconsumption": {
-        "name": "Stromaufnahme Wärmepumpe"
+      "yieldhcday": {
+        "name": "Umweltertrag Heizen heute"
+      },
+      "yieldcoolday": {
+        "name": "Umweltertrag Kühlen heute"
+      },
+      "yieldhwcday": {
+        "name": "Umweltertrag Warmwasser heute"
+      },
+      "yieldhcmonth": {
+        "name": "Umweltertrag Heizen Monat"
+      },
+      "cophcmonth": {
+        "name": "Arbeitszahl Heizen Monat"
+      },
+      "cophc": {
+        "name": "Arbeitszahl Heizen"
+      },
+      "yieldhwcmonth": {
+        "name": "Umweltertrag Warmwasser Monat"
+      },
+      "cophwcmonth": {
+        "name": "Arbeitszahl Warmwasser Monat"
+      },
+      "cophwc": {
+        "name": "Arbeitszahl Warmwasser"
+      },
+      "currentyieldpower": {
+        "name": "Umweltleistung"
       },
       "setmode_hcmode": {
         "state": {
@@ -264,11 +291,65 @@
           "water": "Warmwasser"
         }
       },
+      "status01_temp": {
+        "name": "Vorlauftemperatur (Status)"
+      },
+      "status01_temp_1": {
+        "name": "Rücklauftemperatur (Status)"
+      },
+      "status01_temp_2": {
+        "name": "Außentemperatur (Status)"
+      },
+      "status01_temp_3": {
+        "name": "Warmwassertemperatur (Status)"
+      },
+      "status01_temp_4": {
+        "name": "Speichertemperatur (Status)"
+      },
       "status01_pumpstate": {
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
+      },
+      "yieldcoolingmonth": {
+        "name": "Umweltertrag Kühlen Monat"
+      },
+      "copcoolingmonth": {
+        "name": "Arbeitszahl Kühlen Monat"
+      },
+      "copcooling": {
+        "name": "Arbeitszahl Kühlen"
+      },
+      "powerconsumptionhmu": {
+        "name": "Stromaufnahme Wärmepumpe"
+      },
+      "energyenvironmenthc": {
+        "name": "Umweltertrag Heizen"
+      },
+      "energyenvironmenthwc": {
+        "name": "Umweltertrag Warmwasser"
+      },
+      "energyenvironmentcool": {
+        "name": "Umweltertrag Kühlen"
+      },
+      "energygeneratedhc": {
+        "name": "Wärmeabgabe Heizen"
+      },
+      "energygeneratedhwc": {
+        "name": "Wärmeabgabe Warmwasser"
+      },
+      "energygeneratedcool": {
+        "name": "Kälteabgabe Kühlen"
+      },
+      "energyelectrichc": {
+        "name": "Stromverbrauch Heizen"
+      },
+      "energyelectrichwc": {
+        "name": "Stromverbrauch Warmwasser"
+      },
+      "energyelectriccool": {
+        "name": "Stromverbrauch Kühlen"
       },
       "singlestoragecharge": {
         "state": {

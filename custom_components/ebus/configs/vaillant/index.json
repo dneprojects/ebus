@@ -1,6 +1,19 @@
 {
-  "_comment": "Scan ident (+ optional HW variant) -> definition file. The device ADDRESS is not part of this; it is taken from the scan at runtime and stamped onto the messages, so identical devices behind different bus couplers share one file. A bus coupler (e.g. V32) is only the scan key -- the file defines the device BEHIND it, distinguished by its HW variant (eloBlock vs a heat pump both scan as V32). All files are our own Apache-2.0 work: eloblock/netx3 are authored, the device types (ctlv3/pmw/vr_71/hmu/v32.hp) are re-engineered from an observed bus capture (see aioebus configs/vaillant/PROVENANCE.md). 'Broadcast' is a synthetic circuit (address 0xfe) the coordinator injects for bus broadcasts (outside temperature, date/time). 'names' maps a definition file to the friendly device name shown in Home Assistant; without an entry the scan ident is used.",
-  "V32": { "hw": { "9802": "eloblock.json", "6004": "v32.hp.json" } },
+  "_comment": "Scan ident (+ optional HW variant) -> definition file. The device ADDRESS is not part of this; it is taken from the scan at runtime and stamped onto the messages, so identical devices behind different bus couplers share one file. A bus coupler (e.g. V32) is only the scan key -- the file defines the device BEHIND it, distinguished by its HW variant (eloBlock vs a heat pump both scan as V32). An entry is either a file name or a profile {file, name, model, disabled_fields}: a profile lets the same device type behind a coupler reuse its one definition file (the second heat pump is the same HMU as the first) while still showing its own name/model -- the profile keys win over the file-keyed 'names'/'models'/'disabled_fields' maps below. All files are our own Apache-2.0 work: eloblock/netx3 are authored, the device types (ctlv3/pmw/vr_71/hmu) are re-engineered from an observed bus capture (see aioebus configs/vaillant/PROVENANCE.md). 'Broadcast' is a synthetic circuit (address 0xfe) the coordinator injects for bus broadcasts (outside temperature, date/time). 'names' maps a definition file to the friendly device name shown in Home Assistant; without an entry the scan ident is used.",
+  "V32": {
+    "hw": {
+      "9802": "eloblock.json",
+      "6004": {
+        "file": "hmu.json",
+        "name": "Wärmepumpe 2",
+        "model": "aroTHERM plus",
+        "disabled_fields": [
+          "DateTime btime", "DateTime bdate", "DateTime temp", "SetMode hwctempdesired",
+          "Status01 temp_2", "Status01 temp_3", "Status01 temp_4"
+        ]
+      }
+    }
+  },
   "NETX3": "f6.netx3.json",
   "HMU00": "hmu.json",
   "CTLV3": "ctlv3.json",
@@ -11,7 +24,6 @@
   "names": {
     "eloblock.json": "eloBlock",
     "hmu.json": "Wärmepumpe",
-    "v32.hp.json": "Wärmepumpe 2",
     "vr_71.json": "VR 71",
     "ctlv3.json": "sensoCOMFORT",
     "f6.netx3.json": "VR 940f",
@@ -19,7 +31,6 @@
   },
   "models": {
     "_comment": "Model shown in HA, keyed by definition file. For devices behind a bus coupler the scan ident is the coupler (both the heat pump and the eloBlock scan as 'V32'); this shows the actual appliance instead.",
-    "v32.hp.json": "aroTHERM plus",
     "eloblock.json": "eloBlock",
     "vr_71.json": "Mischer- und Solarmodul",
     "ctlv3.json": "VRC 720",
@@ -32,7 +43,6 @@
     "hmu.json": ["vaillant/08.hmu", "vaillant/08.hmu.HW5103"],
     "pmw.json": ["vaillant/0a.pmw.hwc"],
     "vr_71.json": ["vaillant/26.vr_71"],
-    "v32.hp.json": ["vaillant/08.v3x"],
     "broadcast.json": ["broadcast", "vaillant/broadcast"]
   },
   "climate": {
@@ -54,10 +64,6 @@
     ],
     "hmu.json": [
       "DateTime btime", "DateTime bdate", "DateTime temp",
-      "Status01 temp_2", "Status01 temp_3", "Status01 temp_4"
-    ],
-    "v32.hp.json": [
-      "DateTime btime", "DateTime bdate", "DateTime temp", "SetMode hwctempdesired",
       "Status01 temp_2", "Status01 temp_3", "Status01 temp_4"
     ]
   }

@@ -1181,9 +1181,6 @@
       "cophcmonth": {
         "name": "CopHcMonth"
       },
-      "yieldhc": {
-        "name": "YieldHc"
-      },
       "cophc": {
         "name": "CopHc"
       },
@@ -1192,9 +1189,6 @@
       },
       "cophwcmonth": {
         "name": "CopHwcMonth"
-      },
-      "yieldhwc": {
-        "name": "YieldHwc"
       },
       "cophwc": {
         "name": "CopHwc"
@@ -1220,9 +1214,6 @@
       "currentyieldpower": {
         "name": "CurrentYieldPower"
       },
-      "currentconsumedpower": {
-        "name": "CurrentConsumedPower"
-      },
       "currentcompressorutil": {
         "name": "CurrentCompressorUtil"
       },
@@ -1231,9 +1222,6 @@
       },
       "flowpressure": {
         "name": "FlowPressure"
-      },
-      "totalenergyusage": {
-        "name": "TotalEnergyUsage"
       },
       "compressorhours": {
         "name": "CompressorHours"
@@ -1334,9 +1322,6 @@
           "connection_fault_frequency_converter": "connection_fault_frequency_converter",
           "four_port_valve_position_fault": "four_port_valve_position_fault"
         }
-      },
-      "rundataelectricpowerconsumption": {
-        "name": "RunDataElectricPowerConsumption"
       },
       "rundatahighpressure": {
         "name": "RunDataHighPressure"
@@ -1515,14 +1500,38 @@
       "copcoolingmonth": {
         "name": "CopCoolingMonth"
       },
-      "yieldcooling": {
-        "name": "YieldCooling"
-      },
       "copcooling": {
         "name": "CopCooling"
       },
       "powerconsumptionhmu": {
         "name": "PowerConsumptionHmu"
+      },
+      "energyenvironmenthc": {
+        "name": "EnergyEnvironmentHc"
+      },
+      "energyenvironmenthwc": {
+        "name": "EnergyEnvironmentHwc"
+      },
+      "energyenvironmentcool": {
+        "name": "EnergyEnvironmentCool"
+      },
+      "energygeneratedhc": {
+        "name": "EnergyGeneratedHc"
+      },
+      "energygeneratedhwc": {
+        "name": "EnergyGeneratedHwc"
+      },
+      "energygeneratedcool": {
+        "name": "EnergyGeneratedCool"
+      },
+      "energyelectrichc": {
+        "name": "EnergyElectricHc"
+      },
+      "energyelectrichwc": {
+        "name": "EnergyElectricHwc"
+      },
+      "energyelectriccool": {
+        "name": "EnergyElectricCool"
       },
       "singlestoragecharge": {
         "name": "SingleStorageCharge",

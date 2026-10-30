@@ -139,25 +139,6 @@
   {
     "direction": "r",
     "circuit": "",
-    "name": "YieldHc",
-    "pbsb": "b51a",
-    "id": "05ff3210",
-    "zz": "08",
-    "fields": [
-      {
-        "name": "ign",
-        "type": "IGN:3"
-      },
-      {
-        "name": "value",
-        "type": "UIN",
-        "unit": "kWh"
-      }
-    ]
-  },
-  {
-    "direction": "r",
-    "circuit": "",
     "name": "CopHc",
     "pbsb": "b51a",
     "id": "05ff3211",
@@ -210,25 +191,6 @@
         "name": "value",
         "type": "UIN",
         "divisor": 10
-      }
-    ]
-  },
-  {
-    "direction": "r",
-    "circuit": "",
-    "name": "YieldHwc",
-    "pbsb": "b51a",
-    "id": "05ff3216",
-    "zz": "08",
-    "fields": [
-      {
-        "name": "ign",
-        "type": "IGN:3"
-      },
-      {
-        "name": "value",
-        "type": "ULG",
-        "unit": "kWh"
       }
     ]
   },
@@ -407,26 +369,6 @@
   {
     "direction": "r",
     "circuit": "",
-    "name": "CurrentConsumedPower",
-    "pbsb": "b51a",
-    "id": "05ff3224",
-    "zz": "08",
-    "fields": [
-      {
-        "name": "ign",
-        "type": "IGN:3"
-      },
-      {
-        "name": "value",
-        "type": "SCH",
-        "divisor": 10,
-        "unit": "kW"
-      }
-    ]
-  },
-  {
-    "direction": "r",
-    "circuit": "",
     "name": "CurrentCompressorUtil",
     "pbsb": "b51a",
     "id": "05ff3225",
@@ -479,25 +421,6 @@
         "type": "D2C",
         "divisor": 4,
         "unit": "bar"
-      }
-    ]
-  },
-  {
-    "direction": "r",
-    "circuit": "",
-    "name": "TotalEnergyUsage",
-    "pbsb": "b51a",
-    "id": "05ff324d",
-    "zz": "08",
-    "fields": [
-      {
-        "name": "ign",
-        "type": "IGN:3"
-      },
-      {
-        "name": "value",
-        "type": "UIN",
-        "unit": "kWh"
       }
     ]
   },
@@ -831,25 +754,6 @@
           "581": "connection_fault_frequency_converter",
           "590": "four_port_valve_position_fault"
         }
-      }
-    ]
-  },
-  {
-    "direction": "r",
-    "circuit": "",
-    "name": "RunDataElectricPowerConsumption",
-    "pbsb": "b509",
-    "id": "5402005b0d",
-    "zz": "08",
-    "fields": [
-      {
-        "name": "ign",
-        "type": "IGN:4"
-      },
-      {
-        "name": "value",
-        "type": "EXP",
-        "unit": "W"
       }
     ]
   },
@@ -1656,26 +1560,6 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "YieldCooling",
-    "pbsb": "b51a",
-    "id": "05ff322c",
-    "zz": "08",
-    "fields": [
-      {
-        "name": "ign",
-        "type": "IGN:3"
-      },
-      {
-        "name": "value",
-        "type": "UIN",
-        "divisor": 10,
-        "unit": "kWh"
-      }
-    ]
-  },
-  {
-    "direction": "r",
-    "circuit": "wp0",
     "name": "CopCooling",
     "pbsb": "b51a",
     "id": "05ff322d",
@@ -1715,7 +1599,7 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "EnergyEnvironmentHeat",
+    "name": "EnergyEnvironmentHc",
     "pbsb": "b516",
     "id": "1000ffff42030000",
     "zz": "08",
@@ -1735,7 +1619,7 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "EnergyEnvironmentWater",
+    "name": "EnergyEnvironmentHwc",
     "pbsb": "b516",
     "id": "1000ffff42040000",
     "zz": "08",
@@ -1775,7 +1659,7 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "EnergyYieldHeat",
+    "name": "EnergyGeneratedHc",
     "pbsb": "b516",
     "id": "1000ffff49030000",
     "zz": "08",
@@ -1795,7 +1679,7 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "EnergyYieldWater",
+    "name": "EnergyGeneratedHwc",
     "pbsb": "b516",
     "id": "1000ffff49040000",
     "zz": "08",
@@ -1815,7 +1699,7 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "EnergyYieldCool",
+    "name": "EnergyGeneratedCool",
     "pbsb": "b516",
     "id": "1000ffff49050000",
     "zz": "08",
@@ -1835,7 +1719,7 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "EnergyElectricHeat",
+    "name": "EnergyElectricHc",
     "pbsb": "b516",
     "id": "1000ffff83030000",
     "zz": "08",
@@ -1855,7 +1739,7 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "EnergyElectricWater",
+    "name": "EnergyElectricHwc",
     "pbsb": "b516",
     "id": "1000ffff83040000",
     "zz": "08",

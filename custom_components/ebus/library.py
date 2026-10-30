@@ -36,6 +36,19 @@ _KEYWORD_ICON: Final[tuple[tuple[str, str], ...]] = (
     ("temp", "mdi:thermometer"), ("mode", "mdi:tune"),
     ("error", "mdi:alert-circle-outline"), ("time", "mdi:clock-outline"))
 
+# Messages dropped from the bundled definitions, so their old registry entries are
+# removed at setup instead of lingering as 'unavailable'. Retired because another
+# register carries the same value (one home per value): the b51a lifetime yields
+# and TotalEnergyUsage (16-bit, wrap at 65535 kWh) duplicate the b516/10 float
+# counters; CurrentConsumedPower and RunDataElectricPowerConsumption duplicate
+# PowerConsumptionHmu. Superseded: the 0.2.0 names of the renamed b516/10 counters.
+RETIRED_MESSAGES: Final[frozenset[str]] = frozenset({
+    "YieldHc", "YieldHwc", "YieldCooling", "TotalEnergyUsage",
+    "CurrentConsumedPower", "RunDataElectricPowerConsumption",
+    "EnergyEnvironmentHeat", "EnergyEnvironmentWater", "EnergyYieldHeat",
+    "EnergyYieldWater", "EnergyYieldCool", "EnergyElectricHeat", "EnergyElectricWater",
+})
+
 
 @dataclass
 class Field:
@@ -56,51 +69,67 @@ def _load_file(name: str) -> tuple[MessageDef, ...]:
     return tuple(from_dicts(json.loads((_CONFIG_DIR / name).read_text(encoding="utf-8"))))
 
 
-def resolve_file(ident: str, hw: str | None) -> str | None:
-    """Pick the definition file for a scanned device by its ident and HW variant.
-    The address plays no role here, so identical devices resolve to one file."""
+def _profile(ident: str, hw: str | None) -> dict[str, Any] | None:
+    """The index entry for a scanned device by its ident and HW variant, as a
+    profile {file, name?, model?, disabled_fields?}. An entry is a plain file name
+    or such a profile, so the same device type behind a coupler can reuse one file
+    under its own name. The address plays no role: identical devices share it."""
     entry = _index().get(ident)
-    if entry is None:
-        return None
+    if isinstance(entry, dict) and "file" not in entry:
+        entry = entry.get("hw", {}).get(hw or "") or entry.get("default")
     if isinstance(entry, str):
+        return {"file": entry}
+    if isinstance(entry, dict) and isinstance(entry.get("file"), str):
         return entry
-    result = entry.get("hw", {}).get(hw or "") or entry.get("default")
-    return result if isinstance(result, str) else None
+    return None
+
+
+def resolve_file(ident: str, hw: str | None) -> str | None:
+    """Pick the definition file for a scanned device by its ident and HW variant."""
+    profile = _profile(ident, hw)
+    return profile["file"] if profile else None
+
+
+def _profile_value(scan: ScanResult, key: str, table: str) -> Any:
+    """A presentation value for a device: its profile's own entry wins, else the
+    file-keyed table of the same meaning in index.json."""
+    profile = _profile(scan.ident, scan.hw)
+    if not profile:
+        return None
+    if key in profile:
+        return profile[key]
+    return _index().get(table, {}).get(profile["file"])
 
 
 def disabled_field_labels(scan: ScanResult) -> set[str]:
     """Entity labels that should be created disabled by default for this device
-    (unconnected channels, from the 'disabled_fields' section of index.json)."""
-    file = resolve_file(scan.ident, scan.hw)
-    if not file:
-        return set()
-    labels = _index().get("disabled_fields", {}).get(file, [])
+    (unconnected channels, from 'disabled_fields' in index.json)."""
+    labels = _profile_value(scan, "disabled_fields", "disabled_fields")
     return set(labels) if isinstance(labels, list) else set()
 
 
 def device_name(scan: ScanResult) -> str:
     """Friendly device name for Home Assistant. Two devices can share a scan
-    ident (e.g. an eloBlock and a heat pump both scan as 'V32'), so prefer the
-    name mapped to the resolved definition file; fall back to the scan ident."""
-    file = resolve_file(scan.ident, scan.hw)
-    if file:
-        name = _index().get("names", {}).get(file)
-        if isinstance(name, str):
-            return name
-    return scan.ident
+    ident (e.g. an eloBlock and a heat pump both scan as 'V32') or a definition
+    file (two heat pumps), so the profile/file name wins; else the scan ident."""
+    name = _profile_value(scan, "name", "names")
+    return name if isinstance(name, str) else scan.ident
 
 
 def device_model(scan: ScanResult) -> str:
     """Model shown in HA. When a device sits behind a bus coupler the scan ident
-    is the coupler (e.g. 'V32' for both the heat pump and the eloBlock); a
-    'models' map in index.json overrides it with the actual appliance, keyed by
-    the resolved definition file. Falls back to the scan ident."""
-    file = resolve_file(scan.ident, scan.hw)
-    if file:
-        model = _index().get("models", {}).get(file)
-        if isinstance(model, str):
-            return model
-    return scan.ident
+    is the coupler (e.g. 'V32' for both the heat pump and the eloBlock); the
+    profile or the file-keyed 'models' map names the actual appliance. Falls back
+    to the scan ident."""
+    model = _profile_value(scan, "model", "models")
+    return model if isinstance(model, str) else scan.ident
+
+
+def retired_unique_id(unique_id: str) -> bool:
+    """True for a sensor unique_id ('ebus_<zz>_<message>_<label>') whose message
+    was retired from the bundled definitions (see RETIRED_MESSAGES)."""
+    parts = unique_id.split("_", 3)
+    return len(parts) == 4 and parts[0] == "ebus" and parts[2] in RETIRED_MESSAGES
 
 
 def resolve_user_file(scan: ScanResult, user_dir: Path) -> Path | None:

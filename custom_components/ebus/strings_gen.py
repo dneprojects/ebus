@@ -90,7 +90,8 @@ NAME_DE = {
     "electricpower": "Stromaufnahme Wärmepumpe", "returntemp": "Rücklauftemperatur",
     "hwctemp": "Warmwassertemperatur", "modulation": "Modulation",
     "outsidetemp": "Außentemperatur", "vdatetime": "Datum/Uhrzeit",
-    "rundataelectricpowerconsumption": "Stromaufnahme Wärmepumpe",
+    "powerconsumptionhmu": "Stromaufnahme Wärmepumpe",
+    "currentyieldpower": "Umweltleistung",
     "operatinghours": "Betriebsstunden",
     # Status01 (b511 01) is the status telegram the regulator polls continuously
     # (so these arrive passively). Its six slots per the stock 08.hmu.csv layout:
@@ -106,18 +107,32 @@ NAME_DE = {
     "status01_temp_3": "Warmwassertemperatur (Status)",
     "status01_temp_4": "Speichertemperatur (Status)",
     # b516/10 lifetime energy counters the sensoNET gateway polls hourly (so they
-    # arrive passively); EXP float in kWh. source 0x42 ambient, 0x49 delivered heat,
-    # 0x83 electric input; usage 0x03 heating, 0x04 DHW, 0x05 cooling. Together they
-    # give the heat balance (SCOP = delivered heat / electric input).
-    "energyenvironmentheat": "Umweltenergie Heizen",
-    "energyenvironmentwater": "Umweltenergie Warmwasser",
-    "energyenvironmentcool": "Umweltenergie Kühlen",
-    "energyyieldheat": "Erzeugte Wärme Heizen",
-    "energyyieldwater": "Erzeugte Wärme Warmwasser",
-    "energyyieldcool": "Erzeugte Wärme Kühlen",
-    "energyelectricheat": "Stromverbrauch Heizen",
-    "energyelectricwater": "Stromverbrauch Warmwasser",
+    # arrive passively); EXP float in kWh. source 0x42 ambient energy (Vaillant's
+    # "Umweltertrag" -- what b51a calls Yield), 0x49 delivered heat, 0x83 electric
+    # input; usage Hc/Hwc/Cool. Ambient + electric = delivered heat (minus losses).
+    "energyenvironmenthc": "Umweltertrag Heizen",
+    "energyenvironmenthwc": "Umweltertrag Warmwasser",
+    "energyenvironmentcool": "Umweltertrag Kühlen",
+    "energygeneratedhc": "Wärmeabgabe Heizen",
+    "energygeneratedhwc": "Wärmeabgabe Warmwasser",
+    "energygeneratedcool": "Kälteabgabe Kühlen",
+    "energyelectrichc": "Stromverbrauch Heizen",
+    "energyelectrichwc": "Stromverbrauch Warmwasser",
     "energyelectriccool": "Stromverbrauch Kühlen",
+    # b51a statistics kept for what b516 does not offer: today/this month (0.1 kWh)
+    # and Vaillant's own coefficient of performance (lifetime and this month)
+    "yieldhcday": "Umweltertrag Heizen heute",
+    "yieldhwcday": "Umweltertrag Warmwasser heute",
+    "yieldcoolday": "Umweltertrag Kühlen heute",
+    "yieldhcmonth": "Umweltertrag Heizen Monat",
+    "yieldhwcmonth": "Umweltertrag Warmwasser Monat",
+    "yieldcoolingmonth": "Umweltertrag Kühlen Monat",
+    "cophc": "Arbeitszahl Heizen",
+    "cophwc": "Arbeitszahl Warmwasser",
+    "copcooling": "Arbeitszahl Kühlen",
+    "cophcmonth": "Arbeitszahl Heizen Monat",
+    "cophwcmonth": "Arbeitszahl Warmwasser Monat",
+    "copcoolingmonth": "Arbeitszahl Kühlen Monat",
 }
 STATE_DE = {
     "off": "Aus", "on": "Ein", "auto": "Auto", "yes": "Ja", "no": "Nein",

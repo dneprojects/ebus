@@ -33,9 +33,9 @@ power level.
   this device is a *different* register (`AlarmOnDelay`/`SwitchOffParty`). So the
   part-load is **not changeable over eBUS**, only at the appliance.
 - The eloBlock's **own electrical power is not published on the bus**. The
-  `RunDataElectricPowerConsumption` watt register belongs to the **heat pump**
-  (≈ 2.3 kW while it contributed), not the eloBlock — take the eloBlock's draw
-  from an external meter (~14 kW here).
+  electrical-power registers (`PowerConsumptionHmu`, `RunDataElectricPowerConsumption`)
+  belong to the **heat pump** (≈ 2.3 kW while it contributed), not the eloBlock —
+  take the eloBlock's draw from an external meter (~14 kW here).
 
 ## DHW charge logic (observed 2026-10-23, setpoint 50 °C)
 

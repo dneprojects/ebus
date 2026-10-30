@@ -26,7 +26,8 @@ def _scan(ident, hw="0000", sw="0000"):
 
 def test_resolve_bundled_by_ident_and_hw():
     assert library.resolve_file("V32", "9802") == "eloblock.json"   # HW variant
-    assert library.resolve_file("V32", "6004") == "v32.hp.json"     # other V32 = heat pump
+    # the heat pump behind a V32 coupler is the same HMU -> the same one file
+    assert library.resolve_file("V32", "6004") == "hmu.json"
     assert library.resolve_file("NETX3", "0404") == "f6.netx3.json"
     assert library.resolve_file("HMU00", "5103") == "hmu.json"
     assert library.resolve_file("CTLV3", "8004") == "ctlv3.json"    # re-engineered
@@ -87,6 +88,10 @@ def test_timer_schedules_convention():
 def test_disabled_field_labels():
     vr = library.disabled_field_labels(_scan("VR_71", "5904"))
     assert "SensorData1 s4" in vr and "SensorData2 s8" in vr
+    # a profile carries its own list, overriding the shared file's
+    hp2 = library.disabled_field_labels(_scan("V32", "6004"))
+    assert "SetMode hwctempdesired" in hp2 and "Status01 temp_2" in hp2
+    assert "SetMode hwctempdesired" not in library.disabled_field_labels(_scan("HMU00", "5103"))
     assert library.disabled_field_labels(_scan("CTLV3", "8004")) == set()  # none declared
     assert library.disabled_field_labels(_scan("NOPE", "0000")) == set()   # unknown device
 
@@ -178,15 +183,36 @@ def test_broadcast_updates_surface_as_reads():
 def test_hmu_energy_counters_decode_kwh():
     # the bundled HMU config exposes the nine b516/10 lifetime energy counters the
     # sensoNET gateway polls; EXP + divisor must yield kWh (needs aioebus >= 0.5.1).
-    # Real 24h-log capture: EnergyEnvironmentHeat slave trailing float -> kWh/1000.
+    # Real 24h-log capture: EnergyEnvironmentHc slave trailing float -> kWh/1000.
     from aioebus.convert import from_dicts
     hmu = _PKG / "configs" / "vaillant" / "hmu.json"
     defs = {m.name: m for m in from_dicts(json.loads(hmu.read_text(encoding="utf-8")))}
-    energy = [n for n, m in defs.items() if n.startswith("Energy") and m.pbsb == "b516"]
-    assert len(energy) == 9
-    m = defs["EnergyEnvironmentHeat"]
+    energy = {n for n, m in defs.items() if n.startswith("Energy") and m.pbsb == "b516"}
+    assert energy == {f"Energy{s}{u}" for s in ("Environment", "Generated", "Electric")
+                      for u in ("Hc", "Hwc", "Cool")}
+    m = defs["EnergyEnvironmentHc"]
     assert m.decode_labeled("1000ffff42030000", "00000142035e35372f9f4b") == {
-        "EnergyEnvironmentHeat": 20864.622}
+        "EnergyEnvironmentHc": 20864.622}
+    # one home per value: the duplicating registers are gone from the bundle
+    assert not library.RETIRED_MESSAGES & set(defs)
+
+
+def test_both_heat_pumps_share_the_full_definition():
+    # the HMU at 08 and the same HMU behind the V32 coupler at 18 get the same
+    # message set (incl. the energy counters), each stamped with its own address
+    devices = {0x08: _scan("HMU00", "5103"), 0x18: _scan("V32", "6004")}
+    reads = library.device_messages(devices, "r")
+    by_zz = {zz: {m.name for m in reads if m.zz == zz} for zz in ("08", "18")}
+    assert by_zz["08"] == by_zz["18"]
+    assert {"EnergyGeneratedHc", "PowerConsumptionHmu", "Status01"} <= by_zz["18"]
+
+
+def test_retired_unique_id():
+    assert library.retired_unique_id("ebus_18_YieldHc_YieldHc")
+    assert library.retired_unique_id("ebus_08_EnergyYieldHeat_EnergyYieldHeat")  # 0.2.0 name
+    assert not library.retired_unique_id("ebus_08_EnergyGeneratedHc_EnergyGeneratedHc")
+    assert not library.retired_unique_id("ebus_08_Status01_Status01 temp")
+    assert not library.retired_unique_id("ebus_192.168.178.179_9999_signal")  # adapter sensor
 
 
 def test_scan_all_covers_known_addresses():

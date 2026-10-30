@@ -5,11 +5,13 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import BROADCAST_ADDRESS, DOMAIN
 from .coordinator import EbusCoordinator
 from .device import adapter_identifier
+from .library import retired_unique_id
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR, Platform.SENSOR, Platform.NUMBER,
@@ -23,9 +25,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool
     await coordinator.async_discover()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    _remove_retired_entities(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
+
+
+def _remove_retired_entities(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
+    """Drop registry entries of messages retired from the bundled definitions, so
+    they do not linger as orphaned 'unavailable' entities."""
+    registry = er.async_get(hass)
+    for ent in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if retired_unique_id(ent.unique_id):
+            registry.async_remove(ent.entity_id)
 
 
 async def _async_reload(hass: HomeAssistant, entry: EbusConfigEntry) -> None:

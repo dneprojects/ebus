@@ -54,9 +54,9 @@ def test_curated_multifield_name_used_verbatim():
 def test_curated_energy_counter_names():
     # b516/10 lifetime energy counters: a lone 'value' field (the IGN prefix is
     # dropped) keys off the message name, so the curated German label is verbatim.
-    for name, de_name in (("EnergyEnvironmentHeat", "Umweltenergie Heizen"),
-                          ("EnergyElectricWater", "Stromverbrauch Warmwasser"),
-                          ("EnergyYieldCool", "Erzeugte Wärme Kühlen")):
+    for name, de_name in (("EnergyEnvironmentHc", "Umweltertrag Heizen"),
+                          ("EnergyElectricHwc", "Stromverbrauch Warmwasser"),
+                          ("EnergyGeneratedHc", "Wärmeabgabe Heizen")):
         m = _msg(name, fields=[
             FieldDef("ign", "", "IGN:7", None, None, "", ""),
             FieldDef("value", "", "EXP", 1000, None, "kWh", "")])
