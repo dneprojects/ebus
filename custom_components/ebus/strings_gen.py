@@ -92,6 +92,12 @@ NAME_DE = {
     "outsidetemp": "Außentemperatur", "vdatetime": "Datum/Uhrzeit",
     "rundataelectricpowerconsumption": "Stromaufnahme Wärmepumpe",
     "operatinghours": "Betriebsstunden",
+    # Status01 is the status telegram the regulator polls continuously (so these
+    # arrive passively); its first two temperatures behave as flow and return
+    # (the spread opens with the pump). Qualified to not clash with the dedicated
+    # FlowTemp / RunDataReturnTemp entities that come from active polls.
+    "status01_temp": "Vorlauftemperatur (Status)",
+    "status01_temp_1": "Rücklauftemperatur (Status)",
 }
 STATE_DE = {
     "off": "Aus", "on": "Ein", "auto": "Auto", "yes": "Ja", "no": "Nein",
@@ -124,8 +130,14 @@ def _good(text) -> str | None:
 def _name(m: MessageDef, f: FieldDef, lang: str) -> str | None:
     """Display name for ``lang``: upstream label from ``tr``, else a curated
     override, else (English only) the technical name; None means omit so HA falls
-    back to English."""
-    base = _good((m.tr or {}).get(lang)) or CURATED_NAMES.get(lang, {}).get(translation_key(m, f))
+    back to English. A curated override on a multi-field entity is the full field
+    label and is used verbatim; the upstream path below appends the field name to
+    the message label, which only reads well for a lone 'value' field."""
+    key = translation_key(m, f)
+    curated = CURATED_NAMES.get(lang, {}).get(key)
+    if curated and f.name != "value":
+        return _cap(curated)
+    base = _good((m.tr or {}).get(lang)) or curated
     if not base:
         if lang != "en":
             return None

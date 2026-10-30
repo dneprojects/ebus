@@ -30,6 +30,21 @@ def test_names_come_from_tr_capitalized():
     assert de["sensor"]["continuousheating"]["name"] == "Durchgehendes Heizen"
 
 
+def test_curated_multifield_name_used_verbatim():
+    # a curated label on a multi-field entity is the full display name; the field
+    # name must NOT be appended (as it is for an uncurated message-level label).
+    # Locks the Status01 flow/return labels derived from the field behaviour.
+    m = _msg("Status01", fields=[
+        FieldDef("temp", "", "D1C", None, None, "°C", ""),
+        FieldDef("temp_1", "", "D1C", None, None, "°C", "")])
+    de = sg.build_entities([m], "de")["sensor"]
+    assert de["status01_temp"]["name"] == "Vorlauftemperatur (Status)"
+    assert de["status01_temp_1"]["name"] == "Rücklauftemperatur (Status)"
+    # English keeps the technical message+field label (no curated English)
+    en = sg.build_entities([m], "en")["sensor"]
+    assert en["status01_temp"]["name"] == "Status01 temp"
+
+
 def test_de_omitted_without_translation_so_ha_falls_back():
     m = _msg("FooBar", fields=[FieldDef("value", "", "UIN", None, None, "", "")])
     en = sg.build_entities([m], "en")
