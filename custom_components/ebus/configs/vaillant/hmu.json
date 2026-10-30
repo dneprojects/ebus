@@ -1711,5 +1711,185 @@
         "unit": "kW"
       }
     ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyEnvironmentHeat",
+    "pbsb": "b516",
+    "id": "1000ffff42030000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyEnvironmentWater",
+    "pbsb": "b516",
+    "id": "1000ffff42040000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyEnvironmentCool",
+    "pbsb": "b516",
+    "id": "1000ffff42050000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyYieldHeat",
+    "pbsb": "b516",
+    "id": "1000ffff49030000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyYieldWater",
+    "pbsb": "b516",
+    "id": "1000ffff49040000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyYieldCool",
+    "pbsb": "b516",
+    "id": "1000ffff49050000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyElectricHeat",
+    "pbsb": "b516",
+    "id": "1000ffff83030000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyElectricWater",
+    "pbsb": "b516",
+    "id": "1000ffff83040000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "EnergyElectricCool",
+    "pbsb": "b516",
+    "id": "1000ffff83050000",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:7"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kWh"
+      }
+    ]
   }
 ]

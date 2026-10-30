@@ -175,6 +175,20 @@ def test_broadcast_updates_surface_as_reads():
     assert not writes
 
 
+def test_hmu_energy_counters_decode_kwh():
+    # the bundled HMU config exposes the nine b516/10 lifetime energy counters the
+    # sensoNET gateway polls; EXP + divisor must yield kWh (needs aioebus >= 0.5.1).
+    # Real 24h-log capture: EnergyEnvironmentHeat slave trailing float -> kWh/1000.
+    from aioebus.convert import from_dicts
+    hmu = _PKG / "configs" / "vaillant" / "hmu.json"
+    defs = {m.name: m for m in from_dicts(json.loads(hmu.read_text(encoding="utf-8")))}
+    energy = [n for n, m in defs.items() if n.startswith("Energy") and m.pbsb == "b516"]
+    assert len(energy) == 9
+    m = defs["EnergyEnvironmentHeat"]
+    assert m.decode_labeled("1000ffff42030000", "00000142035e35372f9f4b") == {
+        "EnergyEnvironmentHeat": 20864.622}
+
+
 def test_scan_all_covers_known_addresses():
     import importlib.util
     spec = importlib.util.spec_from_file_location("ebus_const", _PKG / "const.py")

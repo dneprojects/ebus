@@ -105,6 +105,19 @@ NAME_DE = {
     "status01_temp_2": "Außentemperatur (Status)",
     "status01_temp_3": "Warmwassertemperatur (Status)",
     "status01_temp_4": "Speichertemperatur (Status)",
+    # b516/10 lifetime energy counters the sensoNET gateway polls hourly (so they
+    # arrive passively); EXP float in kWh. source 0x42 ambient, 0x49 delivered heat,
+    # 0x83 electric input; usage 0x03 heating, 0x04 DHW, 0x05 cooling. Together they
+    # give the heat balance (SCOP = delivered heat / electric input).
+    "energyenvironmentheat": "Umweltenergie Heizen",
+    "energyenvironmentwater": "Umweltenergie Warmwasser",
+    "energyenvironmentcool": "Umweltenergie Kühlen",
+    "energyyieldheat": "Erzeugte Wärme Heizen",
+    "energyyieldwater": "Erzeugte Wärme Warmwasser",
+    "energyyieldcool": "Erzeugte Wärme Kühlen",
+    "energyelectricheat": "Stromverbrauch Heizen",
+    "energyelectricwater": "Stromverbrauch Warmwasser",
+    "energyelectriccool": "Stromverbrauch Kühlen",
 }
 STATE_DE = {
     "off": "Aus", "on": "Ein", "auto": "Auto", "yes": "Ja", "no": "Nein",

@@ -51,6 +51,19 @@ def test_curated_multifield_name_used_verbatim():
     assert en["status01_temp"]["name"] == "Status01 temp"
 
 
+def test_curated_energy_counter_names():
+    # b516/10 lifetime energy counters: a lone 'value' field (the IGN prefix is
+    # dropped) keys off the message name, so the curated German label is verbatim.
+    for name, de_name in (("EnergyEnvironmentHeat", "Umweltenergie Heizen"),
+                          ("EnergyElectricWater", "Stromverbrauch Warmwasser"),
+                          ("EnergyYieldCool", "Erzeugte Wärme Kühlen")):
+        m = _msg(name, fields=[
+            FieldDef("ign", "", "IGN:7", None, None, "", ""),
+            FieldDef("value", "", "EXP", 1000, None, "kWh", "")])
+        de = sg.build_entities([m], "de")["sensor"]
+        assert de[name.lower()]["name"] == de_name
+
+
 def test_de_omitted_without_translation_so_ha_falls_back():
     m = _msg("FooBar", fields=[FieldDef("value", "", "UIN", None, None, "", "")])
     en = sg.build_entities([m], "en")
