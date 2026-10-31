@@ -64,7 +64,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bo
         await hass.async_add_executor_job(_load_definitions)
         _migrate_control_classes(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=5)
+    if entry.minor_version < 6:
+        await hass.async_add_executor_job(_load_definitions)
+        _migrate_control_classes(hass, entry, _BECAME_INSTALLER_1_6)
+        hass.config_entries.async_update_entry(entry, minor_version=6)
     return True
+
+
+# heating-circuit limits moved from user to configuration in 1.6
+_BECAME_INSTALLER_1_6 = frozenset(
+    f"Hc{n}{name}" for n in "123"
+    for name in ("SummerTempLimit", "MinFlowTempDesired", "MaxFlowTempDesired"))
 
 
 def _load_definitions() -> None:
@@ -72,18 +82,22 @@ def _load_definitions() -> None:
     bundled_control_class("")
 
 
-def _migrate_control_classes(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
+def _migrate_control_classes(hass: HomeAssistant, entry: EbusConfigEntry,
+                             only: frozenset[str] | None = None) -> None:
     """1.4 -> 1.5: a writable register becomes a control only by its class
     (index.json 'controls'). Switch off configuration ones that used to be
     created enabled; the user can switch them on again. Controls a register no
-    longer gets are dropped at setup, where the device's own definition is known."""
+    longer gets are dropped at setup, where the device's own definition is known.
+    Later steps pass the registers they moved to configuration (``only``), so
+    configuration controls the user enabled since stay on."""
     registry = er.async_get(hass)
     for ent in er.async_entries_for_config_entry(registry, entry.entry_id):
         if ent.domain not in ("number", "select") or not ent.unique_id.endswith("_set"):
             continue
         parts = ent.unique_id.split("_", 3)  # <entry>_<zz>_<message>_<label>_set
-        cls = bundled_control_class(parts[2]) if len(parts) == 4 else None
-        if cls == "installer" and ent.disabled_by is None:
+        if len(parts) != 4 or (only is not None and parts[2] not in only):
+            continue
+        if bundled_control_class(parts[2]) == "installer" and ent.disabled_by is None:
             registry.async_update_entity(
                 ent.entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION)
 

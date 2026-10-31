@@ -56,7 +56,7 @@ async def test_migration_drops_retired_and_moves_renamed(hass: HomeAssistant):
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.minor_version == 5
+    assert entry.minor_version == 6
     # the renamed counter keeps its entity_id (and so its history)
     assert reg.async_get(renamed).unique_id == (
         f"{entry.entry_id}_08_EnergyGeneratedHc_EnergyGeneratedHc")
@@ -88,7 +88,7 @@ async def test_migration_suffixes_nameless_entity_ids(hass: HomeAssistant):
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.minor_version == 5
+    assert entry.minor_version == 6
     assert reg.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.entry_id}_08_StatusCirPump_StatusCirPump") \
         == "sensor.haustechnik_arotherm_plus_0_statuscirpump"
@@ -121,7 +121,7 @@ async def test_migration_scopes_ids_to_the_entry(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     e = entry.entry_id
-    assert entry.minor_version == 5
+    assert entry.minor_version == 6
     assert reg.async_get(sensor.entity_id).unique_id == f"{e}_08_FlowTemp_FlowTemp"
     assert reg.async_get(number.entity_id).unique_id == (
         f"{e}_15_HydraulicScheme_HydraulicScheme_set")

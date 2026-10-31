@@ -28,7 +28,7 @@ def _enable(enable_custom_integrations):
 
 def _coordinator(hass: HomeAssistant) -> tuple[EbusCoordinator, MockConfigEntry]:
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
-                            options={CONF_ALLOW_WRITE: True}, version=1, minor_version=5)
+                            options={CONF_ALLOW_WRITE: True}, version=1, minor_version=6)
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     coord.update_interval = None
@@ -56,7 +56,8 @@ async def test_counters_and_live_states_get_no_control(hass: HomeAssistant):
 
 async def test_installer_settings_are_disabled_configuration(hass: HomeAssistant):
     nums = await _entities(hass, number)
-    for name in ("HydraulicScheme", "KeyCodeforConfigMenu", "PumpAdditionalTime"):
+    for name in ("HydraulicScheme", "KeyCodeforConfigMenu", "PumpAdditionalTime",
+                 "Hc1SummerTempLimit", "Hc2MinFlowTempDesired", "Hc3MaxFlowTempDesired"):
         e = nums[name]
         assert e.entity_category is EntityCategory.CONFIG
         assert e.entity_registry_enabled_default is False
@@ -101,7 +102,7 @@ async def test_migration_disables_installer_controls_only(hass: HomeAssistant):
                             version=1, minor_version=4)
     entry.add_to_hass(hass)
     other = MockConfigEntry(domain=DOMAIN, data={"host": "5.6.7.8", "port": 9999},
-                            version=1, minor_version=5)
+                            version=1, minor_version=6)
     other.add_to_hass(hass)
     reg = er.async_get(hass)
 
@@ -118,11 +119,36 @@ async def test_migration_disables_installer_controls_only(hass: HomeAssistant):
     foreign = add("number", "HydraulicScheme", owner=other)
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.minor_version == 5
+    assert entry.minor_version == 6
     assert reg.async_get(scheme).disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert reg.async_get(mapping).disabled_by is er.RegistryEntryDisabler.USER
     for kept in (counter, opmode, own, foreign):  # counters go at setup, by device
         assert reg.async_get(kept).disabled_by is None, kept
+
+
+async def test_migration_1_6_switches_off_the_heating_circuit_limits_only(
+        hass: HomeAssistant):
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            version=1, minor_version=5)
+    entry.add_to_hass(hass)
+    reg = er.async_get(hass)
+
+    def add(name, **kw):
+        return reg.async_get_or_create("number", DOMAIN,
+                                       f"{entry.entry_id}_15_{name}_{name}_set",
+                                       config_entry=entry, **kw).entity_id
+
+    limits = [add(f"Hc{n}{x}") for n in "13"
+              for x in ("SummerTempLimit", "MinFlowTempDesired", "MaxFlowTempDesired")]
+    scheme = add("HydraulicScheme")  # configuration the user switched on since 1.5
+    curve = add("Hc1HeatCurve")
+    with patch("custom_components.ebus.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.minor_version == 6
+    for eid in limits:
+        assert reg.async_get(eid).disabled_by is er.RegistryEntryDisabler.INTEGRATION, eid
+    assert reg.async_get(scheme).disabled_by is None
+    assert reg.async_get(curve).disabled_by is None
 
 
 async def test_setup_drops_controls_a_register_no_longer_gets(hass: HomeAssistant):

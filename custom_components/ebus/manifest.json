@@ -9,6 +9,6 @@
   "issue_tracker": "https://github.com/dneprojects/ebus/issues",
   "quality_scale": "bronze",
   "requirements": ["aioebus>=0.6.1"],
-  "version": "0.6.0",
+  "version": "0.6.1",
   "zeroconf": ["_ebusd._tcp.local."]
 }

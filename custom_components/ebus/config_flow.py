@@ -83,8 +83,9 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     # 1.2: registry clean-up of retired/renamed messages; 1.3: suffix nameless ids;
     # 1.4: unique_ids scoped to the entry, adapter keyed independently of its IP;
-    # 1.5: number/select entities follow their register's control class
-    MINOR_VERSION = 5
+    # 1.5: number/select entities follow their register's control class;
+    # 1.6: heating-circuit limits became configuration
+    MINOR_VERSION = 6
 
     def __init__(self) -> None:
         self._discovered: dict[str, Any] = {}
