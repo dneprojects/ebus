@@ -40,3 +40,7 @@ SOURCE_ADDRESS: Final = 0x31
 # scanned device, injected by the coordinator so bus broadcasts become entities
 BROADCAST_ADDRESS: Final = 0xFE
 BROADCAST_IDENT: Final = "Broadcast"
+
+# per-entry stored files (value cache, extra addresses, identifications), each
+# named <prefix><entry_id> under .storage
+STORE_PREFIXES: Final[tuple[str, ...]] = ("ebus_cache_", "ebus_addrs_", "ebus_idents_")

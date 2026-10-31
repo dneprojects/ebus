@@ -29,6 +29,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -48,12 +49,13 @@ from .const import (
     SCAN_ALL_ADDRESSES,
     SOURCE_ADDRESS,
 )
-from .device import adapter_identifier
+from .device import ADAPTER_IDENTIFIER, device_info
 from .library import (
     all_messages,
     climate_zones,
     device_messages,
     fields_of,
+    preload,
     select_polled,
     timer_schedules,
 )
@@ -101,6 +103,11 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # the adapter shield's own web API (firmware, Wi-Fi, uptime); {} when the
         # adapter has no web UI or is unreachable
         self.adapter_status: dict[str, Any] = {}
+        self.adapter_device_id: str | None = None  # registry id of the hub device
+        # entity unique_ids start with the entry id, so two adapters (with devices
+        # on the same bus addresses) never collide
+        self.uid_prefix = entry.entry_id
+        self._link_lost_logged = False
         self._has_web = False
         self._writer: asyncio.StreamWriter | None = None
         self._supervisor: asyncio.Task[None] | None = None
@@ -118,6 +125,17 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # keep scanning them without repeating the full-space probe
         self._addr_store: Store[list[int]] = Store(
             hass, _CACHE_STORAGE_VERSION, f"ebus_addrs_{entry.entry_id}")
+        # last identification read per device (it never changes)
+        self._ident_store: Store[dict[str, Any]] = Store(
+            hass, _CACHE_STORAGE_VERSION, f"ebus_idents_{entry.entry_id}")
+
+    def uid(self, *parts: object) -> str:
+        """An entity unique_id scoped to this config entry."""
+        return "_".join((self.uid_prefix, *(str(p) for p in parts)))
+
+    def device_info(self, zz: int) -> DeviceInfo:
+        """DeviceInfo for a scanned device (hanging off the adapter hub)."""
+        return device_info(zz, self.devices.get(zz), self.adapter_device_id)
 
     async def _connect(self) -> tuple[SendFn, RecvFn]:
         async with asyncio.timeout(_CONNECT_TIMEOUT):
@@ -171,66 +189,42 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 raise  # the link dropped: retry the whole setup, not the next address
             except Exception as err:  # noqa: BLE001 - a missing device is normal
                 _LOGGER.debug("scan %#04x failed: %s", zz, err)
-        # the extended Vaillant identification (article/serial) -- the model the
-        # shared control-board id hides. Best-effort, Vaillant devices only.
-        for zz, scan in list(self.devices.items()):
-            if scan.mf != 0xB5:
-                continue
-            try:
-                ident = await scanner.read_identification(zz)
-            except ConnectionError:
-                raise  # the link dropped: retry the whole setup
-            except Exception as err:  # noqa: BLE001 - optional, never block setup
-                _LOGGER.debug("ident %#04x failed: %s", zz, err)
-                continue
-            if ident is not None:
-                self.idents[zz] = ident
-        # drop phantom addresses: a device answering on several addresses with the
-        # same serial is one physical device. Keep a known base address (else the
-        # lowest) and discard the duplicates, also from the device registry.
-        registry = dr.async_get(self.hass)
-        primary: dict[str, int] = {}
-        for zz in sorted(self.devices):
-            ident = self.idents.get(zz)
-            if ident is None or not ident.serial:
-                continue
-            prev = primary.get(ident.serial)
-            if prev is None:
-                primary[ident.serial] = zz
-                continue
-            drop = zz if (prev in SCAN_ADDRESSES or zz not in SCAN_ADDRESSES) else prev
-            if drop == prev:
-                primary[ident.serial] = zz
-            self.devices.pop(drop, None)
-            self.idents.pop(drop, None)
-            dev = registry.async_get_device(identifiers={(DOMAIN, f"{drop:02x}")})
-            if dev is not None:
-                registry.async_remove_device(dev.id)
-            _LOGGER.debug("eBUS: dropped duplicate %#04x (serial %s)", drop, ident.serial)
-        # remember devices found beyond the base (after dedup), so they survive
-        # turning the deep scan off without re-adding the phantoms
-        found_extras = sorted(set(self.devices) - set(SCAN_ADDRESSES))
-        if found_extras != sorted(extras):
-            await self._addr_store.async_save(found_extras)
+        await self._identify(scanner)
+        dropped = self._drop_duplicates()
+        # remember devices found beyond the base (after dedup), so later setups keep
+        # scanning them; a normal scan keeps one that missed this start, a deep
+        # scan (which probed every address) stores exactly what answered
+        found = set(self.devices) - set(SCAN_ADDRESSES)
+        keep = sorted((found if self.deep_scan else extras | found) - dropped)
+        if keep != sorted(extras):
+            await self._addr_store.async_save(keep)
+        if self.deep_scan:  # the option means "probe everything once": done
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options={**self.config_entry.options, CONF_DEEP_SCAN: False})
         # the broadcast circuit is not a scanned device: inject it so bus
         # broadcasts (outside temperature, date/time) become entities too
         self.devices[BROADCAST_ADDRESS] = ScanResult(
             mf=0, manufacturer="", ident=BROADCAST_IDENT,
             sw="", hw="", sw_num=None, hw_num=None)
         # register the adapter as the hub device: scanned devices hang off it
-        # (via_device) and the broadcast entities belong to it. Enrich it from the
-        # adapter shield's own web API when present (real firmware/hardware + a
-        # link straight to its web UI)
+        # (via_device_id) and the broadcast entities belong to it. Enrich it from
+        # the adapter shield's own web API when present (real firmware/hardware +
+        # a link straight to its web UI)
         self.adapter_status = await self._fetch_adapter_status()
         self._has_web = bool(self.adapter_status)
+        self._adopt_adapter_id()
         registry = dr.async_get(self.hass)
-        registry.async_get_or_create(**self._adapter_device_info())
+        self.adapter_device_id = registry.async_get_or_create(
+            **self._adapter_device_info()).id
         # drop the former synthetic 'Broadcast' device: its entities now live on
         # the adapter, so it lingers as an empty shell from older versions
-        stale = registry.async_get_device(
-            identifiers={(DOMAIN, f"{BROADCAST_ADDRESS:02x}")})
+        stale = registry.async_get_device_by_identifier(
+            (DOMAIN, f"{BROADCAST_ADDRESS:02x}"), self.config_entry.entry_id)
         if stale is not None:
             registry.async_remove_device(stale.id)
+        # every definition file is read now, off the event loop; from here on the
+        # library works from memory
+        await self.hass.async_add_executor_job(preload, self.devices, self.user_dir)
         # generate localized entity names on the user's machine from the upstream
         # CDN (never bundled): best-effort, so a CDN hiccup just leaves names English
         try:
@@ -254,6 +248,78 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
                      len(self.devices), len(self.read_messages), len(self.write_messages))
 
+    async def _identify(self, scanner: ActiveReader) -> None:
+        """Read the extended Vaillant identification (article/serial) -- the model
+        the shared control-board id hides. It never changes, so the last one read
+        is remembered and stands in when a device does not answer at this start
+        (a gateway busy right after a restart)."""
+        stored = await self._ident_store.async_load() or {}
+        known = {**stored}
+        for zz, scan in list(self.devices.items()):
+            if scan.mf != 0xB5:
+                continue
+            try:
+                ident = await scanner.read_identification(zz)
+            except ConnectionError:
+                raise  # the link dropped: retry the whole setup
+            except Exception as err:  # noqa: BLE001 - optional, never block setup
+                _LOGGER.debug("ident %#04x failed: %s", zz, err)
+                ident = None
+            key = f"{zz:02x}"
+            if ident is not None:
+                self.idents[zz] = ident
+                known[key] = {"ident": scan.ident, "hw": scan.hw, "sw": scan.sw,
+                              "article": ident.article,
+                              "serial": ident.serial, "year": ident.year, "week": ident.week}
+            elif (isinstance(prev := stored.get(key), dict) and prev.get("ident") == scan.ident
+                  and prev.get("hw") == scan.hw and prev.get("sw") == scan.sw):
+                self.idents[zz] = Identification(
+                    prev.get("article", ""), prev.get("serial", ""),
+                    prev.get("year"), prev.get("week"))
+                _LOGGER.debug("ident %#04x: using the remembered identification", zz)
+        if known != stored:
+            await self._ident_store.async_save(known)
+
+    def _drop_duplicates(self) -> set[int]:
+        """Drop phantom addresses: a device answering on several addresses with the
+        same serial is one physical device. Keep a known base address (else the
+        lowest) and discard the duplicates, also from the device registry."""
+        registry = dr.async_get(self.hass)
+        primary: dict[str, int] = {}
+        dropped: set[int] = set()
+        for zz in sorted(self.devices):
+            ident = self.idents.get(zz)
+            if ident is None or not ident.serial:
+                continue
+            prev = primary.get(ident.serial)
+            if prev is None:
+                primary[ident.serial] = zz
+                continue
+            drop = zz if (prev in SCAN_ADDRESSES or zz not in SCAN_ADDRESSES) else prev
+            if drop == prev:
+                primary[ident.serial] = zz
+            self.devices.pop(drop, None)
+            self.idents.pop(drop, None)
+            dropped.add(drop)
+            dev = registry.async_get_device_by_identifier(
+                (DOMAIN, f"{drop:02x}"), self.config_entry.entry_id)
+            if dev is not None:
+                registry.async_remove_device(dev.id)
+            _LOGGER.debug("eBUS: dropped duplicate %#04x (serial %s)", drop, ident.serial)
+        return dropped
+
+    def _adopt_adapter_id(self) -> None:
+        """Key the entry by the adapter's own id (its MAC) once it is known, so a
+        new IP address is recognised as the same adapter instead of a new one."""
+        adapter_id = self.adapter_status.get("id")
+        entry = self.config_entry
+        if not isinstance(adapter_id, str) or not adapter_id or entry.unique_id == adapter_id:
+            return
+        if any(e.unique_id == adapter_id
+               for e in self.hass.config_entries.async_entries(DOMAIN) if e is not entry):
+            return  # another entry already claims it; leave both untouched
+        self.hass.config_entries.async_update_entry(entry, unique_id=adapter_id)
+
     async def _fetch_adapter_status(self) -> dict[str, Any]:
         """Best-effort read of the adapter shield's web API (eBUS Adapter Shield /
         ebusd-ESP). Returns {} when the adapter has no web UI or is unreachable, so
@@ -261,8 +327,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         url = f"http://{self.host}/api/v1/status"
         try:
             session = async_get_clientsession(self.hass)
-            async with asyncio.timeout(5):
-                resp = await session.get(url)
+            async with asyncio.timeout(5), session.get(url) as resp:
                 if resp.status != 200:
                     return {}
                 data = await resp.json(content_type=None)
@@ -276,7 +341,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         st = self.adapter_status
         info: dict[str, Any] = {
             "config_entry_id": self.config_entry.entry_id,
-            "identifiers": {adapter_identifier(self.host, self.port)},
+            "identifiers": {ADAPTER_IDENTIFIER},
             "name": "eBUS Adapter",
             "manufacturer": "eBUS",
             "model": (f"eBUS Adapter Shield ({st['chip']})"
@@ -311,7 +376,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             polled = select_polled(
                 self.read_messages, enabled,
                 climate_zones(self.devices, self.user_dir),
-                timer_schedules(self.devices, self.user_dir))
+                timer_schedules(self.devices, self.user_dir), self.uid_prefix)
         return PollScheduler(polled, base_interval=self._base_interval,
                              default_priority=PLAIN_READ_PRIORITY)
 
@@ -351,16 +416,25 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 raise
             except Exception as err:  # noqa: BLE001 - keep the supervisor alive
                 _LOGGER.debug("engine stopped: %s", err)
-            _LOGGER.debug("eBUS: link to %s:%s lost, reconnecting", self.host, self.port)
+            # once per outage (a bus without SYN generator, e.g. heating off, would
+            # otherwise log every ~40 s); _async_update_data logs the recovery
+            self._log_once("eBUS: link to %s:%s lost, reconnecting", self.host, self.port)
             if self._writer is not None:
                 self._writer.close()
             await asyncio.sleep(_RECONNECT_BACKOFF)
             try:
                 send, recv = await self._connect()
                 self.engine.attach(send, recv)
-                _LOGGER.info("eBUS: reconnected to %s:%s", self.host, self.port)
+                _LOGGER.debug("eBUS: reconnected to %s:%s", self.host, self.port)
             except OSError as err:
-                _LOGGER.warning("eBUS: reconnect failed: %s", err)
+                _LOGGER.debug("eBUS: reconnect failed: %s", err)
+
+    def _log_once(self, msg: str, *args: object) -> None:
+        if self._link_lost_logged:
+            _LOGGER.debug(msg, *args)
+        else:
+            _LOGGER.warning(msg, *args)
+            self._link_lost_logged = True
 
     async def async_write(self, msg: MessageDef, value: object) -> None:
         """Write one value to a single-field register, then read it back so the
@@ -401,6 +475,9 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
     async def _async_update_data(self) -> EbusCache:
         if self.engine is None:
             raise UpdateFailed("engine not started")
+        if self._link_lost_logged and self.engine.stats.connected:
+            _LOGGER.info("eBUS: link to %s:%s restored", self.host, self.port)
+            self._link_lost_logged = False
         # refresh the adapter's web status for its diagnostic entities (only when
         # the adapter actually has a web UI, so a plain adapter isn't probed)
         if self._has_web:

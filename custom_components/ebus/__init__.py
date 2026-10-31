@@ -2,6 +2,10 @@
 library (talks to an enhanced eBUS adapter directly, no ebusd, no MQTT)."""
 from __future__ import annotations
 
+import logging
+import re
+from pathlib import Path
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -9,12 +13,15 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
-from .const import BROADCAST_ADDRESS, DOMAIN
+from .const import BROADCAST_ADDRESS, DOMAIN, STORE_PREFIXES
 from .coordinator import EbusCoordinator
-from .device import adapter_identifier
+from .device import ADAPTER_IDENTIFIER
 from .library import renamed_unique_id, retired_unique_id
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR, Platform.SENSOR, Platform.NUMBER,
@@ -24,6 +31,10 @@ type EbusConfigEntry = ConfigEntry[EbusCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool:
+    entry_ids = {e.entry_id for e in hass.config_entries.async_entries(DOMAIN)}
+    if removed := await hass.async_add_executor_job(
+            _remove_orphaned_stores, hass.config.path(".storage"), entry_ids):
+        _LOGGER.debug("eBUS: removed stored files of deleted entries: %s", removed)
     coordinator = EbusCoordinator(hass, entry, entry.data[CONF_HOST], entry.data[CONF_PORT])
     await coordinator.async_discover()
     await coordinator.async_config_entry_first_refresh()
@@ -46,7 +57,39 @@ async def async_migrate_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bo
     if entry.minor_version < 3:
         _migrate_nameless_entity_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=3)
+    if entry.minor_version < 4:
+        _migrate_scoped_ids(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=4)
     return True
+
+
+_ADAPTER_UID = re.compile(r"^ebus_(?![0-9a-f]{2}_)(?P<host>.+)_(?P<port>\d+)_(?P<rest>.+)$")
+
+
+def _migrate_scoped_ids(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
+    """1.3 -> 1.4: unique_ids start with the entry id instead of 'ebus' (two
+    adapters with devices on the same addresses never collide), and the adapter's
+    own entities and device are keyed independently of its address (a new IP
+    keeps them). Entity ids, and so history, stay as they are."""
+    registry = er.async_get(hass)
+    for ent in er.async_entries_for_config_entry(registry, entry.entry_id):
+        uid = ent.unique_id
+        if (m := _ADAPTER_UID.match(uid)) is not None:
+            new = f"{entry.entry_id}_adapter_{m['rest']}"
+        elif uid.startswith("ebus_"):
+            new = f"{entry.entry_id}_{uid[len('ebus_'):]}"
+        else:
+            continue
+        if registry.async_get_entity_id(ent.domain, DOMAIN, new):
+            registry.async_remove(ent.entity_id)
+        else:
+            registry.async_update_entity(ent.entity_id, new_unique_id=new)
+    devices = dr.async_get(hass)
+    old = (DOMAIN, f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}")
+    adapter = devices.async_get_device_by_identifier(old, entry.entry_id)
+    if adapter is not None and devices.async_get_device_by_identifier(
+            ADAPTER_IDENTIFIER, entry.entry_id) is None:
+        devices.async_update_device(adapter.id, new_identifiers={ADAPTER_IDENTIFIER})
 
 
 def _migrate_nameless_entity_ids(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
@@ -103,6 +146,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> boo
     return unloaded
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
+    """Delete the entry's stored files (value cache, addresses, identifications)."""
+    for prefix in STORE_PREFIXES:
+        await Store(hass, 1, f"{prefix}{entry.entry_id}").async_remove()
+
+
+def _remove_orphaned_stores(storage_dir: str, entry_ids: set[str]) -> list[str]:
+    """Delete stored files of entries that no longer exist (removed before this
+    clean-up existed). Blocking file I/O: run it in an executor."""
+    removed: list[str] = []
+    for path in Path(storage_dir).glob("ebus_*"):
+        for prefix in STORE_PREFIXES:
+            if not path.name.startswith(prefix):
+                continue
+            suffix = path.name[len(prefix):]
+            # a dot marks HA's own copies (e.g. '<key>.corrupt.<time>' kept for a
+            # repair issue): never ours to delete
+            if "." in suffix or suffix in entry_ids:
+                continue
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:  # best effort: a file we cannot delete must not stop setup
+                continue
+            removed.append(path.name)
+    return removed
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: EbusConfigEntry, device: DeviceEntry
 ) -> bool:
@@ -111,7 +181,7 @@ async def async_remove_config_entry_device(
     The adapter and every scanned device are kept; anything else (e.g. the former
     synthetic 'Broadcast' device, now folded into the adapter) may be removed."""
     coordinator = entry.runtime_data
-    kept = {adapter_identifier(coordinator.host, coordinator.port)}
+    kept = {ADAPTER_IDENTIFIER}
     kept |= {
         (DOMAIN, f"{zz:02x}")
         for zz in coordinator.devices

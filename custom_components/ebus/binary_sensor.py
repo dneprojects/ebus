@@ -36,8 +36,8 @@ class EbusAdapterSignal(CoordinatorEntity[EbusCoordinator], BinarySensorEntity):
 
     def __init__(self, coordinator: EbusCoordinator) -> None:
         super().__init__(coordinator)
-        self._attr_unique_id = f"ebus_{coordinator.host}_{coordinator.port}_signal"
-        self._attr_device_info = adapter_device_info(coordinator.host, coordinator.port)
+        self._attr_unique_id = coordinator.uid("adapter", "signal")
+        self._attr_device_info = adapter_device_info()
 
     @property
     def is_on(self) -> bool:

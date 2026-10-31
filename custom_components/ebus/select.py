@@ -13,7 +13,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .device import device_info
 from .library import fields_of, icon_for
 
 
@@ -43,12 +42,11 @@ class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
         self._msg = msg
         self._key = value_key(msg, label)
         zz = int(msg.zz, 16)
-        self._attr_unique_id = f"ebus_{'_'.join(str(p) for p in self._key)}_set"
+        self._attr_unique_id = coordinator.uid(*self._key, "set")
         self._attr_translation_key = translation_key(msg, field)
         self._attr_icon = icon_for(field)
         self._attr_options = list(dict.fromkeys(field.values.values()))
-        self._attr_device_info = device_info(
-            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
+        self._attr_device_info = coordinator.device_info(zz)
 
     @property
     def current_option(self) -> str | None:

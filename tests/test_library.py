@@ -99,9 +99,10 @@ def test_disabled_field_labels():
 def test_select_polled_only_enabled():
     reads = library.device_messages({0x15: _scan("CTLV3", "8004", "808")}, "r")
     target = next(m for m in reads if m.direction[:1] == "r" and library.fields_of(m))
-    uid = "ebus_" + "_".join(value_key(target, library.fields_of(target)[0].label))
-    assert library.select_polled(reads, {uid}, [], {}) == [target]  # only the enabled one
-    assert library.select_polled(reads, set(), [], {}) == []         # nothing enabled
+    uid = "E1_" + "_".join(value_key(target, library.fields_of(target)[0].label))
+    assert library.select_polled(reads, {uid}, [], {}, "E1") == [target]  # only the enabled one
+    assert library.select_polled(reads, set(), [], {}, "E1") == []        # nothing enabled
+    assert library.select_polled(reads, {uid}, [], {}, "E2") == []  # another entry's entity
 
 
 def test_resolve_user_file_prefix_and_variant():
@@ -236,6 +237,26 @@ def test_renamed_unique_id():
             == "ebus_18_TargetFlowTemp_TargetFlowTemp")
     assert library.renamed_unique_id("ebus_08_EnergyGeneratedHc_EnergyGeneratedHc") is None
     assert library.renamed_unique_id("ebus_18_YieldHc_YieldHc") is None  # retired, not renamed
+
+
+def test_preload_leaves_no_file_io(monkeypatch):
+    # after preload (run in an executor) the library works from memory: nothing
+    # it does later in the event loop may touch the disk
+    devices = {0x15: _scan("CTLV3", "8004", "808"), 0x08: _scan("HMU00", "5103", "0902")}
+    d = Path(tempfile.mkdtemp())
+    (d / "26.vr71x.json").write_text("[]", encoding="utf-8")
+    devices[0x26] = _scan("VR71X")  # covered by the user directory
+    library.preload(devices, d)
+
+    def no_io(*_a, **_k):
+        raise AssertionError("file I/O after preload")
+
+    monkeypatch.setattr(Path, "read_text", no_io)
+    monkeypatch.setattr(Path, "glob", no_io)
+    library.all_messages(devices, d)
+    library.climate_zones(devices, d)
+    library.timer_schedules(devices, d)
+    library.disabled_field_labels(devices[0x08])
 
 
 def test_scan_all_covers_known_addresses():

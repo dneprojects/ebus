@@ -14,7 +14,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .device import device_info
 from .library import NUMBER_TYPES, fields_of, icon_for
 
 
@@ -57,7 +56,7 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         self._msg = msg
         self._key = value_key(msg, label)
         zz = int(msg.zz, 16)
-        self._attr_unique_id = f"ebus_{'_'.join(str(p) for p in self._key)}_set"
+        self._attr_unique_id = coordinator.uid(*self._key, "set")
         self._attr_translation_key = translation_key(msg, field)
         self._attr_icon = icon_for(field)
         lo, hi, step = _bounds(field)
@@ -66,8 +65,7 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         self._attr_native_step = step
         if field.unit:
             self._attr_native_unit_of_measurement = field.unit
-        self._attr_device_info = device_info(
-            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
+        self._attr_device_info = coordinator.device_info(zz)
 
     @property
     def native_value(self) -> float | None:

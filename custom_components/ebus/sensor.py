@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .device import adapter_device_info, device_info
+from .device import adapter_device_info
 from .library import Field, disabled_field_labels, fields_of, icon_for
 
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
@@ -117,7 +117,7 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         self._field = field
         self._key = value_key(field.msg, field.label)
         zz = int(field.msg.zz, 16)
-        self._attr_unique_id = f"ebus_{'_'.join(str(p) for p in self._key)}"
+        self._attr_unique_id = coordinator.uid(*self._key)
         self._attr_translation_key = translation_key(field.msg, field.field)
         self._attr_icon = icon_for(field.field)
         # channels known to be unconnected on this device type (from the def
@@ -145,8 +145,7 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
                     state = None
                 self._attr_state_class = state
 
-        self._attr_device_info = device_info(
-            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
+        self._attr_device_info = coordinator.device_info(zz)
 
     @property
     def native_value(self) -> StateType:
@@ -189,8 +188,8 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         if icon is not None:
             self._attr_icon = icon
         slug = name.lower().replace(" ", "_").replace("-", "_")
-        self._attr_unique_id = f"ebus_{coordinator.host}_{coordinator.port}_{slug}"
-        self._attr_device_info = adapter_device_info(coordinator.host, coordinator.port)
+        self._attr_unique_id = coordinator.uid("adapter", slug)
+        self._attr_device_info = adapter_device_info()
 
     @property
     def native_value(self) -> StateType:
@@ -210,9 +209,8 @@ class EbusIdentSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         self._val = value
         self._attr_name = name
         self._attr_icon = icon
-        self._attr_unique_id = f"ebus_{zz:02x}_{name.lower()}"
-        self._attr_device_info = device_info(
-            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
+        self._attr_unique_id = coordinator.uid(f"{zz:02x}", name.lower())
+        self._attr_device_info = coordinator.device_info(zz)
 
     @property
     def native_value(self) -> StateType:

@@ -23,6 +23,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.ebus import climate
 from custom_components.ebus.const import DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
+from custom_components.ebus.device import ADAPTER_IDENTIFIER
 from custom_components.ebus.library import all_messages, device_messages, fields_of
 from custom_components.ebus.sensor import EbusSensor
 
@@ -55,9 +56,10 @@ async def test_migration_drops_retired_and_moves_renamed(hass: HomeAssistant):
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     # the renamed counter keeps its entity_id (and so its history)
-    assert reg.async_get(renamed).unique_id == "ebus_08_EnergyGeneratedHc_EnergyGeneratedHc"
+    assert reg.async_get(renamed).unique_id == (
+        f"{entry.entry_id}_08_EnergyGeneratedHc_EnergyGeneratedHc")
     assert reg.async_get(retired) is None
     assert reg.async_get(orphan) is None  # its successor already existed
     assert reg.async_get(successor) is not None
@@ -86,10 +88,45 @@ async def test_migration_suffixes_nameless_entity_ids(hass: HomeAssistant):
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.minor_version == 3
-    assert reg.async_get_entity_id("sensor", DOMAIN, "ebus_08_StatusCirPump_StatusCirPump") \
+    assert entry.minor_version == 4
+    assert reg.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_08_StatusCirPump_StatusCirPump") \
         == "sensor.haustechnik_arotherm_plus_0_statuscirpump"
     assert reg.async_get(named.entity_id) is not None
+
+
+async def test_migration_scopes_ids_to_the_entry(hass: HomeAssistant):
+    # 1.4: every unique_id starts with the entry id (two adapters never collide);
+    # the adapter's entities and device no longer depend on its IP address
+    entry = _entry(minor_version=3)
+    entry.add_to_hass(hass)
+    devices = dr.async_get(hass)
+    adapter = devices.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "1.2.3.4:9999")})
+    reg = er.async_get(hass)
+    sensor = reg.async_get_or_create("sensor", DOMAIN, "ebus_08_FlowTemp_FlowTemp",
+                                     config_entry=entry)
+    number = reg.async_get_or_create("number", DOMAIN, "ebus_15_Z1DayTemp_Z1DayTemp_set",
+                                     config_entry=entry)
+    signal = reg.async_get_or_create("binary_sensor", DOMAIN, "ebus_1.2.3.4_9999_signal",
+                                     config_entry=entry)
+    ident = reg.async_get_or_create("sensor", DOMAIN, "ebus_f6_artikelnummer",
+                                    config_entry=entry)
+    other = MockConfigEntry(domain="other")
+    other.add_to_hass(hass)
+    foreign = reg.async_get_or_create("sensor", "other", "ebus_08_x", config_entry=other)
+
+    with patch("custom_components.ebus.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    e = entry.entry_id
+    assert entry.minor_version == 4
+    assert reg.async_get(sensor.entity_id).unique_id == f"{e}_08_FlowTemp_FlowTemp"
+    assert reg.async_get(number.entity_id).unique_id == f"{e}_15_Z1DayTemp_Z1DayTemp_set"
+    assert reg.async_get(signal.entity_id).unique_id == f"{e}_adapter_signal"
+    assert reg.async_get(ident.entity_id).unique_id == f"{e}_f6_artikelnummer"
+    assert reg.async_get(foreign.entity_id).unique_id == "ebus_08_x"  # not ours
+    assert devices.async_get(adapter.id).identifiers == {ADAPTER_IDENTIFIER}
 
 
 async def test_unreachable_adapter_retries_setup(hass: HomeAssistant):
@@ -268,6 +305,6 @@ async def test_climate_zone_added_once_its_data_arrives(hass: HomeAssistant):
     await climate.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
     assert added == []
     coord.async_set_updated_data({("15", "Z1RoomTemp", "Z1RoomTemp"): 21.5})
-    assert [e.unique_id for e in added] == ["ebus_15_z1_climate"]
+    assert [e.unique_id for e in added] == [f"{entry.entry_id}_15_z1_climate"]
     coord.async_set_updated_data({("15", "Z1RoomTemp", "Z1RoomTemp"): 21.0})
     assert len(added) == 1  # added once, not on every update

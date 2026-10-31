@@ -196,10 +196,28 @@ def _messages_for(scan: ScanResult, user_dir: Path | None) -> list[MessageDef]:
     if name is not None:
         return list(_load_file(name))
     if user_dir is not None:
-        p = resolve_user_file(scan, user_dir)
-        if p is not None:
-            return from_dicts(json.loads(p.read_text(encoding="utf-8")))
+        return list(_user_messages(scan.ident, scan.hw, str(user_dir)))
     return []
+
+
+@cache
+def _user_messages(ident: str, hw: str, user_dir: str) -> tuple[MessageDef, ...]:
+    """A device's user-generated definition, read once per run (file I/O: warm it
+    in an executor, see preload)."""
+    scan = ScanResult(0, "", ident, "", hw, None, None)
+    p = resolve_user_file(scan, Path(user_dir))
+    if p is None:
+        return ()
+    return tuple(from_dicts(json.loads(p.read_text(encoding="utf-8"))))
+
+
+def preload(devices: dict[int, ScanResult], user_dir: Path | None = None) -> None:
+    """Read every definition file the devices need (blocking I/O, so call it in an
+    executor); afterwards the library works from memory only. User files are
+    re-read on every setup, so a regenerated one counts after a reload."""
+    _user_messages.cache_clear()
+    _index()
+    all_messages(devices, user_dir)
 
 
 def addressed_messages(address: int, scan: ScanResult,
@@ -378,13 +396,15 @@ def select_polled(
     enabled_uids: set[str],
     zones: list[ClimateZone],
     schedules: dict[tuple[str, str], list[TimerSlot]],
+    prefix: str,
 ) -> list[MessageDef]:
     """The read messages that back at least one *enabled* entity, so only those
-    are polled. ``enabled_uids`` is the set of enabled ebus entity unique_ids; a
-    read backs a sensor (uid 'ebus_<zz>_<name>_<label>'), a number/select (same
-    + '_set'), a climate zone or a calendar. Keyed by (zz, name, label) which a
-    read and its write twin share, so a writable's read twin is polled whenever
-    its number/select is enabled."""
+    are polled. ``enabled_uids`` is the set of enabled ebus entity unique_ids,
+    each starting with the entry's ``prefix``; a read backs a sensor (uid
+    '<prefix>_<zz>_<name>_<label>'), a number/select (same + '_set'), a climate
+    zone or a calendar. Keyed by (zz, name, label) which a read and its write
+    twin share, so a writable's read twin is polled whenever its number/select
+    is enabled."""
     polled: list[MessageDef] = []
     seen: set[int] = set()
 
@@ -397,16 +417,16 @@ def select_polled(
         if m.direction[:1] != "r":
             continue
         for field in fields_of(m):
-            base = "ebus_" + "_".join(value_key(m, field.label))
+            base = "_".join((prefix, *value_key(m, field.label)))
             if base in enabled_uids or f"{base}_set" in enabled_uids:
                 add(m)
                 break
     for zone in zones:
-        if f"ebus_{zone.zz}_z{zone.n}_climate" in enabled_uids:
+        if f"{prefix}_{zone.zz}_z{zone.n}_climate" in enabled_uids:
             for msg in (zone.target_read, zone.current, zone.mode_read, zone.shortname):
                 add(msg)
-    for (zz, prefix), slots in schedules.items():
-        if f"ebus_{zz}_{prefix}_timer".lower() in enabled_uids:
+    for (zz, tprefix), slots in schedules.items():
+        if f"{prefix}_{f'{zz}_{tprefix}_timer'.lower()}" in enabled_uids:
             for slot in slots:
                 add(slot.msg)
     return polled

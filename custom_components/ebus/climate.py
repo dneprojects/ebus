@@ -22,7 +22,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
-from .device import device_info
 from .library import ClimateZone, climate_zones
 
 
@@ -77,9 +76,8 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         zz = int(zone.zz, 16)
         short = coordinator.data.get(_key(zone.shortname)) if zone.shortname else None
         self._attr_name = short if isinstance(short, str) and short.strip() else zone.name
-        self._attr_unique_id = f"ebus_{zone.zz}_z{zone.n}_climate"
-        self._attr_device_info = device_info(
-            zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)
+        self._attr_unique_id = coordinator.uid(zone.zz, f"z{zone.n}", "climate")
+        self._attr_device_info = coordinator.device_info(zz)
 
         labels = _enum_labels(zone.mode_read) or _enum_labels(zone.mode_write)
         low = {v.lower(): v for v in labels}

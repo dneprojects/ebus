@@ -5,6 +5,7 @@ import asyncio
 import logging
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 from aioebus.transport import RECEIVED, EnhDecoder
 from homeassistant.config_entries import (
@@ -14,7 +15,8 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
@@ -62,12 +64,26 @@ async def _probe_adapter(host: str, port: int) -> str | None:
         writer.close()
 
 
+async def _adapter_id(hass: HomeAssistant, host: str) -> str | None:
+    """The adapter shield's own id (its MAC) from its web API, or None for an
+    adapter without one. Keys the entry independently of the IP address."""
+    try:
+        async with (asyncio.timeout(3),
+                    async_get_clientsession(hass).get(f"http://{host}/api/v1/status") as resp):
+            data = await resp.json(content_type=None) if resp.status == 200 else None
+    except (TimeoutError, aiohttp.ClientError, ValueError):
+        return None
+    adapter_id = data.get("id") if isinstance(data, dict) else None
+    return adapter_id if isinstance(adapter_id, str) and adapter_id else None
+
+
 class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Ask for the enhanced adapter's host and port, or confirm a discovered one."""
 
     VERSION = 1
-    # 1.2: registry clean-up of retired/renamed messages; 1.3: suffix nameless ids
-    MINOR_VERSION = 3
+    # 1.2: registry clean-up of retired/renamed messages; 1.3: suffix nameless ids;
+    # 1.4: unique_ids scoped to the entry, adapter keyed independently of its IP
+    MINOR_VERSION = 4
 
     def __init__(self) -> None:
         self._discovered: dict[str, Any] = {}
@@ -79,10 +95,16 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            await self.async_set_unique_id(f"{host}:{port}")
-            self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(
+                await _adapter_id(self.hass, host) or f"{host}:{port}")
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
             probe = await _probe_adapter(host, port)
             if probe is None:
+                # the same adapter under a new, working address updates its entry
+                # (only after the probe, so a wrong port never breaks a working
+                # entry); its update listener reloads it
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: host, CONF_PORT: port}, reload_on_update=False)
                 return self.async_create_entry(
                     title=f"eBUS ({host})", data={CONF_HOST: host, CONF_PORT: port},
                     options={CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE]})
@@ -101,8 +123,12 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle an adapter found via mDNS (it advertises _ebusd._tcp)."""
         host = discovery_info.host
         port = discovery_info.port or DEFAULT_PORT
-        await self.async_set_unique_id(f"{host}:{port}")
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
+        # an adapter at a configured address is known, even when its web API is
+        # busy for a moment (it must not be probed or offered a second time)
+        self._async_abort_entries_match({CONF_HOST: host})
+        await self.async_set_unique_id(await _adapter_id(self.hass, host) or f"{host}:{port}")
+        # the same adapter at a new IP: follow it (the entry's listener reloads it)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host}, reload_on_update=False)
         # only offer it if it is really a usable enh adapter (filters out an ebusd
         # daemon advertising the same service, and an adapter held by another client)
         if await _probe_adapter(host, port) is not None:

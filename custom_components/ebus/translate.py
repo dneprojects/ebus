@@ -35,6 +35,7 @@ _SCHEMA = 4  # bump to force regeneration when the generated structure changes
 _PKG = Path(__file__).parent
 _TDIR = _PKG / "translations"
 _MARKER = _TDIR / ".ebus_gen"
+_FETCH_BUDGET = 20  # s for the whole CDN fetch at setup
 
 
 def _cdn_paths(devices: dict[int, ScanResult]) -> list[str]:
@@ -48,12 +49,13 @@ def _cdn_paths(devices: dict[int, ScanResult]) -> list[str]:
 
 
 async def _fetch(session, lang: str, path: str) -> str | None:
+    """The file's text; "" when the CDN has no such file (final: e.g. a language
+    upstream does not translate); None when it could not be reached (retry)."""
     url = f"{_CDN}/{lang}/{path}.csv"
     try:
-        async with asyncio.timeout(15):
-            resp = await session.get(url)
+        async with asyncio.timeout(15), session.get(url) as resp:
             if resp.status != 200:
-                return None
+                return ""
             return await resp.text()
     except (TimeoutError, aiohttp.ClientError) as err:
         _LOGGER.debug("eBUS: CDN %s unreachable: %s", url, err)
@@ -70,6 +72,8 @@ def _files_digest(languages: list[str]) -> str:
 def _marker_matches(sig: str, languages: list[str]) -> bool:
     """The marker holds the signature AND a digest of the files it wrote, so files
     replaced behind our back (an update shipping the plain baseline) regenerate."""
+    if not sig:
+        return False
     try:
         return _MARKER.read_text(encoding="utf-8").split() == [sig, _files_digest(languages)]
     except OSError:
@@ -85,13 +89,21 @@ def _write_files(files: dict[str, dict], sig: str) -> None:
 
 
 def _clear_cache(hass: HomeAssistant) -> None:
-    """Drop HA's flattened-translation cache so the freshly written files are
-    re-read. The frontend still serves its own cached copy until the page is
-    reloaded, so a restart (or browser refresh) is what actually shows the new
-    names -- this just makes that refresh pick them up instead of the old cache."""
+    """Forget this integration's entries in HA's flattened-translation cache so
+    the freshly written files are re-read (other integrations' entries stay).
+    The frontend still serves its own cached copy until the page is reloaded,
+    so a restart (or browser refresh) is what actually shows the new names."""
     try:
         from homeassistant.helpers.translation import TRANSLATION_FLATTEN_CACHE
-        hass.data.pop(TRANSLATION_FLATTEN_CACHE, None)
+        cache = hass.data.get(TRANSLATION_FLATTEN_CACHE)
+        if cache is None:
+            return
+        data = cache.cache_data
+        for components in data.loaded.values():
+            components.discard(DOMAIN)
+        for categories in data.cache.values():
+            for by_component in categories.values():
+                by_component.pop(DOMAIN, None)
     except Exception as err:  # noqa: BLE001 - best effort; a restart applies it anyway
         _LOGGER.debug("eBUS: could not clear translation cache: %s", err)
 
@@ -119,22 +131,28 @@ async def async_update_translations(
         return  # already generated for this device set + languages + definitions
 
     session = async_get_clientsession(hass)
+    jobs = [(lang, path) for lang in languages for path in paths]
+    try:  # all files at once, and never holding up the setup for long
+        async with asyncio.timeout(_FETCH_BUDGET):
+            texts = await asyncio.gather(*(_fetch(session, lang, path) for lang, path in jobs))
+    except TimeoutError:
+        _LOGGER.debug("eBUS: CDN too slow, names stay as they are for now")
+        return
     by_lang: dict[str, list] = {}
-    for lang in languages:
-        msgs: list = []
-        for path in paths:
-            text = await _fetch(session, lang, path)
-            if text:
-                msgs += parse_csv(text)
-        if msgs:
-            by_lang[lang] = msgs
+    for (lang, _path), text in zip(jobs, texts, strict=True):
+        if text:
+            by_lang.setdefault(lang, []).extend(parse_csv(text))
     if "en" not in by_lang:  # the English base must be present
         return
 
     defs = all_messages(devices, user_dir)
     attach_translations(defs, by_lang)
     files = {lang: strings_gen.build_strings(defs, lang) for lang in languages}
-    await hass.async_add_executor_job(_write_files, files, sig)
+    # only a complete fetch is remembered: after one the CDN could not fully
+    # serve (unreachable, timed out) the next start tries again instead of
+    # keeping the gap; a file it does not have at all is final
+    complete = all(text is not None for text in texts)
+    await hass.async_add_executor_job(_write_files, files, sig if complete else "")
     _clear_cache(hass)
     _LOGGER.info("eBUS: generated %s translations from %d CDN file(s)",
                  "/".join(languages), len(paths))

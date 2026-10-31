@@ -37,9 +37,7 @@ rules:
     status: todo
     comment: Sensors go unavailable without a cached value; number/select still rely only on the coordinator's last-update state.
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: Reconnects are logged, but not yet as a single log-once-per-outage pattern.
+  log-when-unavailable: done
   parallel-updates:
     status: todo
     comment: PARALLEL_UPDATES is not yet declared on the platforms.
@@ -48,7 +46,7 @@ rules:
     comment: The adapter needs no credentials, so there is nothing to re-authenticate.
   test-coverage:
     status: todo
-    comment: Library resolution, the config flow, setup retry, link loss, the entry migration and late climate zones are covered; full platform coverage is pending.
+    comment: Library resolution, the config flow, a full setup with platforms, setup retry, link loss, the entry migrations, the write path and late climate zones are covered; per-platform entity tests are pending.
 
   # --- Gold -----------------------------------------------------------------
   devices: done
