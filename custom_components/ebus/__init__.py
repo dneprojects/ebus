@@ -68,13 +68,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bo
         await hass.async_add_executor_job(_load_definitions)
         _migrate_control_classes(hass, entry, _BECAME_INSTALLER_1_6)
         hass.config_entries.async_update_entry(entry, minor_version=6)
+    if entry.minor_version < 7:
+        await hass.async_add_executor_job(_load_definitions)
+        _migrate_control_classes(hass, entry, _BECAME_INSTALLER_1_7)
+        hass.config_entries.async_update_entry(entry, minor_version=7)
     return True
 
 
-# heating-circuit limits moved from user to configuration in 1.6
+# heating-circuit limits moved from user to configuration in 1.6, cooling in 1.7
 _BECAME_INSTALLER_1_6 = frozenset(
     f"Hc{n}{name}" for n in "123"
     for name in ("SummerTempLimit", "MinFlowTempDesired", "MaxFlowTempDesired"))
+_BECAME_INSTALLER_1_7 = frozenset(f"Hc{n}MinCoolingTempDesired" for n in "123")
 
 
 def _load_definitions() -> None:
