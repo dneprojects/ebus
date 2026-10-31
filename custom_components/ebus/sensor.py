@@ -8,7 +8,7 @@ from aioebus.engine import value_key
 from aioebus.translations import translation_key
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfInformation, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -95,16 +95,32 @@ async def async_setup_entry(
     if coordinator.adapter_status:  # adapter has a web UI -> add its own metrics
         specs += _ADAPTER_WEB_SENSORS
     entities += [EbusAdapterSensor(coordinator, *spec) for spec in specs]
-    # per-device Vaillant identification (article/serial), static diagnostic values
-    for zz, ident in coordinator.idents.items():
-        entities.append(
-            EbusIdentSensor(coordinator, zz, "Artikelnummer", ident.article, "mdi:barcode"))
-        entities.append(
-            EbusIdentSensor(coordinator, zz, "Seriennummer", ident.serial, "mdi:identifier"))
-        if ident.year:
-            entities.append(EbusIdentSensor(
-                coordinator, zz, "Baujahr", f"{ident.year} KW{ident.week:02d}", "mdi:calendar"))
     async_add_entities(entities)
+
+    # per-device Vaillant identification (article/serial), static diagnostic
+    # values; one read later at runtime adds its sensors then
+    identified: set[int] = set()
+
+    @callback
+    def _add_ident_sensors() -> None:
+        new: list[SensorEntity] = []
+        for zz, ident in coordinator.idents.items():
+            if zz in identified:
+                continue
+            identified.add(zz)
+            new.append(
+                EbusIdentSensor(coordinator, zz, "Artikelnummer", ident.article, "mdi:barcode"))
+            new.append(
+                EbusIdentSensor(coordinator, zz, "Seriennummer", ident.serial, "mdi:identifier"))
+            if ident.year:
+                new.append(EbusIdentSensor(
+                    coordinator, zz, "Baujahr", f"{ident.year} KW{ident.week:02d}",
+                    "mdi:calendar"))
+        if new:
+            async_add_entities(new)
+
+    _add_ident_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_add_ident_sensors))
 
 
 class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):

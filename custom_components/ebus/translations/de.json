@@ -1653,6 +1653,9 @@
       }
     },
     "number": {
+      "continuousheating": {
+        "name": "Durchheizen unter Außentemperatur"
+      },
       "frostoverridetime": {
         "name": "Frostschutz-Verzögerung"
       },
@@ -1668,6 +1671,12 @@
       "pumpadditionaltime": {
         "name": "Pumpennachlaufzeit"
       },
+      "cylinderchargehyst": {
+        "name": "Speicherladung Hysterese"
+      },
+      "cylinderchargeoffset": {
+        "name": "Speicherladung Überhöhung"
+      },
       "hydraulicscheme": {
         "name": "Hydraulikschema"
       },
@@ -1676,6 +1685,9 @@
       },
       "yieldtotal": {
         "name": "Umweltertrag gesamt"
+      },
+      "hwcmaxflowtempdesired": {
+        "name": "Warmwasser Vorlauf-Sollwert max."
       },
       "prfuelsumhcthismonth": {
         "name": "Brennstoff Heizen dieser Monat"
@@ -1716,11 +1728,53 @@
       "keycodeforconfigmenu": {
         "name": "Code Fachhandwerkerebene"
       },
+      "outsidetempavg": {
+        "name": "Außentemperatur Mittelwert"
+      },
+      "hwctempdesired": {
+        "name": "Warmwasser Sollwert"
+      },
+      "hc1excesstemp": {
+        "name": "Heizkreis 1 Vorlauf-Überhöhung"
+      },
+      "hc1heatcurve": {
+        "name": "Heizkreis 1 Heizkurve"
+      },
+      "hc1maxflowtempdesired": {
+        "name": "Heizkreis 1 Vorlauf-Sollwert max."
+      },
+      "hc1mincoolingtempdesired": {
+        "name": "Heizkreis 1 Kühl-Vorlauf min."
+      },
+      "hc1minflowtempdesired": {
+        "name": "Heizkreis 1 Vorlauf-Sollwert min."
+      },
+      "hc1summertemplimit": {
+        "name": "Heizkreis 1 AT-Abschaltgrenze"
+      },
       "hc1status": {
         "name": "Heizkreis 1 Status"
       },
       "hc1pumpstatus": {
         "name": "Heizkreis 1 Pumpe"
+      },
+      "hc2excesstemp": {
+        "name": "Heizkreis 2 Vorlauf-Überhöhung"
+      },
+      "hc2heatcurve": {
+        "name": "Heizkreis 2 Heizkurve"
+      },
+      "hc2maxflowtempdesired": {
+        "name": "Heizkreis 2 Vorlauf-Sollwert max."
+      },
+      "hc2mincoolingtempdesired": {
+        "name": "Heizkreis 2 Kühl-Vorlauf min."
+      },
+      "hc2minflowtempdesired": {
+        "name": "Heizkreis 2 Vorlauf-Sollwert min."
+      },
+      "hc2summertemplimit": {
+        "name": "Heizkreis 2 AT-Abschaltgrenze"
       },
       "hc2status": {
         "name": "Heizkreis 2 Status"
@@ -1728,20 +1782,98 @@
       "hc2pumpstatus": {
         "name": "Heizkreis 2 Pumpe"
       },
+      "hc3excesstemp": {
+        "name": "Heizkreis 3 Vorlauf-Überhöhung"
+      },
+      "hc3heatcurve": {
+        "name": "Heizkreis 3 Heizkurve"
+      },
+      "hc3maxflowtempdesired": {
+        "name": "Heizkreis 3 Vorlauf-Sollwert max."
+      },
+      "hc3mincoolingtempdesired": {
+        "name": "Heizkreis 3 Kühl-Vorlauf min."
+      },
+      "hc3minflowtempdesired": {
+        "name": "Heizkreis 3 Vorlauf-Sollwert min."
+      },
+      "hc3summertemplimit": {
+        "name": "Heizkreis 3 AT-Abschaltgrenze"
+      },
       "hc3status": {
         "name": "Heizkreis 3 Status"
       },
       "hc3pumpstatus": {
         "name": "Heizkreis 3 Pumpe"
       },
+      "z1coolingtemp": {
+        "name": "Zone 1 Kühl-Sollwert"
+      },
+      "z1holidaytemp": {
+        "name": "Zone 1 Urlaubs-Sollwert"
+      },
+      "z1quickvetotemp": {
+        "name": "Zone 1 Quick-Veto Sollwert"
+      },
+      "z1quickvetoduration": {
+        "name": "Zone 1 Quick-Veto Dauer"
+      },
+      "z1nighttemp": {
+        "name": "Zone 1 Absenk-Sollwert"
+      },
       "z1valvestatus": {
         "name": "Zone 1 Ventilstatus"
+      },
+      "z1actualroomtempdesired": {
+        "name": "Zone 1 Raum-Sollwert aktuell"
+      },
+      "z1daytemp": {
+        "name": "Zone 1 Tag-Sollwert"
+      },
+      "z2coolingtemp": {
+        "name": "Zone 2 Kühl-Sollwert"
+      },
+      "z2holidaytemp": {
+        "name": "Zone 2 Urlaubs-Sollwert"
+      },
+      "z2quickvetotemp": {
+        "name": "Zone 2 Quick-Veto Sollwert"
+      },
+      "z2quickvetoduration": {
+        "name": "Zone 2 Quick-Veto Dauer"
+      },
+      "z2nighttemp": {
+        "name": "Zone 2 Absenk-Sollwert"
       },
       "z2valvestatus": {
         "name": "Zone 2 Ventilstatus"
       },
+      "z2actualroomtempdesired": {
+        "name": "Zone 2 Raum-Sollwert aktuell"
+      },
+      "z2daytemp": {
+        "name": "Zone 2 Tag-Sollwert"
+      },
+      "z3holidaytemp": {
+        "name": "Zone 3 Urlaubs-Sollwert"
+      },
+      "z3quickvetotemp": {
+        "name": "Zone 3 Quick-Veto Sollwert"
+      },
+      "z3quickvetoduration": {
+        "name": "Zone 3 Quick-Veto Dauer"
+      },
+      "z3nighttemp": {
+        "name": "Zone 3 Absenk-Sollwert"
+      },
       "z3valvestatus": {
         "name": "Zone 3 Ventilstatus"
+      },
+      "z3actualroomtempdesired": {
+        "name": "Zone 3 Raum-Sollwert aktuell"
+      },
+      "z3daytemp": {
+        "name": "Zone 3 Tag-Sollwert"
       },
       "manualtappingtempdesired": {
         "name": "Zapf-Sollwert manuell"

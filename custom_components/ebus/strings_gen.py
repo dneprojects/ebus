@@ -591,7 +591,7 @@ CURATED_NAMES = {"de": NAME_DE}
 CURATED_STATES = {"de": STATE_DE}
 
 NUMBER_TYPES = frozenset(
-    {"UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "D1B", "D1C", "D2B", "D2C", "FLT"})
+    {"UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "D1B", "D1C", "D2B", "D2C", "FLT", "EXP", "EXR"})
 
 
 def _decodable(msg: MessageDef) -> list[FieldDef]:

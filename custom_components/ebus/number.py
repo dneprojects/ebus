@@ -9,16 +9,17 @@ from aioebus.messages import FieldDef, MessageDef
 from aioebus.translations import translation_key
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .library import NUMBER_TYPES, fields_of, icon_for
+from .library import FLOAT_TYPES, NUMBER_TYPES, fields_of, icon_for, number_bounds
 
 
 def _bounds(field: FieldDef) -> tuple[float, float, float]:
-    """Rough (min, max, step) for a numeric field from its type + divisor."""
+    """Rough (min, max, step) for an integer field from its type + divisor."""
     codec = make_codec(field.type)
     size = codec.length
     base_div = getattr(codec, "base_div", 1)
@@ -40,8 +41,14 @@ async def async_setup_entry(
         if len(fields) != 1:
             continue  # only simple single-field writes for now
         field = fields[0]
-        if field.field.type.upper() in NUMBER_TYPES and not field.field.values:
-            entities.append(EbusNumber(coordinator, msg, field.field, field.label))
+        kind = field.field.type.upper()
+        if field.field.values or kind not in NUMBER_TYPES | FLOAT_TYPES:
+            continue
+        cls = coordinator.control_class(msg)
+        if cls == "none":
+            coordinator.remove_control("number", msg, field.label)
+        else:
+            entities.append(EbusNumber(coordinator, msg, field.field, field.label, cls))
     async_add_entities(entities)
 
 
@@ -50,7 +57,8 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
     _attr_mode = NumberMode.BOX
 
     def __init__(
-        self, coordinator: EbusCoordinator, msg: MessageDef, field: FieldDef, label: str
+        self, coordinator: EbusCoordinator, msg: MessageDef, field: FieldDef, label: str,
+        cls: str,
     ) -> None:
         super().__init__(coordinator)
         self._msg = msg
@@ -59,7 +67,11 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         self._attr_unique_id = coordinator.uid(*self._key, "set")
         self._attr_translation_key = translation_key(msg, field)
         self._attr_icon = icon_for(field)
-        lo, hi, step = _bounds(field)
+        if cls == "installer":  # a configuration setting: shown only once enabled
+            self._attr_entity_category = EntityCategory.CONFIG
+            self._attr_entity_registry_enabled_default = False
+        bounds = number_bounds(coordinator.devices.get(zz), msg.name, field)
+        lo, hi, step = bounds or _bounds(field)
         self._attr_native_min_value = lo
         self._attr_native_max_value = hi
         self._attr_native_step = step

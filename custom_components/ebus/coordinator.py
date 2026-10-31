@@ -21,7 +21,7 @@ from aioebus.engine import EbusEngine, value_key
 from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
-from aioebus.scan import Identification, ScanResult
+from aioebus.scan import Identification, ScanResult, decode_identification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -53,6 +53,7 @@ from .device import ADAPTER_IDENTIFIER, device_info
 from .library import (
     all_messages,
     climate_zones,
+    control_class,
     device_messages,
     fields_of,
     preload,
@@ -66,6 +67,8 @@ _RECONNECT_BACKOFF: Final = 10  # seconds between reconnect attempts
 _CONNECT_TIMEOUT: Final = 10  # s to open the adapter connection
 _RECV_TIMEOUT: Final = 30  # s without a single byte before the link counts as dead
 _RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into one rebuild
+# pauses (s) before each runtime attempt at an identification missed at setup
+_IDENT_RETRY_DELAYS: Final = (60, 240, 600, 900, 1800)
 _CACHE_STORAGE_VERSION: Final = 1
 _CACHE_SAVE_DELAY: Final = 20  # s; throttle persisting the cache (below the
 # poll interval so the delayed write actually fires between updates)
@@ -128,10 +131,23 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # last identification read per device (it never changes)
         self._ident_store: Store[dict[str, Any]] = Store(
             hass, _CACHE_STORAGE_VERSION, f"ebus_idents_{entry.entry_id}")
+        self._ident_known: dict[str, Any] = {}  # the store's content, kept current
 
     def uid(self, *parts: object) -> str:
         """An entity unique_id scoped to this config entry."""
         return "_".join((self.uid_prefix, *(str(p) for p in parts)))
+
+    def control_class(self, msg: MessageDef) -> str:
+        """"user", "installer" or "none" for a writable register (see library)."""
+        return control_class(self.devices.get(int(msg.zz, 16)), msg.name)
+
+    def remove_control(self, domain: str, msg: MessageDef, label: str) -> None:
+        """Drop the registry entry of a control this register no longer gets
+        (registered by a version before the classes existed)."""
+        registry = er.async_get(self.hass)
+        uid = self.uid(*value_key(msg, label), "set")
+        if entity_id := registry.async_get_entity_id(domain, DOMAIN, uid):
+            registry.async_remove(entity_id)
 
     def device_info(self, zz: int) -> DeviceInfo:
         """DeviceInfo for a scanned device (hanging off the adapter hub)."""
@@ -245,6 +261,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             er.EVENT_ENTITY_REGISTRY_UPDATED, self._on_registry_update))
         self._supervisor = self.config_entry.async_create_background_task(
             self.hass, self._run_forever(), name="ebus-supervisor")
+        self.config_entry.async_create_background_task(
+            self.hass, self._late_identify(), name="ebus-identify")
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
                      len(self.devices), len(self.read_messages), len(self.write_messages))
 
@@ -254,7 +272,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         is remembered and stands in when a device does not answer at this start
         (a gateway busy right after a restart)."""
         stored = await self._ident_store.async_load() or {}
-        known = {**stored}
+        self._ident_known = {**stored}
         for zz, scan in list(self.devices.items()):
             if scan.mf != 0xB5:
                 continue
@@ -267,18 +285,51 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 ident = None
             key = f"{zz:02x}"
             if ident is not None:
-                self.idents[zz] = ident
-                known[key] = {"ident": scan.ident, "hw": scan.hw, "sw": scan.sw,
-                              "article": ident.article,
-                              "serial": ident.serial, "year": ident.year, "week": ident.week}
+                self._remember_ident(zz, scan, ident)
             elif (isinstance(prev := stored.get(key), dict) and prev.get("ident") == scan.ident
                   and prev.get("hw") == scan.hw and prev.get("sw") == scan.sw):
                 self.idents[zz] = Identification(
                     prev.get("article", ""), prev.get("serial", ""),
                     prev.get("year"), prev.get("week"))
                 _LOGGER.debug("ident %#04x: using the remembered identification", zz)
-        if known != stored:
-            await self._ident_store.async_save(known)
+        if self._ident_known != stored:
+            await self._ident_store.async_save(self._ident_known)
+
+    def _remember_ident(self, zz: int, scan: ScanResult, ident: Identification) -> None:
+        self.idents[zz] = ident
+        self._ident_known[f"{zz:02x}"] = {
+            "ident": scan.ident, "hw": scan.hw, "sw": scan.sw, "article": ident.article,
+            "serial": ident.serial, "year": ident.year, "week": ident.week}
+
+    async def _late_identify(self) -> None:
+        """Read the identification of Vaillant devices that did not answer it at
+        setup (e.g. behind a slow bus coupler) through the running engine, a few
+        times with growing pauses. Once read it is remembered for later starts."""
+        for delay in _IDENT_RETRY_DELAYS:
+            missing = [zz for zz, scan in self.devices.items()
+                       if scan.mf == 0xB5 and zz not in self.idents]
+            if not missing:
+                return
+            await asyncio.sleep(delay)
+            for zz in missing:
+                ident = await self._read_ident(zz)
+                if ident is None:
+                    continue
+                self._remember_ident(zz, self.devices[zz], ident)
+                await self._ident_store.async_save(self._ident_known)
+                _LOGGER.debug("ident %#04x read at runtime", zz)
+                self.async_update_listeners()  # the sensor platform adds its entities
+
+    async def _read_ident(self, zz: int) -> Identification | None:
+        if self.engine is None:
+            return None
+        try:
+            parts = [await self.engine.read_raw(zz, "b509", msgid)
+                     for msgid in ("24", "25", "26", "27")]
+        except (TimeoutError, ReadError, OSError) as err:
+            _LOGGER.debug("ident %#04x at runtime failed: %s", zz, err)
+            return None
+        return decode_identification(*parts)
 
     def _drop_duplicates(self) -> set[int]:
         """Drop phantom addresses: a device answering on several addresses with the

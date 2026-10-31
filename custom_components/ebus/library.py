@@ -25,6 +25,7 @@ _CONFIG_DIR: Final = Path(__file__).parent / "configs" / "vaillant"
 # numeric field types that can be written as a Home Assistant number
 NUMBER_TYPES: Final[frozenset[str]] = frozenset(
     {"UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "D1B", "D1C", "D2B", "D2C", "FLT"})
+FLOAT_TYPES: Final[frozenset[str]] = frozenset({"EXP", "EXR"})  # need explicit bounds
 
 # mdi icon by unit, else by a keyword in the field name (mirrors the eBUS Bridge)
 _UNIT_ICON: Final[dict[str, str]] = {
@@ -107,6 +108,61 @@ def _profile_value(scan: ScanResult, key: str, table: str) -> Any:
     if key in profile:
         return profile[key]
     return _index().get(table, {}).get(profile["file"])
+
+
+def control_class(scan: ScanResult | None, message: str) -> str:
+    """What a writable register becomes: "user" (a control, enabled), "installer"
+    (a configuration control, created disabled) or "none" (no control, the
+    sensor only), from the 'controls' section of index.json. A bundled file
+    lists its user and installer registers, so anything unlisted (a counter, a
+    live state) gets no control; a device without a section (a user-generated
+    definition) gets configuration controls the user enables deliberately."""
+    profile = _profile(scan.ident, scan.hw) if scan is not None else None
+    section = _index().get("controls", {}).get(profile["file"]) if profile else None
+    if not isinstance(section, dict):
+        return "installer"
+    for cls in ("user", "installer"):
+        if message in section.get(cls, ()):
+            return cls
+    return "none"
+
+
+def bundled_control_class(message: str) -> str | None:
+    """The class of a register name across the bundled files with a 'controls'
+    section (for migrating entities registered before the classes existed):
+    the most permissive class it has anywhere, "none" if those files define it
+    without listing it, None if no such file defines it (a user definition)."""
+    classes: set[str] = set()
+    for file, section in _index().get("controls", {}).items():
+        if file.startswith("_") or not isinstance(section, dict):
+            continue
+        if message not in {m.name for m in _load_file(file)}:
+            continue
+        classes.add(next((c for c in ("user", "installer") if message in section.get(c, ())),
+                         "none"))
+    for cls in ("user", "installer", "none"):
+        if cls in classes:
+            return cls
+    return None
+
+
+# number range by unit for float registers (they have no natural raw range)
+_UNIT_BOUNDS: Final[dict[str, tuple[float, float, float]]] = {
+    "°C": (0.0, 90.0, 0.5), "K": (0.0, 30.0, 0.5), "h": (0.0, 24.0, 0.5), "": (0.0, 10.0, 0.05)}
+
+
+def number_bounds(scan: ScanResult | None, message: str, field: FieldDef
+                  ) -> tuple[float, float, float] | None:
+    """(min, max, step) for a number from index.json 'number_bounds', else a
+    unit default for a float register; None leaves an integer type's range."""
+    profile = _profile(scan.ident, scan.hw) if scan is not None else None
+    table = _index().get("number_bounds", {}).get(profile["file"], {}) if profile else {}
+    bounds = table.get(message) if isinstance(table, dict) else None
+    if isinstance(bounds, list) and len(bounds) == 3:
+        return (float(bounds[0]), float(bounds[1]), float(bounds[2]))
+    if field.type.upper() in FLOAT_TYPES:
+        return _UNIT_BOUNDS.get(field.unit or "", _UNIT_BOUNDS[""])
+    return None
 
 
 def disabled_field_labels(scan: ScanResult) -> set[str]:

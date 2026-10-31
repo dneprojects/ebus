@@ -7,7 +7,9 @@
         "file": "hmu.json",
         "name": "Wärmepumpe 2",
         "model": "aroTHERM plus",
-        "disabled_fields": ["SetMode hwctempdesired"]
+        "disabled_fields": [
+          "SetMode hwctempdesired"
+        ]
       }
     }
   },
@@ -36,11 +38,23 @@
   },
   "cdn": {
     "_comment": "Definition file -> upstream ebus.github.io source path(s) (without the /<lang>/ prefix and .csv suffix). Used at runtime, on the user's own machine, to fetch the per-language display text and generate local translation files -- the GPL-3.0 upstream text is never stored in this repo. eloblock/netx3 are our own definitions with no upstream source.",
-    "ctlv3.json": ["vaillant/15.ctlv3"],
-    "hmu.json": ["vaillant/08.hmu", "vaillant/08.hmu.HW5103"],
-    "pmw.json": ["vaillant/0a.pmw.hwc"],
-    "vr_71.json": ["vaillant/26.vr_71"],
-    "broadcast.json": ["broadcast", "vaillant/broadcast"]
+    "ctlv3.json": [
+      "vaillant/15.ctlv3"
+    ],
+    "hmu.json": [
+      "vaillant/08.hmu",
+      "vaillant/08.hmu.HW5103"
+    ],
+    "pmw.json": [
+      "vaillant/0a.pmw.hwc"
+    ],
+    "vr_71.json": [
+      "vaillant/26.vr_71"
+    ],
+    "broadcast.json": [
+      "broadcast",
+      "vaillant/broadcast"
+    ]
   },
   "climate": {
     "_comment": "Bundle per-zone registers into a climate entity (one per heating zone). For each zone N, '<prefix>N<target>' is the writable comfort setpoint (target temperature), '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode (off/auto -> HVAC off/auto, others -> heat + preset). A zone is created only if it has data.",
@@ -54,14 +68,366 @@
   },
   "disabled_fields": {
     "_comment": "Entity labels ('<message> <field>') that never carried a value in the reference capture -- unconnected channels (e.g. a sensor input with nothing wired). Their sensors are created disabled by default; the user can enable them. Only affects a sensor's enabled_default at first registration.",
-    "pmw.json": ["Status temp_1"],
+    "pmw.json": [
+      "Status temp_1"
+    ],
     "vr_71.json": [
-      "SensorData1 s4", "SensorData1 s5", "SensorData1 s6", "SensorData1 s7",
-      "SensorData2 s8", "SensorData2 s10", "SensorData2 s11"
+      "SensorData1 s4",
+      "SensorData1 s5",
+      "SensorData1 s6",
+      "SensorData1 s7",
+      "SensorData2 s8",
+      "SensorData2 s10",
+      "SensorData2 s11"
     ],
     "hmu.json": [
-      "DateTime btime", "DateTime bdate", "DateTime temp",
-      "Status01 temp_2", "Status01 temp_3", "Status01 temp_4"
+      "DateTime btime",
+      "DateTime bdate",
+      "DateTime temp",
+      "Status01 temp_2",
+      "Status01 temp_3",
+      "Status01 temp_4"
     ]
+  },
+  "controls": {
+    "_comment": "Which writable registers become controls: 'user' (enabled), 'installer' (configuration, created disabled); anything a listed file defines but does not list gets no control (counters, live states). Reviewed register by register.",
+    "ctlv3.json": {
+      "user": [
+        "AdaptHeatCurve",
+        "CylinderChargeOffset",
+        "Hc1AutoOffMode",
+        "Hc1ExcessTemp",
+        "Hc1HeatCurve",
+        "Hc1MaxFlowTempDesired",
+        "Hc1MinCoolingTempDesired",
+        "Hc1MinFlowTempDesired",
+        "Hc1SummerTempLimit",
+        "Hc2AutoOffMode",
+        "Hc2ExcessTemp",
+        "Hc2HeatCurve",
+        "Hc2MaxFlowTempDesired",
+        "Hc2MinCoolingTempDesired",
+        "Hc2MinFlowTempDesired",
+        "Hc2SummerTempLimit",
+        "Hc3AutoOffMode",
+        "Hc3ExcessTemp",
+        "Hc3HeatCurve",
+        "Hc3MaxFlowTempDesired",
+        "Hc3MinCoolingTempDesired",
+        "Hc3MinFlowTempDesired",
+        "Hc3SummerTempLimit",
+        "HwcLockTime",
+        "HwcMaxFlowTempDesired",
+        "HwcOpMode",
+        "HwcSFMode",
+        "HwcTempDesired",
+        "MaxCylinderChargeTime",
+        "Z1ActualRoomTempDesired",
+        "Z1CoolingTemp",
+        "Z1DayTemp",
+        "Z1HolidayTemp",
+        "Z1NightTemp",
+        "Z1OpMode",
+        "Z1QuickVetoDuration",
+        "Z1QuickVetoTemp",
+        "Z1SFMode",
+        "Z2ActualRoomTempDesired",
+        "Z2CoolingTemp",
+        "Z2DayTemp",
+        "Z2HolidayTemp",
+        "Z2NightTemp",
+        "Z2OpMode",
+        "Z2QuickVetoDuration",
+        "Z2QuickVetoTemp",
+        "Z2SFMode",
+        "Z3ActualRoomTempDesired",
+        "Z3DayTemp",
+        "Z3HolidayTemp",
+        "Z3NightTemp",
+        "Z3OpMode",
+        "Z3QuickVetoDuration",
+        "Z3QuickVetoTemp",
+        "Z3SFMode"
+      ],
+      "installer": [
+        "ContinuousHeating",
+        "CylinderChargeHyst",
+        "FrostOverRideTime",
+        "Hc1RoomTempSwitchOn",
+        "Hc2RoomTempSwitchOn",
+        "Hc3RoomTempSwitchOn",
+        "HwcParallelLoading",
+        "HydraulicScheme",
+        "KeyCodeforConfigMenu",
+        "MaxRoomHumidity",
+        "MultiRelaySetting",
+        "PumpAdditionalTime",
+        "Z1RoomZoneMapping",
+        "Z2RoomZoneMapping",
+        "Z3RoomZoneMapping"
+      ]
+    },
+    "hmu.json": {
+      "user": [],
+      "installer": []
+    },
+    "pmw.json": {
+      "user": [
+        "Load",
+        "ManualTappingTempDesired",
+        "OperatingMode",
+        "Party",
+        "SetMode",
+        "SetTempDesired"
+      ],
+      "installer": []
+    }
+  },
+  "number_bounds": {
+    "_comment": "[min, max, step] for number controls; float registers need them.",
+    "ctlv3.json": {
+      "ContinuousHeating": [
+        -26,
+        10,
+        1
+      ],
+      "CylinderChargeHyst": [
+        1,
+        20,
+        0.5
+      ],
+      "CylinderChargeOffset": [
+        1,
+        40,
+        0.5
+      ],
+      "Hc1ExcessTemp": [
+        0,
+        30,
+        1
+      ],
+      "Hc1HeatCurve": [
+        0.1,
+        4,
+        0.05
+      ],
+      "Hc1MaxFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc1MinCoolingTempDesired": [
+        7,
+        24,
+        1
+      ],
+      "Hc1MinFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc1SummerTempLimit": [
+        10,
+        99,
+        1
+      ],
+      "Hc2ExcessTemp": [
+        0,
+        30,
+        1
+      ],
+      "Hc2HeatCurve": [
+        0.1,
+        4,
+        0.05
+      ],
+      "Hc2MaxFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc2MinCoolingTempDesired": [
+        7,
+        24,
+        1
+      ],
+      "Hc2MinFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc2SummerTempLimit": [
+        10,
+        99,
+        1
+      ],
+      "Hc3ExcessTemp": [
+        0,
+        30,
+        1
+      ],
+      "Hc3HeatCurve": [
+        0.1,
+        4,
+        0.05
+      ],
+      "Hc3MaxFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc3MinCoolingTempDesired": [
+        7,
+        24,
+        1
+      ],
+      "Hc3MinFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc3SummerTempLimit": [
+        10,
+        99,
+        1
+      ],
+      "HwcLockTime": [
+        0,
+        120,
+        10
+      ],
+      "HwcMaxFlowTempDesired": [
+        40,
+        90,
+        1
+      ],
+      "HwcTempDesired": [
+        35,
+        70,
+        1
+      ],
+      "MaxCylinderChargeTime": [
+        20,
+        120,
+        10
+      ],
+      "Z1ActualRoomTempDesired": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1CoolingTemp": [
+        15,
+        30,
+        0.5
+      ],
+      "Z1DayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1HolidayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1NightTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1QuickVetoDuration": [
+        0.5,
+        12,
+        0.5
+      ],
+      "Z1QuickVetoTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2ActualRoomTempDesired": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2CoolingTemp": [
+        15,
+        30,
+        0.5
+      ],
+      "Z2DayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2HolidayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2NightTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2QuickVetoDuration": [
+        0.5,
+        12,
+        0.5
+      ],
+      "Z2QuickVetoTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3ActualRoomTempDesired": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3CoolingTemp": [
+        15,
+        30,
+        0.5
+      ],
+      "Z3DayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3HolidayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3NightTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3QuickVetoDuration": [
+        0.5,
+        12,
+        0.5
+      ],
+      "Z3QuickVetoTemp": [
+        5,
+        30,
+        0.5
+      ]
+    },
+    "pmw.json": {
+      "ManualTappingTempDesired": [
+        35,
+        70,
+        1
+      ],
+      "SetTempDesired": [
+        35,
+        70,
+        1
+      ]
+    }
   }
 }

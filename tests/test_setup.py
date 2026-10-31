@@ -56,7 +56,7 @@ async def test_migration_drops_retired_and_moves_renamed(hass: HomeAssistant):
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.minor_version == 4
+    assert entry.minor_version == 5
     # the renamed counter keeps its entity_id (and so its history)
     assert reg.async_get(renamed).unique_id == (
         f"{entry.entry_id}_08_EnergyGeneratedHc_EnergyGeneratedHc")
@@ -88,7 +88,7 @@ async def test_migration_suffixes_nameless_entity_ids(hass: HomeAssistant):
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.minor_version == 4
+    assert entry.minor_version == 5
     assert reg.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.entry_id}_08_StatusCirPump_StatusCirPump") \
         == "sensor.haustechnik_arotherm_plus_0_statuscirpump"
@@ -106,7 +106,8 @@ async def test_migration_scopes_ids_to_the_entry(hass: HomeAssistant):
     reg = er.async_get(hass)
     sensor = reg.async_get_or_create("sensor", DOMAIN, "ebus_08_FlowTemp_FlowTemp",
                                      config_entry=entry)
-    number = reg.async_get_or_create("number", DOMAIN, "ebus_15_Z1DayTemp_Z1DayTemp_set",
+    number = reg.async_get_or_create("number", DOMAIN,
+                                     "ebus_15_HydraulicScheme_HydraulicScheme_set",
                                      config_entry=entry)
     signal = reg.async_get_or_create("binary_sensor", DOMAIN, "ebus_1.2.3.4_9999_signal",
                                      config_entry=entry)
@@ -120,9 +121,10 @@ async def test_migration_scopes_ids_to_the_entry(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     e = entry.entry_id
-    assert entry.minor_version == 4
+    assert entry.minor_version == 5
     assert reg.async_get(sensor.entity_id).unique_id == f"{e}_08_FlowTemp_FlowTemp"
-    assert reg.async_get(number.entity_id).unique_id == f"{e}_15_Z1DayTemp_Z1DayTemp_set"
+    assert reg.async_get(number.entity_id).unique_id == (
+        f"{e}_15_HydraulicScheme_HydraulicScheme_set")
     assert reg.async_get(signal.entity_id).unique_id == f"{e}_adapter_signal"
     assert reg.async_get(ident.entity_id).unique_id == f"{e}_f6_artikelnummer"
     assert reg.async_get(foreign.entity_id).unique_id == "ebus_08_x"  # not ours

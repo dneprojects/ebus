@@ -8,6 +8,7 @@ from aioebus.messages import FieldDef, MessageDef
 from aioebus.translations import translation_key
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,8 +27,13 @@ async def async_setup_entry(
         if len(fields) != 1:
             continue
         field = fields[0]
-        if field.field.values:  # value table -> selectable options
-            entities.append(EbusSelect(coordinator, msg, field.field, field.label))
+        if not field.field.values:  # value table -> selectable options
+            continue
+        cls = coordinator.control_class(msg)
+        if cls == "none":
+            coordinator.remove_control("select", msg, field.label)
+        else:
+            entities.append(EbusSelect(coordinator, msg, field.field, field.label, cls))
     async_add_entities(entities)
 
 
@@ -35,7 +41,8 @@ class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: EbusCoordinator, msg: MessageDef, field: FieldDef, label: str
+        self, coordinator: EbusCoordinator, msg: MessageDef, field: FieldDef, label: str,
+        cls: str,
     ) -> None:
         super().__init__(coordinator)
         assert field.values is not None  # only built for value-table fields
@@ -45,6 +52,9 @@ class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
         self._attr_unique_id = coordinator.uid(*self._key, "set")
         self._attr_translation_key = translation_key(msg, field)
         self._attr_icon = icon_for(field)
+        if cls == "installer":  # a configuration setting: shown only once enabled
+            self._attr_entity_category = EntityCategory.CONFIG
+            self._attr_entity_registry_enabled_default = False
         self._attr_options = list(dict.fromkeys(field.values.values()))
         self._attr_device_info = coordinator.device_info(zz)
 

@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 from .const import BROADCAST_ADDRESS, DOMAIN, STORE_PREFIXES
 from .coordinator import EbusCoordinator
 from .device import ADAPTER_IDENTIFIER
-from .library import renamed_unique_id, retired_unique_id
+from .library import bundled_control_class, renamed_unique_id, retired_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,32 @@ async def async_migrate_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bo
     if entry.minor_version < 4:
         _migrate_scoped_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=4)
+    if entry.minor_version < 5:
+        await hass.async_add_executor_job(_load_definitions)
+        _migrate_control_classes(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=5)
     return True
+
+
+def _load_definitions() -> None:
+    """Read the bundled definition files (blocking; run in an executor)."""
+    bundled_control_class("")
+
+
+def _migrate_control_classes(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
+    """1.4 -> 1.5: a writable register becomes a control only by its class
+    (index.json 'controls'). Switch off configuration ones that used to be
+    created enabled; the user can switch them on again. Controls a register no
+    longer gets are dropped at setup, where the device's own definition is known."""
+    registry = er.async_get(hass)
+    for ent in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if ent.domain not in ("number", "select") or not ent.unique_id.endswith("_set"):
+            continue
+        parts = ent.unique_id.split("_", 3)  # <entry>_<zz>_<message>_<label>_set
+        cls = bundled_control_class(parts[2]) if len(parts) == 4 else None
+        if cls == "installer" and ent.disabled_by is None:
+            registry.async_update_entity(
+                ent.entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION)
 
 
 _ADAPTER_UID = re.compile(r"^ebus_(?![0-9a-f]{2}_)(?P<host>.+)_(?P<port>\d+)_(?P<rest>.+)$")

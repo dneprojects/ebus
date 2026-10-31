@@ -1857,6 +1857,9 @@
       }
     },
     "number": {
+      "continuousheating": {
+        "name": "ContinuousHeating"
+      },
       "frostoverridetime": {
         "name": "FrostOverRideTime"
       },
@@ -1872,6 +1875,12 @@
       "pumpadditionaltime": {
         "name": "PumpAdditionalTime"
       },
+      "cylinderchargehyst": {
+        "name": "CylinderChargeHyst"
+      },
+      "cylinderchargeoffset": {
+        "name": "CylinderChargeOffset"
+      },
       "hydraulicscheme": {
         "name": "HydraulicScheme"
       },
@@ -1880,6 +1889,9 @@
       },
       "yieldtotal": {
         "name": "YieldTotal"
+      },
+      "hwcmaxflowtempdesired": {
+        "name": "HwcMaxFlowTempDesired"
       },
       "prfuelsumhcthismonth": {
         "name": "PrFuelSumHcThisMonth"
@@ -1920,11 +1932,53 @@
       "keycodeforconfigmenu": {
         "name": "KeyCodeforConfigMenu"
       },
+      "outsidetempavg": {
+        "name": "OutsideTempAvg"
+      },
+      "hwctempdesired": {
+        "name": "HwcTempDesired"
+      },
+      "hc1excesstemp": {
+        "name": "Hc1ExcessTemp"
+      },
+      "hc1heatcurve": {
+        "name": "Hc1HeatCurve"
+      },
+      "hc1maxflowtempdesired": {
+        "name": "Hc1MaxFlowTempDesired"
+      },
+      "hc1mincoolingtempdesired": {
+        "name": "Hc1MinCoolingTempDesired"
+      },
+      "hc1minflowtempdesired": {
+        "name": "Hc1MinFlowTempDesired"
+      },
+      "hc1summertemplimit": {
+        "name": "Hc1SummerTempLimit"
+      },
       "hc1status": {
         "name": "Hc1Status"
       },
       "hc1pumpstatus": {
         "name": "Hc1PumpStatus"
+      },
+      "hc2excesstemp": {
+        "name": "Hc2ExcessTemp"
+      },
+      "hc2heatcurve": {
+        "name": "Hc2HeatCurve"
+      },
+      "hc2maxflowtempdesired": {
+        "name": "Hc2MaxFlowTempDesired"
+      },
+      "hc2mincoolingtempdesired": {
+        "name": "Hc2MinCoolingTempDesired"
+      },
+      "hc2minflowtempdesired": {
+        "name": "Hc2MinFlowTempDesired"
+      },
+      "hc2summertemplimit": {
+        "name": "Hc2SummerTempLimit"
       },
       "hc2status": {
         "name": "Hc2Status"
@@ -1932,20 +1986,98 @@
       "hc2pumpstatus": {
         "name": "Hc2PumpStatus"
       },
+      "hc3excesstemp": {
+        "name": "Hc3ExcessTemp"
+      },
+      "hc3heatcurve": {
+        "name": "Hc3HeatCurve"
+      },
+      "hc3maxflowtempdesired": {
+        "name": "Hc3MaxFlowTempDesired"
+      },
+      "hc3mincoolingtempdesired": {
+        "name": "Hc3MinCoolingTempDesired"
+      },
+      "hc3minflowtempdesired": {
+        "name": "Hc3MinFlowTempDesired"
+      },
+      "hc3summertemplimit": {
+        "name": "Hc3SummerTempLimit"
+      },
       "hc3status": {
         "name": "Hc3Status"
       },
       "hc3pumpstatus": {
         "name": "Hc3PumpStatus"
       },
+      "z1coolingtemp": {
+        "name": "Z1CoolingTemp"
+      },
+      "z1holidaytemp": {
+        "name": "Z1HolidayTemp"
+      },
+      "z1quickvetotemp": {
+        "name": "Z1QuickVetoTemp"
+      },
+      "z1quickvetoduration": {
+        "name": "Z1QuickVetoDuration"
+      },
+      "z1nighttemp": {
+        "name": "Z1NightTemp"
+      },
       "z1valvestatus": {
         "name": "Z1ValveStatus"
+      },
+      "z1actualroomtempdesired": {
+        "name": "Z1ActualRoomTempDesired"
+      },
+      "z1daytemp": {
+        "name": "Z1DayTemp"
+      },
+      "z2coolingtemp": {
+        "name": "Z2CoolingTemp"
+      },
+      "z2holidaytemp": {
+        "name": "Z2HolidayTemp"
+      },
+      "z2quickvetotemp": {
+        "name": "Z2QuickVetoTemp"
+      },
+      "z2quickvetoduration": {
+        "name": "Z2QuickVetoDuration"
+      },
+      "z2nighttemp": {
+        "name": "Z2NightTemp"
       },
       "z2valvestatus": {
         "name": "Z2ValveStatus"
       },
+      "z2actualroomtempdesired": {
+        "name": "Z2ActualRoomTempDesired"
+      },
+      "z2daytemp": {
+        "name": "Z2DayTemp"
+      },
+      "z3holidaytemp": {
+        "name": "Z3HolidayTemp"
+      },
+      "z3quickvetotemp": {
+        "name": "Z3QuickVetoTemp"
+      },
+      "z3quickvetoduration": {
+        "name": "Z3QuickVetoDuration"
+      },
+      "z3nighttemp": {
+        "name": "Z3NightTemp"
+      },
       "z3valvestatus": {
         "name": "Z3ValveStatus"
+      },
+      "z3actualroomtempdesired": {
+        "name": "Z3ActualRoomTempDesired"
+      },
+      "z3daytemp": {
+        "name": "Z3DayTemp"
       },
       "manualtappingtempdesired": {
         "name": "ManualTappingTempDesired"

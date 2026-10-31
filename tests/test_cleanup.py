@@ -79,7 +79,8 @@ async def test_normal_scan_keeps_extras_that_miss_one_start(hass: HomeAssistant)
          patch("custom_components.ebus.coordinator.ActiveReader", return_value=scanner), \
          patch.object(coord, "_fetch_adapter_status", AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
-         patch.object(coord, "_run_forever", AsyncMock()):
+         patch.object(coord, "_run_forever", AsyncMock()), \
+         patch.object(coord, "_late_identify", AsyncMock()):
         await coord._discover()
     assert sorted(await coord._addr_store.async_load()) == [0x52, 0x76]  # 0x52 not forgotten
     adapter = dr.async_get(hass).async_get(coord.adapter_device_id)
@@ -227,7 +228,8 @@ async def test_deep_scan_drops_addresses_nothing_answers_on(hass: HomeAssistant)
          patch("custom_components.ebus.coordinator.ActiveReader", return_value=scanner), \
          patch.object(coord, "_fetch_adapter_status", AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
-         patch.object(coord, "_run_forever", AsyncMock()):
+         patch.object(coord, "_run_forever", AsyncMock()), \
+         patch.object(coord, "_late_identify", AsyncMock()):
         await coord._discover()
     assert await coord._addr_store.async_load() == []
     assert coord.config_entry.options[CONF_DEEP_SCAN] is False  # done: probe once only
@@ -247,6 +249,58 @@ async def test_remembered_identification_needs_the_same_unit(hass: HomeAssistant
     scanner.read_identification = AsyncMock(return_value=None)
     await coord._identify(scanner)
     assert 0xF6 not in coord.idents
+
+
+async def test_identification_missed_at_setup_is_read_at_runtime(hass: HomeAssistant):
+    # a heat pump behind the coupler skipped the identification at setup: the
+    # running engine reads it later, stores it and tells the platforms
+    coord = _coord(hass)
+    coord.devices = {0x18: _HMU}
+    ident = Identification("0010021122", "21212300100210211220000000N7", 2021, 12)
+    coord.engine = MagicMock()
+    coord.engine.read_raw = AsyncMock(side_effect=[ReadError("no answer from slave"),
+                                                   b"1", b"2", b"3", b"4"])
+    listener = MagicMock()
+    coord.async_add_listener(listener)
+    with patch("custom_components.ebus.coordinator._IDENT_RETRY_DELAYS", (0, 0, 0)), \
+         patch("custom_components.ebus.coordinator.decode_identification",
+               return_value=ident) as decode:
+        await coord._late_identify()
+    decode.assert_called_once_with(b"1", b"2", b"3", b"4")
+    assert coord.idents[0x18] == ident
+    assert (await coord._ident_store.async_load())["18"]["serial"] == ident.serial
+    listener.assert_called()
+
+
+@pytest.mark.parametrize("answer", [TimeoutError(), OSError("reset"), ConnectionError(),
+                                    ReadError("NAK"), None])
+async def test_identification_that_never_comes_gives_up_quietly(hass: HomeAssistant, answer):
+    # every retry fails (or the answer is not a Vaillant identification): no
+    # ident, nothing stored, no exception out of the background task
+    coord = _coord(hass)
+    coord.devices = {0x18: _HMU}
+    coord.engine = MagicMock()
+    if answer is None:
+        coord.engine.read_raw = AsyncMock(return_value=b"")
+    else:
+        coord.engine.read_raw = AsyncMock(side_effect=answer)
+    listener = MagicMock()
+    coord.async_add_listener(listener)
+    with patch("custom_components.ebus.coordinator._IDENT_RETRY_DELAYS", (0, 0, 0)):
+        await coord._late_identify()
+    assert coord.engine.read_raw.await_count == (12 if answer is None else 3)
+    assert 0x18 not in coord.idents
+    assert await coord._ident_store.async_load() is None
+    listener.assert_not_called()
+
+
+async def test_identification_waits_for_the_engine(hass: HomeAssistant):
+    coord = _coord(hass)
+    coord.devices = {0x18: _HMU}
+    coord.engine = None
+    with patch("custom_components.ebus.coordinator._IDENT_RETRY_DELAYS", (0, 0)):
+        await coord._late_identify()
+    assert 0x18 not in coord.idents
 
 
 async def test_link_restored_is_logged_and_rearms(hass: HomeAssistant, caplog):
