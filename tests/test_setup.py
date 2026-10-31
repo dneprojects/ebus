@@ -15,6 +15,8 @@ from aioebus.scan import ScanResult
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -53,13 +55,41 @@ async def test_migration_drops_retired_and_moves_renamed(hass: HomeAssistant):
     with patch("custom_components.ebus.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     # the renamed counter keeps its entity_id (and so its history)
     assert reg.async_get(renamed).unique_id == "ebus_08_EnergyGeneratedHc_EnergyGeneratedHc"
     assert reg.async_get(retired) is None
     assert reg.async_get(orphan) is None  # its successor already existed
     assert reg.async_get(successor) is not None
     assert reg.async_get(kept) is not None
+
+
+async def test_migration_suffixes_nameless_entity_ids(hass: HomeAssistant):
+    # a 'uw' sensor registered without a name got the bare (area-prefixed) device
+    # slug as entity_id; 1.3 appends its label, other ids stay untouched
+    entry = _entry(minor_version=2)
+    entry.add_to_hass(hass)
+    area = ar.async_get(hass).async_create("Haustechnik")
+    dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "08")}, name="Wärmepumpe")
+    dr.async_get(hass).async_update_device(
+        dev.id, name_by_user="aroTHERM plus 0", area_id=area.id)
+    reg = er.async_get(hass)
+    bare = reg.async_get_or_create(
+        "sensor", DOMAIN, "ebus_08_StatusCirPump_StatusCirPump", config_entry=entry,
+        device_id=dev.id, suggested_object_id="haustechnik_arotherm_plus_0")
+    named = reg.async_get_or_create(
+        "sensor", DOMAIN, "ebus_08_FlowTemp_FlowTemp", config_entry=entry,
+        device_id=dev.id, suggested_object_id="haustechnik_arotherm_plus_0_flowtemp")
+    assert bare.entity_id == "sensor.haustechnik_arotherm_plus_0"
+
+    with patch("custom_components.ebus.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.minor_version == 3
+    assert reg.async_get_entity_id("sensor", DOMAIN, "ebus_08_StatusCirPump_StatusCirPump") \
+        == "sensor.haustechnik_arotherm_plus_0_statuscirpump"
+    assert reg.async_get(named.entity_id) is not None
 
 
 async def test_unreachable_adapter_retries_setup(hass: HomeAssistant):

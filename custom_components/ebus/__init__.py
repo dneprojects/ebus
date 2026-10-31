@@ -5,8 +5,11 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.util import slugify
 
 from .const import BROADCAST_ADDRESS, DOMAIN
 from .coordinator import EbusCoordinator
@@ -40,7 +43,34 @@ async def async_migrate_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bo
     if entry.minor_version < 2:
         _migrate_retired_and_renamed(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
+    if entry.minor_version < 3:
+        _migrate_nameless_entity_ids(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=3)
     return True
+
+
+def _migrate_nameless_entity_ids(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
+    """1.2 -> 1.3: an entity registered while its translation had no name (a 'uw'
+    sensor before 0.3.1) got the bare device slug as entity_id; append its label."""
+    registry = er.async_get(hass)
+    devices = dr.async_get(hass)
+    areas = ar.async_get(hass)
+    for ent in er.async_entries_for_config_entry(registry, entry.entry_id):
+        parts = ent.unique_id.split("_", 3)
+        if len(parts) != 4 or parts[0] != "ebus" or ent.device_id is None:
+            continue
+        device = devices.async_get(ent.device_id)
+        if device is None:
+            continue
+        # the id HA derived from the device name alone, possibly area-prefixed
+        area = areas.async_get_area(device.area_id) if device.area_id else None
+        names = {n for n in (device.name_by_user, device.name) if n}
+        bare = {f"{ent.domain}.{slugify(n)}" for n in names}
+        if area is not None:
+            bare |= {f"{ent.domain}.{slugify(f'{area.name} {n}')}" for n in names}
+        new_id = f"{ent.entity_id}_{slugify(parts[3])}"
+        if ent.entity_id in bare and registry.async_get(new_id) is None:
+            registry.async_update_entity(ent.entity_id, new_entity_id=new_id)
 
 
 def _migrate_retired_and_renamed(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
