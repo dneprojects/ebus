@@ -21,13 +21,14 @@ def _msg(name, direction="r", fields=None, tr=None):
 
 
 def test_names_come_from_tr_capitalized():
-    m = _msg("ContinuousHeating",
-             tr={"en": "continuous heating", "de": "Durchgehendes Heizen"},
+    # a key without a curated name (curated ones win, see below)
+    m = _msg("UncuratedHeating",
+             tr={"en": "uncurated heating", "de": "Ungepflegtes Heizen"},
              fields=[FieldDef("value", "", "EXP", None, None, "°C", "")])
     en = sg.build_entities([m], "en")
     de = sg.build_entities([m], "de")
-    assert en["sensor"]["continuousheating"]["name"] == "Continuous heating"
-    assert de["sensor"]["continuousheating"]["name"] == "Durchgehendes Heizen"
+    assert en["sensor"]["uncuratedheating"]["name"] == "Uncurated heating"
+    assert de["sensor"]["uncuratedheating"]["name"] == "Ungepflegtes Heizen"
 
 
 def test_curated_multifield_name_used_verbatim():
@@ -98,13 +99,25 @@ def test_long_or_blob_comments_are_rejected():
 
 
 def test_select_keeps_de_states_but_omits_english_name():
-    m = _msg("HwcOpMode", direction="w",
+    m = _msg("FooOpMode", direction="w",
              fields=[FieldDef("value", "", "UCH", None, {0: "off", 1: "auto"}, "", "")])
     en = sg.build_entities([m], "en")
     de = sg.build_entities([m], "de")
-    assert en["select"]["hwcopmode"]["name"] == "HwcOpMode"
-    assert "name" not in de["select"]["hwcopmode"]
-    assert de["select"]["hwcopmode"]["state"] == {"off": "Aus", "auto": "Auto"}
+    assert en["select"]["fooopmode"]["name"] == "FooOpMode"
+    assert "name" not in de["select"]["fooopmode"]
+    assert de["select"]["fooopmode"]["state"] == {"off": "Aus", "auto": "Auto"}
+
+
+def test_reviewed_names_cover_every_bundled_key():
+    # every entity of the bundled definitions has a reviewed German name
+    import json as _json
+    strings = _json.loads((_MOD.parent / "strings.json").read_text(encoding="utf-8"))
+    keys = {k for platform in strings["entity"].values() for k in platform}
+    sample = {"z1daytemp", "sensordata1_s1", "hwctimer_monday0_htm", "status01_temp_1"}
+    assert sample <= keys
+    assert sg.NAME_DE["z1daytemp"] == "Zone 1 Tag-Sollwert"
+    assert sg.NAME_DE["sensordata1_s1"] == "Temperatursensor S1"
+    assert not [k for k in sg.NAME_DE.values() if "Fühler" in k]
 
 
 def test_build_strings_includes_ui_section():

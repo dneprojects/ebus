@@ -43,106 +43,458 @@
   },
   "entity": {
     "sensor": {
+      "vdatetime_time": {
+        "name": "Uhrzeit (Bus)"
+      },
+      "vdatetime_date": {
+        "name": "Datum (Bus)"
+      },
       "outsidetemp": {
         "name": "Außentemperatur"
       },
+      "continuousheating": {
+        "name": "Durchheizen unter Außentemperatur"
+      },
+      "frostoverridetime": {
+        "name": "Frostschutz-Verzögerung"
+      },
       "hwcparallelloading": {
+        "name": "Warmwasser Parallelladung",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "maxroomhumidity": {
+        "name": "Raumfeuchte max."
+      },
       "adaptheatcurve": {
+        "name": "Adaptive Heizkurve",
         "state": {
           "no": "Nein",
           "yes": "Ja"
         }
       },
+      "maxcylinderchargetime": {
+        "name": "Speicherladung max. Dauer"
+      },
+      "hwclocktime": {
+        "name": "Warmwasser Sperrzeit"
+      },
+      "pumpadditionaltime": {
+        "name": "Pumpennachlaufzeit"
+      },
+      "cylinderchargehyst": {
+        "name": "Speicherladung Hysterese"
+      },
+      "cylinderchargeoffset": {
+        "name": "Speicherladung Überhöhung"
+      },
+      "maintenancedate": {
+        "name": "Nächste Wartung"
+      },
+      "date": {
+        "name": "Datum"
+      },
+      "time": {
+        "name": "Uhrzeit"
+      },
+      "hydraulicscheme": {
+        "name": "Hydraulikschema"
+      },
       "waterpressure": {
         "name": "Wasserdruck"
+      },
+      "solaryieldtotal": {
+        "name": "Solarertrag gesamt"
+      },
+      "yieldtotal": {
+        "name": "Umweltertrag gesamt"
+      },
+      "hwcmaxflowtempdesired": {
+        "name": "Warmwasser Vorlauf-Sollwert max."
       },
       "systemflowtemp": {
         "name": "Anlagen-Vorlauftemperatur"
       },
+      "multirelaysetting": {
+        "name": "Multifunktionsausgang"
+      },
+      "prfuelsumhcthismonth": {
+        "name": "Brennstoff Heizen dieser Monat"
+      },
+      "prenergysumhcthismonth": {
+        "name": "Energie Heizen dieser Monat"
+      },
+      "prenergysumhwcthismonth": {
+        "name": "Energie Warmwasser dieser Monat"
+      },
+      "prfuelsumhwcthismonth": {
+        "name": "Brennstoff Warmwasser dieser Monat"
+      },
+      "prfuelsumhclastmonth": {
+        "name": "Brennstoff Heizen Vormonat"
+      },
+      "prenergysumhclastmonth": {
+        "name": "Energie Heizen Vormonat"
+      },
+      "prenergysumhwclastmonth": {
+        "name": "Energie Warmwasser Vormonat"
+      },
+      "prfuelsumhwclastmonth": {
+        "name": "Brennstoff Warmwasser Vormonat"
+      },
+      "prfuelsumhc": {
+        "name": "Brennstoff Heizen gesamt"
+      },
+      "prenergysumhc": {
+        "name": "Energie Heizen gesamt"
+      },
+      "prenergysumhwc": {
+        "name": "Energie Warmwasser gesamt"
+      },
+      "prfuelsumhwc": {
+        "name": "Brennstoff Warmwasser gesamt"
+      },
       "displayedoutsidetemp": {
         "name": "Außentemperatur"
       },
+      "keycodeforconfigmenu": {
+        "name": "Code Fachhandwerkerebene"
+      },
+      "outsidetempavg": {
+        "name": "Außentemperatur Mittelwert"
+      },
       "maintenancedue": {
+        "name": "Wartung fällig",
         "state": {
           "no": "Nein",
           "yes": "Ja"
         }
       },
       "hwcopmode": {
+        "name": "Warmwasser Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
           "day": "Tag",
           "night": "Nacht"
         }
+      },
+      "hwctempdesired": {
+        "name": "Warmwasser Sollwert"
+      },
+      "hwcstoragetemp": {
+        "name": "Warmwasser Speichertemperatur"
+      },
+      "hwcflowtemp": {
+        "name": "Warmwasser Vorlauftemperatur"
+      },
+      "hwcholidaystartperiod": {
+        "name": "Warmwasser Urlaub Beginn"
+      },
+      "hwcholidayendperiod": {
+        "name": "Warmwasser Urlaub Ende"
       },
       "hwcsfmode": {
+        "name": "Warmwasser Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
+      },
+      "hc1circuittype_mctype": {
+        "name": "Heizkreis 1 Kreistyp"
+      },
+      "hc1actualflowtempdesired": {
+        "name": "Heizkreis 1 Vorlauf-Sollwert aktuell"
+      },
+      "hc1flowtemp": {
+        "name": "Heizkreis 1 Vorlauftemperatur"
+      },
+      "hc1excesstemp": {
+        "name": "Heizkreis 1 Vorlauf-Überhöhung"
       },
       "hc1autooffmode": {
+        "name": "Heizkreis 1 Verhalten außerhalb Zeitfenster",
         "state": {
           "night": "Nacht"
         }
+      },
+      "hc1heatcurve": {
+        "name": "Heizkreis 1 Heizkurve"
+      },
+      "hc1maxflowtempdesired": {
+        "name": "Heizkreis 1 Vorlauf-Sollwert max."
+      },
+      "hc1mincoolingtempdesired": {
+        "name": "Heizkreis 1 Kühl-Vorlauf min."
+      },
+      "hc1minflowtempdesired": {
+        "name": "Heizkreis 1 Vorlauf-Sollwert min."
+      },
+      "hc1summertemplimit": {
+        "name": "Heizkreis 1 AT-Abschaltgrenze"
       },
       "hc1roomtempswitchon": {
+        "name": "Heizkreis 1 Raumaufschaltung",
         "state": {
           "off": "Aus"
         }
+      },
+      "hc1mixermovement": {
+        "name": "Heizkreis 1 Mischerbewegung"
+      },
+      "hc1heatcurveadaption": {
+        "name": "Heizkreis 1 Heizkurven-Anpassung"
+      },
+      "hc1status": {
+        "name": "Heizkreis 1 Status"
+      },
+      "hc1pumpstatus": {
+        "name": "Heizkreis 1 Pumpe"
+      },
+      "hc2circuittype_mctype": {
+        "name": "Heizkreis 2 Kreistyp"
+      },
+      "hc2actualflowtempdesired": {
+        "name": "Heizkreis 2 Vorlauf-Sollwert aktuell"
+      },
+      "hc2flowtemp": {
+        "name": "Heizkreis 2 Vorlauftemperatur"
+      },
+      "hc2excesstemp": {
+        "name": "Heizkreis 2 Vorlauf-Überhöhung"
       },
       "hc2autooffmode": {
+        "name": "Heizkreis 2 Verhalten außerhalb Zeitfenster",
         "state": {
           "night": "Nacht"
         }
+      },
+      "hc2heatcurve": {
+        "name": "Heizkreis 2 Heizkurve"
+      },
+      "hc2maxflowtempdesired": {
+        "name": "Heizkreis 2 Vorlauf-Sollwert max."
+      },
+      "hc2mincoolingtempdesired": {
+        "name": "Heizkreis 2 Kühl-Vorlauf min."
+      },
+      "hc2minflowtempdesired": {
+        "name": "Heizkreis 2 Vorlauf-Sollwert min."
+      },
+      "hc2summertemplimit": {
+        "name": "Heizkreis 2 AT-Abschaltgrenze"
       },
       "hc2roomtempswitchon": {
+        "name": "Heizkreis 2 Raumaufschaltung",
         "state": {
           "off": "Aus"
         }
+      },
+      "hc2mixermovement": {
+        "name": "Heizkreis 2 Mischerbewegung"
+      },
+      "hc2heatcurveadaption": {
+        "name": "Heizkreis 2 Heizkurven-Anpassung"
+      },
+      "hc2status": {
+        "name": "Heizkreis 2 Status"
+      },
+      "hc2pumpstatus": {
+        "name": "Heizkreis 2 Pumpe"
+      },
+      "hc3circuittype_mctype": {
+        "name": "Heizkreis 3 Kreistyp"
+      },
+      "hc3actualflowtempdesired": {
+        "name": "Heizkreis 3 Vorlauf-Sollwert aktuell"
+      },
+      "hc3excesstemp": {
+        "name": "Heizkreis 3 Vorlauf-Überhöhung"
       },
       "hc3autooffmode": {
+        "name": "Heizkreis 3 Verhalten außerhalb Zeitfenster",
         "state": {
           "night": "Nacht"
         }
       },
+      "hc3heatcurve": {
+        "name": "Heizkreis 3 Heizkurve"
+      },
+      "hc3maxflowtempdesired": {
+        "name": "Heizkreis 3 Vorlauf-Sollwert max."
+      },
+      "hc3mincoolingtempdesired": {
+        "name": "Heizkreis 3 Kühl-Vorlauf min."
+      },
+      "hc3minflowtempdesired": {
+        "name": "Heizkreis 3 Vorlauf-Sollwert min."
+      },
+      "hc3summertemplimit": {
+        "name": "Heizkreis 3 AT-Abschaltgrenze"
+      },
       "hc3roomtempswitchon": {
+        "name": "Heizkreis 3 Raumaufschaltung",
         "state": {
           "off": "Aus"
         }
       },
+      "hc3mixermovement": {
+        "name": "Heizkreis 3 Mischerbewegung"
+      },
+      "hc3heatcurveadaption": {
+        "name": "Heizkreis 3 Heizkurven-Anpassung"
+      },
+      "hc3status": {
+        "name": "Heizkreis 3 Status"
+      },
+      "hc3pumpstatus": {
+        "name": "Heizkreis 3 Pumpe"
+      },
+      "z1coolingtemp": {
+        "name": "Zone 1 Kühl-Sollwert"
+      },
+      "z1holidaystartperiod": {
+        "name": "Zone 1 Urlaub Beginn"
+      },
+      "z1holidayendperiod": {
+        "name": "Zone 1 Urlaub Ende"
+      },
+      "z1holidaytemp": {
+        "name": "Zone 1 Urlaubs-Sollwert"
+      },
       "z1opmode": {
+        "name": "Zone 1 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
           "day": "Tag",
           "night": "Nacht"
         }
+      },
+      "z1quickvetotemp": {
+        "name": "Zone 1 Quick-Veto Sollwert"
+      },
+      "z1quickvetoduration": {
+        "name": "Zone 1 Quick-Veto Dauer"
+      },
+      "z1quickvetoendtime": {
+        "name": "Zone 1 Quick-Veto Ende Uhrzeit"
+      },
+      "z1quickvetoenddate": {
+        "name": "Zone 1 Quick-Veto Ende Datum"
+      },
+      "z1nighttemp": {
+        "name": "Zone 1 Absenk-Sollwert"
       },
       "z1sfmode": {
+        "name": "Zone 1 Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
+      },
+      "z1roomtemp": {
+        "name": "Zone 1 Raumtemperatur"
+      },
+      "z1valvestatus": {
+        "name": "Zone 1 Ventilstatus"
+      },
+      "z1roomzonemapping": {
+        "name": "Zone 1 Raumtemperatursensor-Zuordnung"
+      },
+      "z1actualroomtempdesired": {
+        "name": "Zone 1 Raum-Sollwert aktuell"
+      },
+      "z1shortname": {
+        "name": "Zone 1 Kurzname"
+      },
+      "z1name1": {
+        "name": "Zone 1 Name Teil 1"
+      },
+      "z1name2": {
+        "name": "Zone 1 Name Teil 2"
+      },
+      "z1daytemp": {
+        "name": "Zone 1 Tag-Sollwert"
+      },
+      "z2coolingtemp": {
+        "name": "Zone 2 Kühl-Sollwert"
+      },
+      "z2holidaystartperiod": {
+        "name": "Zone 2 Urlaub Beginn"
+      },
+      "z2holidayendperiod": {
+        "name": "Zone 2 Urlaub Ende"
+      },
+      "z2holidaytemp": {
+        "name": "Zone 2 Urlaubs-Sollwert"
       },
       "z2opmode": {
+        "name": "Zone 2 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
           "day": "Tag",
           "night": "Nacht"
         }
+      },
+      "z2quickvetotemp": {
+        "name": "Zone 2 Quick-Veto Sollwert"
+      },
+      "z2quickvetoduration": {
+        "name": "Zone 2 Quick-Veto Dauer"
+      },
+      "z2quickvetoendtime": {
+        "name": "Zone 2 Quick-Veto Ende Uhrzeit"
+      },
+      "z2quickvetoenddate": {
+        "name": "Zone 2 Quick-Veto Ende Datum"
+      },
+      "z2nighttemp": {
+        "name": "Zone 2 Absenk-Sollwert"
       },
       "z2sfmode": {
+        "name": "Zone 2 Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
       },
+      "z2roomtemp": {
+        "name": "Zone 2 Raumtemperatur"
+      },
+      "z2valvestatus": {
+        "name": "Zone 2 Ventilstatus"
+      },
+      "z2roomzonemapping": {
+        "name": "Zone 2 Raumtemperatursensor-Zuordnung"
+      },
+      "z2actualroomtempdesired": {
+        "name": "Zone 2 Raum-Sollwert aktuell"
+      },
+      "z2shortname": {
+        "name": "Zone 2 Kurzname"
+      },
+      "z2name1": {
+        "name": "Zone 2 Name Teil 1"
+      },
+      "z2name2": {
+        "name": "Zone 2 Name Teil 2"
+      },
+      "z2daytemp": {
+        "name": "Zone 2 Tag-Sollwert"
+      },
+      "z3holidaystartperiod": {
+        "name": "Zone 3 Urlaub Beginn"
+      },
+      "z3holidayendperiod": {
+        "name": "Zone 3 Urlaub Ende"
+      },
+      "z3holidaytemp": {
+        "name": "Zone 3 Urlaubs-Sollwert"
+      },
       "z3opmode": {
+        "name": "Zone 3 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
@@ -150,12 +502,368 @@
           "night": "Nacht"
         }
       },
+      "z3quickvetotemp": {
+        "name": "Zone 3 Quick-Veto Sollwert"
+      },
+      "z3quickvetoduration": {
+        "name": "Zone 3 Quick-Veto Dauer"
+      },
+      "z3quickvetoendtime": {
+        "name": "Zone 3 Quick-Veto Ende Uhrzeit"
+      },
+      "z3quickvetoenddate": {
+        "name": "Zone 3 Quick-Veto Ende Datum"
+      },
+      "z3nighttemp": {
+        "name": "Zone 3 Absenk-Sollwert"
+      },
       "z3sfmode": {
+        "name": "Zone 3 Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
       },
+      "z3valvestatus": {
+        "name": "Zone 3 Ventilstatus"
+      },
+      "z3roomzonemapping": {
+        "name": "Zone 3 Raumtemperatursensor-Zuordnung"
+      },
+      "z3actualroomtempdesired": {
+        "name": "Zone 3 Raum-Sollwert aktuell"
+      },
+      "z3shortname": {
+        "name": "Zone 3 Kurzname"
+      },
+      "z3name1": {
+        "name": "Zone 3 Name Teil 1"
+      },
+      "z3name2": {
+        "name": "Zone 3 Name Teil 2"
+      },
+      "z3daytemp": {
+        "name": "Zone 3 Tag-Sollwert"
+      },
+      "hwctimer_timeframes_slotcount": {
+        "name": "Warmwasser Zeitfenster Anzahl Montag"
+      },
+      "hwctimer_timeframes_slotcount_1": {
+        "name": "Warmwasser Zeitfenster Anzahl Dienstag"
+      },
+      "hwctimer_timeframes_slotcount_2": {
+        "name": "Warmwasser Zeitfenster Anzahl Mittwoch"
+      },
+      "hwctimer_timeframes_slotcount_3": {
+        "name": "Warmwasser Zeitfenster Anzahl Donnerstag"
+      },
+      "hwctimer_timeframes_slotcount_4": {
+        "name": "Warmwasser Zeitfenster Anzahl Freitag"
+      },
+      "hwctimer_timeframes_slotcount_5": {
+        "name": "Warmwasser Zeitfenster Anzahl Samstag"
+      },
+      "hwctimer_timeframes_slotcount_6": {
+        "name": "Warmwasser Zeitfenster Anzahl Sonntag"
+      },
+      "hwctimer_monday0_htm": {
+        "name": "Warmwasser Zeitfenster Montag Beginn"
+      },
+      "hwctimer_monday0_htm_1": {
+        "name": "Warmwasser Zeitfenster Montag Ende"
+      },
+      "hwctimer_monday0_slottemp": {
+        "name": "Warmwasser Zeitfenster Montag Temperatur"
+      },
+      "hwctimer_tuesday0_htm": {
+        "name": "Warmwasser Zeitfenster Dienstag Beginn"
+      },
+      "hwctimer_tuesday0_htm_1": {
+        "name": "Warmwasser Zeitfenster Dienstag Ende"
+      },
+      "hwctimer_tuesday0_slottemp": {
+        "name": "Warmwasser Zeitfenster Dienstag Temperatur"
+      },
+      "hwctimer_wednesday0_htm": {
+        "name": "Warmwasser Zeitfenster Mittwoch Beginn"
+      },
+      "hwctimer_wednesday0_htm_1": {
+        "name": "Warmwasser Zeitfenster Mittwoch Ende"
+      },
+      "hwctimer_wednesday0_slottemp": {
+        "name": "Warmwasser Zeitfenster Mittwoch Temperatur"
+      },
+      "hwctimer_thursday0_htm": {
+        "name": "Warmwasser Zeitfenster Donnerstag Beginn"
+      },
+      "hwctimer_thursday0_htm_1": {
+        "name": "Warmwasser Zeitfenster Donnerstag Ende"
+      },
+      "hwctimer_thursday0_slottemp": {
+        "name": "Warmwasser Zeitfenster Donnerstag Temperatur"
+      },
+      "hwctimer_friday0_htm": {
+        "name": "Warmwasser Zeitfenster Freitag Beginn"
+      },
+      "hwctimer_friday0_htm_1": {
+        "name": "Warmwasser Zeitfenster Freitag Ende"
+      },
+      "hwctimer_friday0_slottemp": {
+        "name": "Warmwasser Zeitfenster Freitag Temperatur"
+      },
+      "hwctimer_saturday0_htm": {
+        "name": "Warmwasser Zeitfenster Samstag Beginn"
+      },
+      "hwctimer_saturday0_htm_1": {
+        "name": "Warmwasser Zeitfenster Samstag Ende"
+      },
+      "hwctimer_saturday0_slottemp": {
+        "name": "Warmwasser Zeitfenster Samstag Temperatur"
+      },
+      "hwctimer_sunday0_htm": {
+        "name": "Warmwasser Zeitfenster Sonntag Beginn"
+      },
+      "hwctimer_sunday0_htm_1": {
+        "name": "Warmwasser Zeitfenster Sonntag Ende"
+      },
+      "hwctimer_sunday0_slottemp": {
+        "name": "Warmwasser Zeitfenster Sonntag Temperatur"
+      },
+      "cctimer_timeframes_slotcount": {
+        "name": "Zirkulation Zeitfenster Anzahl Montag"
+      },
+      "cctimer_timeframes_slotcount_1": {
+        "name": "Zirkulation Zeitfenster Anzahl Dienstag"
+      },
+      "cctimer_timeframes_slotcount_2": {
+        "name": "Zirkulation Zeitfenster Anzahl Mittwoch"
+      },
+      "cctimer_timeframes_slotcount_3": {
+        "name": "Zirkulation Zeitfenster Anzahl Donnerstag"
+      },
+      "cctimer_timeframes_slotcount_4": {
+        "name": "Zirkulation Zeitfenster Anzahl Freitag"
+      },
+      "cctimer_timeframes_slotcount_5": {
+        "name": "Zirkulation Zeitfenster Anzahl Samstag"
+      },
+      "cctimer_timeframes_slotcount_6": {
+        "name": "Zirkulation Zeitfenster Anzahl Sonntag"
+      },
+      "cctimer_monday0_htm": {
+        "name": "Zirkulation Zeitfenster Montag Beginn"
+      },
+      "cctimer_monday0_htm_1": {
+        "name": "Zirkulation Zeitfenster Montag Ende"
+      },
+      "cctimer_tuesday0_htm": {
+        "name": "Zirkulation Zeitfenster Dienstag Beginn"
+      },
+      "cctimer_tuesday0_htm_1": {
+        "name": "Zirkulation Zeitfenster Dienstag Ende"
+      },
+      "cctimer_wednesday0_htm": {
+        "name": "Zirkulation Zeitfenster Mittwoch Beginn"
+      },
+      "cctimer_wednesday0_htm_1": {
+        "name": "Zirkulation Zeitfenster Mittwoch Ende"
+      },
+      "cctimer_thursday0_htm": {
+        "name": "Zirkulation Zeitfenster Donnerstag Beginn"
+      },
+      "cctimer_thursday0_htm_1": {
+        "name": "Zirkulation Zeitfenster Donnerstag Ende"
+      },
+      "cctimer_friday0_htm": {
+        "name": "Zirkulation Zeitfenster Freitag Beginn"
+      },
+      "cctimer_friday0_htm_1": {
+        "name": "Zirkulation Zeitfenster Freitag Ende"
+      },
+      "cctimer_saturday0_htm": {
+        "name": "Zirkulation Zeitfenster Samstag Beginn"
+      },
+      "cctimer_saturday0_htm_1": {
+        "name": "Zirkulation Zeitfenster Samstag Ende"
+      },
+      "cctimer_sunday0_htm": {
+        "name": "Zirkulation Zeitfenster Sonntag Beginn"
+      },
+      "cctimer_sunday0_htm_1": {
+        "name": "Zirkulation Zeitfenster Sonntag Ende"
+      },
+      "z1timer_timeframes_slotcount": {
+        "name": "Zone 1 Zeitfenster Anzahl Montag"
+      },
+      "z1timer_timeframes_slotcount_1": {
+        "name": "Zone 1 Zeitfenster Anzahl Dienstag"
+      },
+      "z1timer_timeframes_slotcount_2": {
+        "name": "Zone 1 Zeitfenster Anzahl Mittwoch"
+      },
+      "z1timer_timeframes_slotcount_3": {
+        "name": "Zone 1 Zeitfenster Anzahl Donnerstag"
+      },
+      "z1timer_timeframes_slotcount_4": {
+        "name": "Zone 1 Zeitfenster Anzahl Freitag"
+      },
+      "z1timer_timeframes_slotcount_5": {
+        "name": "Zone 1 Zeitfenster Anzahl Samstag"
+      },
+      "z1timer_timeframes_slotcount_6": {
+        "name": "Zone 1 Zeitfenster Anzahl Sonntag"
+      },
+      "z1timer_monday0_htm": {
+        "name": "Zone 1 Zeitfenster Montag Beginn"
+      },
+      "z1timer_monday0_htm_1": {
+        "name": "Zone 1 Zeitfenster Montag Ende"
+      },
+      "z1timer_monday0_slottemp": {
+        "name": "Zone 1 Zeitfenster Montag Temperatur"
+      },
+      "z1timer_tuesday0_htm": {
+        "name": "Zone 1 Zeitfenster Dienstag Beginn"
+      },
+      "z1timer_tuesday0_htm_1": {
+        "name": "Zone 1 Zeitfenster Dienstag Ende"
+      },
+      "z1timer_tuesday0_slottemp": {
+        "name": "Zone 1 Zeitfenster Dienstag Temperatur"
+      },
+      "z1timer_wednesday0_htm": {
+        "name": "Zone 1 Zeitfenster Mittwoch Beginn"
+      },
+      "z1timer_wednesday0_htm_1": {
+        "name": "Zone 1 Zeitfenster Mittwoch Ende"
+      },
+      "z1timer_wednesday0_slottemp": {
+        "name": "Zone 1 Zeitfenster Mittwoch Temperatur"
+      },
+      "z1timer_thursday0_htm": {
+        "name": "Zone 1 Zeitfenster Donnerstag Beginn"
+      },
+      "z1timer_thursday0_htm_1": {
+        "name": "Zone 1 Zeitfenster Donnerstag Ende"
+      },
+      "z1timer_thursday0_slottemp": {
+        "name": "Zone 1 Zeitfenster Donnerstag Temperatur"
+      },
+      "z1timer_friday0_htm": {
+        "name": "Zone 1 Zeitfenster Freitag Beginn"
+      },
+      "z1timer_friday0_htm_1": {
+        "name": "Zone 1 Zeitfenster Freitag Ende"
+      },
+      "z1timer_friday0_slottemp": {
+        "name": "Zone 1 Zeitfenster Freitag Temperatur"
+      },
+      "z1timer_saturday0_htm": {
+        "name": "Zone 1 Zeitfenster Samstag Beginn"
+      },
+      "z1timer_saturday0_htm_1": {
+        "name": "Zone 1 Zeitfenster Samstag Ende"
+      },
+      "z1timer_saturday0_slottemp": {
+        "name": "Zone 1 Zeitfenster Samstag Temperatur"
+      },
+      "z1timer_sunday0_htm": {
+        "name": "Zone 1 Zeitfenster Sonntag Beginn"
+      },
+      "z1timer_sunday0_htm_1": {
+        "name": "Zone 1 Zeitfenster Sonntag Ende"
+      },
+      "z1timer_sunday0_slottemp": {
+        "name": "Zone 1 Zeitfenster Sonntag Temperatur"
+      },
+      "z2timer_timeframes_slotcount": {
+        "name": "Zone 2 Zeitfenster Anzahl Montag"
+      },
+      "z2timer_timeframes_slotcount_1": {
+        "name": "Zone 2 Zeitfenster Anzahl Dienstag"
+      },
+      "z2timer_timeframes_slotcount_2": {
+        "name": "Zone 2 Zeitfenster Anzahl Mittwoch"
+      },
+      "z2timer_timeframes_slotcount_3": {
+        "name": "Zone 2 Zeitfenster Anzahl Donnerstag"
+      },
+      "z2timer_timeframes_slotcount_4": {
+        "name": "Zone 2 Zeitfenster Anzahl Freitag"
+      },
+      "z2timer_timeframes_slotcount_5": {
+        "name": "Zone 2 Zeitfenster Anzahl Samstag"
+      },
+      "z2timer_timeframes_slotcount_6": {
+        "name": "Zone 2 Zeitfenster Anzahl Sonntag"
+      },
+      "z2timer_monday0_htm": {
+        "name": "Zone 2 Zeitfenster Montag Beginn"
+      },
+      "z2timer_monday0_htm_1": {
+        "name": "Zone 2 Zeitfenster Montag Ende"
+      },
+      "z2timer_monday0_slottemp": {
+        "name": "Zone 2 Zeitfenster Montag Temperatur"
+      },
+      "z2timer_tuesday0_htm": {
+        "name": "Zone 2 Zeitfenster Dienstag Beginn"
+      },
+      "z2timer_tuesday0_htm_1": {
+        "name": "Zone 2 Zeitfenster Dienstag Ende"
+      },
+      "z2timer_tuesday0_slottemp": {
+        "name": "Zone 2 Zeitfenster Dienstag Temperatur"
+      },
+      "z2timer_wednesday0_htm": {
+        "name": "Zone 2 Zeitfenster Mittwoch Beginn"
+      },
+      "z2timer_wednesday0_htm_1": {
+        "name": "Zone 2 Zeitfenster Mittwoch Ende"
+      },
+      "z2timer_wednesday0_slottemp": {
+        "name": "Zone 2 Zeitfenster Mittwoch Temperatur"
+      },
+      "z2timer_thursday0_htm": {
+        "name": "Zone 2 Zeitfenster Donnerstag Beginn"
+      },
+      "z2timer_thursday0_htm_1": {
+        "name": "Zone 2 Zeitfenster Donnerstag Ende"
+      },
+      "z2timer_thursday0_slottemp": {
+        "name": "Zone 2 Zeitfenster Donnerstag Temperatur"
+      },
+      "z2timer_friday0_htm": {
+        "name": "Zone 2 Zeitfenster Freitag Beginn"
+      },
+      "z2timer_friday0_htm_1": {
+        "name": "Zone 2 Zeitfenster Freitag Ende"
+      },
+      "z2timer_friday0_slottemp": {
+        "name": "Zone 2 Zeitfenster Freitag Temperatur"
+      },
+      "z2timer_saturday0_htm": {
+        "name": "Zone 2 Zeitfenster Samstag Beginn"
+      },
+      "z2timer_saturday0_htm_1": {
+        "name": "Zone 2 Zeitfenster Samstag Ende"
+      },
+      "z2timer_saturday0_slottemp": {
+        "name": "Zone 2 Zeitfenster Samstag Temperatur"
+      },
+      "z2timer_sunday0_htm": {
+        "name": "Zone 2 Zeitfenster Sonntag Beginn"
+      },
+      "z2timer_sunday0_htm_1": {
+        "name": "Zone 2 Zeitfenster Sonntag Ende"
+      },
+      "z2timer_sunday0_slottemp": {
+        "name": "Zone 2 Zeitfenster Sonntag Temperatur"
+      },
+      "hwclegionellatime": {
+        "name": "Legionellenschutz Uhrzeit"
+      },
       "hwclegionelladay": {
+        "name": "Legionellenschutz Tag",
         "state": {
           "off": "Aus"
         }
@@ -164,6 +872,7 @@
         "name": "Vorlauftemperatur"
       },
       "pumpstate": {
+        "name": "Status Pumpe",
         "state": {
           "off": "Aus",
           "on": "Ein"
@@ -179,79 +888,172 @@
           "frostschutz": "Frostschutz"
         }
       },
+      "flowtempdemand": {
+        "name": "Vorlauf-Anforderung"
+      },
       "heatingdemand": {
+        "name": "Heizanforderung",
         "state": {
           "no": "Nein",
           "yes": "Ja"
         }
       },
       "hwcdemand": {
+        "name": "Warmwasseranforderung",
         "state": {
           "no": "Nein",
           "yes": "Ja"
         }
       },
+      "positionvalveset": {
+        "name": "Umschaltventil Stellung"
+      },
+      "modulationdesired": {
+        "name": "Modulation Soll"
+      },
       "wp": {
+        "name": "Wärmepumpe angeschlossen",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "pumppower": {
+        "name": "Leistung Pumpe"
+      },
+      "storageloadpump": {
+        "name": "Speicherladepumpe"
+      },
       "heatingswitch": {
+        "name": "Heizen freigegeben",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "hwcswitch": {
+        "name": "Warmwasser freigegeben",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "probereg4003": {
+        "name": "Register 0d4003 (unbekannt)"
+      },
+      "probereg3703": {
+        "name": "Register 0d3703 (unbekannt)"
+      },
+      "probereg3803": {
+        "name": "Register 0d3803 (unbekannt)"
+      },
       "templimiter": {
+        "name": "Sicherheitstemperaturbegrenzer",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
+      },
+      "currenterror_error": {
+        "name": "Aktueller Fehler 1"
+      },
+      "currenterror_error_1": {
+        "name": "Aktueller Fehler 2"
+      },
+      "currenterror_error_2": {
+        "name": "Aktueller Fehler 3"
+      },
+      "currenterror_error_3": {
+        "name": "Aktueller Fehler 4"
+      },
+      "currenterror_error_4": {
+        "name": "Aktueller Fehler 5"
+      },
+      "probereg2800": {
+        "name": "Register 0d2800 (unbekannt)"
+      },
+      "probereg3a03": {
+        "name": "Register 0d3a03 (unbekannt)"
+      },
+      "templimitercutoffs": {
+        "name": "Sicherheitstemperaturbegrenzer Auslösungen"
+      },
+      "partloadhckw": {
+        "name": "Teillast Heizen"
+      },
+      "partloadhwckw": {
+        "name": "Teillast Warmwasser"
+      },
+      "powervalue": {
+        "name": "Leistungswerte (roh)"
       },
       "hwctemp": {
         "name": "Warmwassertemperatur"
       },
+      "hwctempmax": {
+        "name": "Warmwasser Sollwert max."
+      },
+      "anticondensvalue": {
+        "name": "Kondensationsschutz Leistung"
+      },
       "hcpumpmode": {
+        "name": "Heizkreispumpe Betriebsart",
         "state": {
           "winter": "Winter"
         }
       },
+      "blocktimehcmax": {
+        "name": "Heizen Sperrzeit max."
+      },
       "ebusheatcontrol": {
+        "name": "Regelung über eBUS",
         "state": {
           "no": "Nein",
           "yes": "Ja"
         }
       },
       "warmstartenable": {
+        "name": "Warmstart",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "cirpump": {
+        "name": "Zirkulationspumpe",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
+      },
+      "boilertype": {
+        "name": "Gerätetyp"
+      },
+      "dsn": {
+        "name": "Gerätekennung (DSN)"
       },
       "ebusvoltage": {
+        "name": "EBUS-Speisung",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "state_energy": {
+        "name": "Energiestatus"
+      },
+      "state_energy_1": {
+        "name": "Energiezähler (Status)"
+      },
       "state_onoff": {
+        "name": "Ein/Aus",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
+      },
+      "state_state": {
+        "name": "Betriebszustand"
       },
       "yieldhcday": {
         "name": "Umweltertrag Heizen heute"
@@ -280,16 +1082,203 @@
       "cophwc": {
         "name": "Arbeitszahl Warmwasser"
       },
+      "hours": {
+        "name": "Betriebsstunden"
+      },
+      "hourshc": {
+        "name": "Betriebsstunden Heizen"
+      },
+      "hourscool": {
+        "name": "Betriebsstunden Kühlen"
+      },
+      "hourshwc": {
+        "name": "Betriebsstunden Warmwasser"
+      },
+      "targetflowtemp": {
+        "name": "Vorlauf-Sollwert"
+      },
+      "energyintegral": {
+        "name": "Energieintegral"
+      },
       "currentyieldpower": {
         "name": "Umweltleistung"
       },
+      "currentcompressorutil": {
+        "name": "Verdichter Auslastung"
+      },
+      "buildingcircuitflow": {
+        "name": "Heizkreis Volumenstrom"
+      },
+      "flowpressure": {
+        "name": "Anlagendruck"
+      },
+      "compressorhours": {
+        "name": "Verdichter Betriebsstunden"
+      },
+      "compressorstarts": {
+        "name": "Verdichter Starts"
+      },
+      "buildingpumphours": {
+        "name": "Heizkreispumpe Betriebsstunden"
+      },
+      "buildingpumpstarts": {
+        "name": "Heizkreispumpe Starts"
+      },
+      "fourwayvalvehours": {
+        "name": "4-Wege-Ventil Betriebsstunden"
+      },
+      "fourwayvalveswitches": {
+        "name": "4-Wege-Ventil Umschaltungen"
+      },
+      "fan1hours": {
+        "name": "Ventilator 1 Betriebsstunden"
+      },
+      "fan1starts": {
+        "name": "Ventilator 1 Starts"
+      },
+      "fan2hours": {
+        "name": "Ventilator 2 Betriebsstunden"
+      },
+      "fan2starts": {
+        "name": "Ventilator 2 Starts"
+      },
+      "rundatacompressorspeed": {
+        "name": "Verdichter Drehzahl"
+      },
+      "rundataeevpositionabs": {
+        "name": "Expansionsventil Position"
+      },
+      "rundatafan1speed": {
+        "name": "Ventilator 1 Drehzahl"
+      },
+      "rundatafan2speed": {
+        "name": "Ventilator 2 Drehzahl"
+      },
+      "rundatastatuscode": {
+        "name": "Statuscode"
+      },
+      "rundatahighpressure": {
+        "name": "Hochdruck"
+      },
+      "rundatacompressorinlettemp": {
+        "name": "Verdichter Eintrittstemperatur"
+      },
+      "rundatacompressoroutlettemp": {
+        "name": "Verdichter Austrittstemperatur"
+      },
+      "rundataeevoutlettemp": {
+        "name": "Expansionsventil Austrittstemperatur"
+      },
+      "rundataflowtemp": {
+        "name": "Vorlauftemperatur (Betrieb)"
+      },
+      "rundatareturntemp": {
+        "name": "Rücklauftemperatur"
+      },
+      "runstatshmuhours": {
+        "name": "Betriebsstunden Regelung"
+      },
+      "runstatshchours": {
+        "name": "Betriebsstunden Heizen"
+      },
+      "runstatshwchours": {
+        "name": "Betriebsstunden Warmwasser"
+      },
+      "runstatscompressorhours": {
+        "name": "Verdichter Betriebsstunden"
+      },
+      "runstatscompressorstarts": {
+        "name": "Verdichter Starts"
+      },
+      "runstatsbuildingpumphours": {
+        "name": "Heizkreispumpe Betriebsstunden"
+      },
+      "rundatabuildingcpumppower": {
+        "name": "Heizkreispumpe Leistung"
+      },
+      "runstatsbuildingcpumpstarts": {
+        "name": "Heizkreispumpe Starts"
+      },
+      "runstats4portvalvehours": {
+        "name": "4-Wege-Ventil Betriebsstunden"
+      },
+      "runstats4portvalveswitches": {
+        "name": "4-Wege-Ventil Umschaltungen"
+      },
+      "runstatsfan1hours": {
+        "name": "Ventilator 1 Betriebsstunden"
+      },
+      "runstatsfan1starts": {
+        "name": "Ventilator 1 Starts"
+      },
+      "runstatsfan2hours": {
+        "name": "Ventilator 2 Betriebsstunden"
+      },
+      "runstatsfan2starts": {
+        "name": "Ventilator 2 Starts"
+      },
+      "rundataairinlettemp": {
+        "name": "Lufteintrittstemperatur"
+      },
+      "runstatscompressorhc_runtime": {
+        "name": "Verdichter Heizen Laufzeit"
+      },
+      "runstatscompressorhc_cycles": {
+        "name": "Verdichter Heizen Starts"
+      },
+      "runstatscompressorhwc_runtime": {
+        "name": "Verdichter Warmwasser Laufzeit"
+      },
+      "runstatscompressorhwc_cycles": {
+        "name": "Verdichter Warmwasser Starts"
+      },
+      "datetime_dcfstate": {
+        "name": "Funkuhr Status"
+      },
+      "datetime_btime": {
+        "name": "Uhrzeit (WP)"
+      },
+      "datetime_bdate": {
+        "name": "Datum (WP)"
+      },
+      "datetime_temp": {
+        "name": "Außentemperatur (WP)"
+      },
       "setmode_hcmode": {
+        "name": "Vorgabe Heizbetrieb",
         "state": {
           "auto": "Auto",
           "off": "Aus",
           "heat": "Heizen",
           "water": "Warmwasser"
         }
+      },
+      "setmode_flowtempdesired": {
+        "name": "Vorgabe Vorlauf-Sollwert"
+      },
+      "setmode_hwctempdesired": {
+        "name": "Vorgabe Warmwasser-Sollwert"
+      },
+      "setmode_hwcflowtempdesired": {
+        "name": "Vorgabe Warmwasser-Vorlauf-Sollwert"
+      },
+      "setmode_disablehc": {
+        "name": "Vorgabe Heizen gesperrt"
+      },
+      "setmode_disablehwctapping": {
+        "name": "Vorgabe Warmwasserzapfung gesperrt"
+      },
+      "setmode_disablehwcload": {
+        "name": "Vorgabe Speicherladung gesperrt"
+      },
+      "setmode_remotecontrolhcpump": {
+        "name": "Vorgabe Heizkreispumpe fernsteuern"
+      },
+      "setmode_releasebackup": {
+        "name": "Vorgabe Zuheizer freigegeben"
+      },
+      "setmode_releasecooling": {
+        "name": "Vorgabe Kühlen freigegeben"
       },
       "status01_temp": {
         "name": "Vorlauftemperatur (Status)"
@@ -307,16 +1296,33 @@
         "name": "Speichertemperatur (Status)"
       },
       "status01_pumpstate": {
+        "name": "Pumpenstatus (Status)",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "statuscirpump": {
+        "name": "Zirkulationspumpe",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
+      },
+      "compressorhc_runtime": {
+        "name": "Verdichter Heizen Laufzeit"
+      },
+      "compressorhc_cycles": {
+        "name": "Verdichter Heizen Starts"
+      },
+      "compressorhwc_runtime": {
+        "name": "Verdichter Warmwasser Laufzeit"
+      },
+      "compressorhwc_cycles": {
+        "name": "Verdichter Warmwasser Starts"
+      },
+      "compressorblocktime": {
+        "name": "Verdichter Sperrzeit"
       },
       "yieldcoolingmonth": {
         "name": "Umweltertrag Kühlen Monat"
@@ -358,6 +1364,7 @@
         "name": "Stromverbrauch Kühlen"
       },
       "singlestoragecharge": {
+        "name": "Einmalige Speicherladung",
         "state": {
           "off": "Aus",
           "on": "Ein"
@@ -366,44 +1373,126 @@
       "operatinghours": {
         "name": "Betriebsstunden"
       },
+      "vpmwmode": {
+        "name": "Stationsmodus"
+      },
+      "hexmonitoringcounter": {
+        "name": "Wärmetauscher Überwachungszähler"
+      },
+      "hexthreshold": {
+        "name": "Wärmetauscher Verkalkungsschwelle"
+      },
+      "hexindex": {
+        "name": "Wärmetauscher Verkalkungsindex"
+      },
+      "krmfaktorsmall": {
+        "name": "Regler Mischer Kr-Faktor klein"
+      },
+      "krmfaktormiddl": {
+        "name": "Regler Mischer Kr-Faktor mittel"
+      },
+      "tnmfaktorsmall": {
+        "name": "Regler Mischer Nachstellzeit-Faktor klein"
+      },
+      "tnmfaktormiddl": {
+        "name": "Regler Mischer Nachstellzeit-Faktor mittel"
+      },
+      "ntc1sensor_temp": {
+        "name": "Temperatursensor 1"
+      },
+      "ntc1sensor_sensor": {
+        "name": "Temperatursensor 1 Status"
+      },
+      "ntc2sensor_temp": {
+        "name": "Temperatursensor 2"
+      },
+      "ntc2sensor_sensor": {
+        "name": "Temperatursensor 2 Status"
+      },
+      "ntc3sensor_temp": {
+        "name": "Temperatursensor 3"
+      },
+      "ntc3sensor_sensor": {
+        "name": "Temperatursensor 3 Status"
+      },
+      "circopump": {
+        "name": "Zirkulationspumpe"
+      },
+      "pumped": {
+        "name": "Pumpe Einschaltdauer"
+      },
+      "calculatedmixerposition": {
+        "name": "Mischer Stellung berechnet"
+      },
       "electricalheater": {
+        "name": "Elektro-Heizstab",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "heatdemand": {
+        "name": "Wärmeanforderung"
+      },
       "operatingmode": {
+        "name": "Betriebsart",
         "state": {
           "off": "Aus",
           "on": "Ein",
           "auto": "Auto"
         }
       },
+      "manualtappingtempdesired": {
+        "name": "Zapf-Sollwert manuell"
+      },
+      "autotappingtempdesired": {
+        "name": "Zapf-Sollwert Automatik"
+      },
+      "quickvetotempdesired": {
+        "name": "Quick-Veto Sollwert"
+      },
+      "actualtappingtempdesired": {
+        "name": "Zapf-Sollwert aktuell"
+      },
       "quickvetostart": {
+        "name": "Quick-Veto aktiv",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "legiostartday": {
+        "name": "Legionellenschutz Tag"
+      },
+      "legiostarttime": {
+        "name": "Legionellenschutz Uhrzeit"
+      },
       "partystart": {
+        "name": "Party aktiv",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "holidaystart": {
+        "name": "Urlaub aktiv",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "actorfernsteuerung": {
+        "name": "Fernsteuerung Aktoren",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "weekday": {
+        "name": "Wochentag"
+      },
       "teleswitch": {
+        "name": "Fernschalter",
         "state": {
           "on": "Ein",
           "off": "Aus",
@@ -411,18 +1500,69 @@
         }
       },
       "teleswitchstate": {
+        "name": "Fernschalter Zustand",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "enablehwcoperation": {
+        "name": "Warmwasserbetrieb freigegeben",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
+      "krm": {
+        "name": "Regler Mischer Kr"
+      },
+      "tm": {
+        "name": "Regler Mischer Tm"
+      },
+      "tnm": {
+        "name": "Regler Mischer Nachstellzeit"
+      },
+      "tvm": {
+        "name": "Regler Mischer Vorhaltezeit"
+      },
+      "krp": {
+        "name": "Regler Pumpe Kr"
+      },
+      "tvp": {
+        "name": "Regler Pumpe Vorhaltezeit"
+      },
+      "tp": {
+        "name": "Regler Pumpe Tp"
+      },
+      "statemaincontrol": {
+        "name": "Hauptregelung Zustand"
+      },
+      "statemixerpumpcontrol": {
+        "name": "Mischer/Pumpe Zustand"
+      },
+      "statecircokick": {
+        "name": "Zirkulation Anstoß"
+      },
+      "statehexmonitoring": {
+        "name": "Wärmetauscher Überwachung"
+      },
+      "timeticker": {
+        "name": "Betriebszeit Zähler"
+      },
+      "stlegiostoptimecounter": {
+        "name": "Legionellenschutz Stoppzähler"
+      },
+      "stlegioaborttimecounter": {
+        "name": "Legionellenschutz Abbruchzähler"
+      },
+      "stfrostprotcounter": {
+        "name": "Frostschutz Zähler"
+      },
+      "mode_temp": {
+        "name": "Betriebsart Temperatur"
+      },
       "mode_hwcmode": {
+        "name": "Betriebsart Warmwasser",
         "state": {
           "on": "Ein",
           "off": "Aus",
@@ -430,40 +1570,215 @@
         }
       },
       "mode_hwcmode_1": {
+        "name": "Betriebsart Warmwasser 2",
         "state": {
           "on": "Ein",
           "off": "Aus",
           "auto": "Auto"
         }
       },
+      "mode_mctype": {
+        "name": "Betriebsart Kreistyp"
+      },
+      "mode_hex": {
+        "name": "Betriebsart Rohwert"
+      },
       "mode_daynight": {
+        "name": "Betriebsart Tag/Nacht",
         "state": {
           "night": "Nacht",
           "day": "Tag"
         }
       },
+      "status_temp": {
+        "name": "Sollwert (Status)"
+      },
       "status_onoff": {
+        "name": "Ein/Aus (Status)",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
+      },
+      "status_temp_1": {
+        "name": "Istwert (Status)"
+      },
+      "status_temp_2": {
+        "name": "Sollwert 2 (Status)"
+      },
+      "sensordata1_s1": {
+        "name": "Temperatursensor S1"
+      },
+      "sensordata1_s2": {
+        "name": "Temperatursensor S2"
+      },
+      "sensordata1_s3": {
+        "name": "Temperatursensor S3"
+      },
+      "sensordata1_s4": {
+        "name": "Temperatursensor S4"
+      },
+      "sensordata1_s5": {
+        "name": "Temperatursensor S5"
+      },
+      "sensordata1_s6": {
+        "name": "Temperatursensor S6"
+      },
+      "sensordata1_s7": {
+        "name": "Temperatursensor S7"
+      },
+      "sensordata1_ignore": {
+        "name": "Sensordaten 1 Rest"
+      },
+      "sensordata2_s8": {
+        "name": "Temperatursensor S8"
+      },
+      "sensordata2_s9": {
+        "name": "Temperatursensor S9"
+      },
+      "sensordata2_s10": {
+        "name": "Temperatursensor S10"
+      },
+      "sensordata2_s11": {
+        "name": "Temperatursensor S11"
+      },
+      "sensordata2_s12": {
+        "name": "Temperatursensor S12"
+      },
+      "sensordata2_sx": {
+        "name": "Temperatursensor SX"
+      },
+      "sensordata2_ignore": {
+        "name": "Sensordaten 2 Rest"
       }
     },
-    "number": {},
+    "number": {
+      "frostoverridetime": {
+        "name": "Frostschutz-Verzögerung"
+      },
+      "maxroomhumidity": {
+        "name": "Raumfeuchte max."
+      },
+      "maxcylinderchargetime": {
+        "name": "Speicherladung max. Dauer"
+      },
+      "hwclocktime": {
+        "name": "Warmwasser Sperrzeit"
+      },
+      "pumpadditionaltime": {
+        "name": "Pumpennachlaufzeit"
+      },
+      "hydraulicscheme": {
+        "name": "Hydraulikschema"
+      },
+      "solaryieldtotal": {
+        "name": "Solarertrag gesamt"
+      },
+      "yieldtotal": {
+        "name": "Umweltertrag gesamt"
+      },
+      "prfuelsumhcthismonth": {
+        "name": "Brennstoff Heizen dieser Monat"
+      },
+      "prenergysumhcthismonth": {
+        "name": "Energie Heizen dieser Monat"
+      },
+      "prenergysumhwcthismonth": {
+        "name": "Energie Warmwasser dieser Monat"
+      },
+      "prfuelsumhwcthismonth": {
+        "name": "Brennstoff Warmwasser dieser Monat"
+      },
+      "prfuelsumhclastmonth": {
+        "name": "Brennstoff Heizen Vormonat"
+      },
+      "prenergysumhclastmonth": {
+        "name": "Energie Heizen Vormonat"
+      },
+      "prenergysumhwclastmonth": {
+        "name": "Energie Warmwasser Vormonat"
+      },
+      "prfuelsumhwclastmonth": {
+        "name": "Brennstoff Warmwasser Vormonat"
+      },
+      "prfuelsumhc": {
+        "name": "Brennstoff Heizen gesamt"
+      },
+      "prenergysumhc": {
+        "name": "Energie Heizen gesamt"
+      },
+      "prenergysumhwc": {
+        "name": "Energie Warmwasser gesamt"
+      },
+      "prfuelsumhwc": {
+        "name": "Brennstoff Warmwasser gesamt"
+      },
+      "keycodeforconfigmenu": {
+        "name": "Code Fachhandwerkerebene"
+      },
+      "hc1status": {
+        "name": "Heizkreis 1 Status"
+      },
+      "hc1pumpstatus": {
+        "name": "Heizkreis 1 Pumpe"
+      },
+      "hc2status": {
+        "name": "Heizkreis 2 Status"
+      },
+      "hc2pumpstatus": {
+        "name": "Heizkreis 2 Pumpe"
+      },
+      "hc3status": {
+        "name": "Heizkreis 3 Status"
+      },
+      "hc3pumpstatus": {
+        "name": "Heizkreis 3 Pumpe"
+      },
+      "z1valvestatus": {
+        "name": "Zone 1 Ventilstatus"
+      },
+      "z2valvestatus": {
+        "name": "Zone 2 Ventilstatus"
+      },
+      "z3valvestatus": {
+        "name": "Zone 3 Ventilstatus"
+      },
+      "manualtappingtempdesired": {
+        "name": "Zapf-Sollwert manuell"
+      },
+      "stlegiostoptimecounter": {
+        "name": "Legionellenschutz Stoppzähler"
+      },
+      "stlegioaborttimecounter": {
+        "name": "Legionellenschutz Abbruchzähler"
+      },
+      "stfrostprotcounter": {
+        "name": "Frostschutz Zähler"
+      },
+      "settempdesired": {
+        "name": "Sollwert setzen"
+      }
+    },
     "select": {
       "hwcparallelloading": {
+        "name": "Warmwasser Parallelladung",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "adaptheatcurve": {
+        "name": "Adaptive Heizkurve",
         "state": {
           "no": "Nein",
           "yes": "Ja"
         }
       },
+      "multirelaysetting": {
+        "name": "Multifunktionsausgang"
+      },
       "hwcopmode": {
+        "name": "Warmwasser Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
@@ -472,41 +1787,49 @@
         }
       },
       "hwcsfmode": {
+        "name": "Warmwasser Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
       },
       "hc1autooffmode": {
+        "name": "Heizkreis 1 Verhalten außerhalb Zeitfenster",
         "state": {
           "night": "Nacht"
         }
       },
       "hc1roomtempswitchon": {
+        "name": "Heizkreis 1 Raumaufschaltung",
         "state": {
           "off": "Aus"
         }
       },
       "hc2autooffmode": {
+        "name": "Heizkreis 2 Verhalten außerhalb Zeitfenster",
         "state": {
           "night": "Nacht"
         }
       },
       "hc2roomtempswitchon": {
+        "name": "Heizkreis 2 Raumaufschaltung",
         "state": {
           "off": "Aus"
         }
       },
       "hc3autooffmode": {
+        "name": "Heizkreis 3 Verhalten außerhalb Zeitfenster",
         "state": {
           "night": "Nacht"
         }
       },
       "hc3roomtempswitchon": {
+        "name": "Heizkreis 3 Raumaufschaltung",
         "state": {
           "off": "Aus"
         }
       },
       "z1opmode": {
+        "name": "Zone 1 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
@@ -515,11 +1838,16 @@
         }
       },
       "z1sfmode": {
+        "name": "Zone 1 Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
       },
+      "z1roomzonemapping": {
+        "name": "Zone 1 Raumtemperatursensor-Zuordnung"
+      },
       "z2opmode": {
+        "name": "Zone 2 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
@@ -528,11 +1856,16 @@
         }
       },
       "z2sfmode": {
+        "name": "Zone 2 Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
       },
+      "z2roomzonemapping": {
+        "name": "Zone 2 Raumtemperatursensor-Zuordnung"
+      },
       "z3opmode": {
+        "name": "Zone 3 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
@@ -541,17 +1874,23 @@
         }
       },
       "z3sfmode": {
+        "name": "Zone 3 Sonderbetrieb",
         "state": {
           "auto": "Auto"
         }
       },
+      "z3roomzonemapping": {
+        "name": "Zone 3 Raumtemperatursensor-Zuordnung"
+      },
       "statuscirpump": {
+        "name": "Zirkulationspumpe",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "operatingmode": {
+        "name": "Betriebsart",
         "state": {
           "off": "Aus",
           "on": "Ein",
@@ -559,6 +1898,7 @@
         }
       },
       "setmode": {
+        "name": "Betriebsvorgabe",
         "state": {
           "on": "Ein",
           "off": "Aus",
@@ -566,12 +1906,14 @@
         }
       },
       "party": {
+        "name": "Party",
         "state": {
           "off": "Aus",
           "on": "Ein"
         }
       },
       "load": {
+        "name": "Speicherladung",
         "state": {
           "off": "Aus",
           "on": "Ein"
