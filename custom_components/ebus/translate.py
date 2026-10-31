@@ -6,8 +6,8 @@ CDN -- in the user's language and in English -- merge it onto the (facts-only)
 bundled definitions, and write ``translations/<lang>.json`` locally. The GPL-3.0
 upstream text therefore lives only on the user's machine, never in this
 repository; Home Assistant then localizes entity names per user through its own
-translation system. It is cached by a signature of the device set and languages,
-so the CDN is only fetched when that changes.
+translation system. It is cached by a signature of the device set, languages and
+integration version, so the CDN is only fetched when one of those changes.
 """
 from __future__ import annotations
 
@@ -23,8 +23,10 @@ from aioebus.messages import parse_csv
 from aioebus.scan import ScanResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.loader import async_get_integration
 
 from . import strings_gen
+from .const import DOMAIN
 from .library import _index, all_messages, resolve_file
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,9 +60,18 @@ async def _fetch(session, lang: str, path: str) -> str | None:
         return None
 
 
-def _marker_matches(sig: str) -> bool:
+def _files_digest(languages: list[str]) -> str:
+    h = hashlib.sha1()
+    for lang in languages:
+        h.update((_TDIR / f"{lang}.json").read_bytes())
+    return h.hexdigest()
+
+
+def _marker_matches(sig: str, languages: list[str]) -> bool:
+    """The marker holds the signature AND a digest of the files it wrote, so files
+    replaced behind our back (an update shipping the plain baseline) regenerate."""
     try:
-        return _MARKER.read_text(encoding="utf-8").strip() == sig
+        return _MARKER.read_text(encoding="utf-8").split() == [sig, _files_digest(languages)]
     except OSError:
         return False
 
@@ -70,7 +81,7 @@ def _write_files(files: dict[str, dict], sig: str) -> None:
     for lang, data in files.items():
         (_TDIR / f"{lang}.json").write_text(
             json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    _MARKER.write_text(sig, encoding="utf-8")
+    _MARKER.write_text(f"{sig}\n{_files_digest(sorted(files))}\n", encoding="utf-8")
 
 
 def _clear_cache(hass: HomeAssistant) -> None:
@@ -96,14 +107,15 @@ async def async_update_translations(
         return
     languages = sorted({hass.config.language or "en", "en"})
     defs = all_messages(devices, user_dir)
-    # Cache key (not security): regenerate when the schema, languages, CDN paths,
-    # OR the resolved definition set change -- so adding a bundled message (e.g. a
-    # new register) re-localizes on its own, without a manual _SCHEMA bump.
+    version = (await async_get_integration(hass, DOMAIN)).version
+    # Cache key (not security): regenerate when the schema, the integration
+    # version (the name rules in strings_gen change with it), languages, CDN
+    # paths or the resolved definition set change.
     sig = hashlib.sha1("|".join((
-        str(_SCHEMA), ",".join(languages), ",".join(paths),
+        str(_SCHEMA), str(version), ",".join(languages), ",".join(paths),
         ",".join(sorted(f"{m.name}:{m.pbsb}:{m.msgid}" for m in defs)),
     )).encode()).hexdigest()
-    if await hass.async_add_executor_job(_marker_matches, sig):
+    if await hass.async_add_executor_job(_marker_matches, sig, languages):
         return  # already generated for this device set + languages + definitions
 
     session = async_get_clientsession(hass)
