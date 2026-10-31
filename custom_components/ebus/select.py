@@ -3,13 +3,11 @@ from __future__ import annotations
 
 from typing import cast
 
-from aioebus.active import ReadError
 from aioebus.engine import value_key
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.translations import translation_key
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -58,9 +56,4 @@ class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
         return cast("str | None", value) if value in self._attr_options else None
 
     async def async_select_option(self, option: str) -> None:
-        assert self.coordinator.engine is not None
-        try:
-            await self.coordinator.engine.write(self._msg, {self._msg.name: option})
-        except (TimeoutError, ReadError, ValueError, OSError) as err:
-            raise HomeAssistantError(f"eBUS write to {self._msg.name} failed: {err}") from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_write(self._msg, option)

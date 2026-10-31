@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from typing import cast
 
-from aioebus.active import ReadError
 from aioebus.codecs import _NUMERIC, make_codec
 from aioebus.engine import value_key
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.translations import translation_key
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -76,10 +74,4 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         return cast("float | None", self.coordinator.data.get(self._key))
 
     async def async_set_native_value(self, value: float) -> None:
-        assert self.coordinator.engine is not None
-        out = int(value) if value == int(value) else value
-        try:
-            await self.coordinator.engine.write(self._msg, {self._msg.name: out})
-        except (TimeoutError, ReadError, ValueError, OSError) as err:
-            raise HomeAssistantError(f"eBUS write to {self._msg.name} failed: {err}") from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_write(self._msg, value)

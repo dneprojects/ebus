@@ -16,15 +16,15 @@ from typing import Any, Final
 
 import aiohttp
 from aioebus import __version__ as AIOEBUS_VERSION
-from aioebus.active import ActiveReader
-from aioebus.engine import EbusEngine
+from aioebus.active import ActiveReader, ReadError, WriteUncertain
+from aioebus.engine import EbusEngine, value_key
 from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
 from aioebus.scan import Identification, ScanResult
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -53,6 +53,7 @@ from .library import (
     all_messages,
     climate_zones,
     device_messages,
+    fields_of,
     select_polled,
     timer_schedules,
 )
@@ -360,6 +361,42 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 _LOGGER.info("eBUS: reconnected to %s:%s", self.host, self.port)
             except OSError as err:
                 _LOGGER.warning("eBUS: reconnect failed: %s", err)
+
+    async def async_write(self, msg: MessageDef, value: object) -> None:
+        """Write one value to a single-field register, then read it back so the
+        entity shows what the device actually holds (if it cannot be read back,
+        the written value is shown). Errors surface as HomeAssistantError."""
+        fields = fields_of(msg)
+        if self.engine is None or not self.allow_write or len(fields) != 1:
+            raise HomeAssistantError(f"eBUS: {msg.name} is not writable")
+        field = fields[0]
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
+        uncertain: WriteUncertain | None = None
+        try:
+            await self.engine.write(msg, {field.field.name: value})
+        except WriteUncertain as err:  # sent, but unconfirmed: may have been applied
+            uncertain = err
+        except (TimeoutError, ReadError, ValueError, OSError, NotImplementedError) as err:
+            raise HomeAssistantError(f"eBUS write to {msg.name} failed: {err}") from err
+        twin = next((m for m in self.read_messages if m.zz == msg.zz
+                     and m.name == msg.name and m.direction[:1] == "r"), None)
+        read_back = False
+        try:
+            if twin is None:
+                raise ReadError("no readable twin")
+            await self.engine.read(twin)  # stores the read value in the cache
+            read_back = True
+        except (TimeoutError, ReadError, ValueError, OSError) as err:
+            _LOGGER.debug("eBUS: read-back of %s skipped: %s", msg.name, err)
+            if uncertain is None:  # confirmed: show what was written
+                self.engine.cache[value_key(msg, field.label)] = value
+        self.async_set_updated_data(dict(self.engine.cache))
+        if uncertain is not None:
+            shown = "the shown value was read back" if read_back else "it could not be read back"
+            raise HomeAssistantError(
+                f"eBUS write to {msg.name} not confirmed ({uncertain}); it may have "
+                f"been applied -- {shown}") from uncertain
 
     async def _async_update_data(self) -> EbusCache:
         if self.engine is None:

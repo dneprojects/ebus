@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioebus.active import ReadError
 from aioebus.engine import value_key
 from aioebus.messages import MessageDef
 from homeassistant.components.climate import (
@@ -18,7 +17,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -98,6 +96,10 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         self._attr_hvac_modes = hvac
 
         feature = ClimateEntityFeature(0)
+        self._read_only = not coordinator.allow_write
+        if self._read_only:  # show the zone, but offer no controls that must fail
+            self._attr_supported_features = feature
+            return
         if zone.target_write is not None:
             feature |= ClimateEntityFeature.TARGET_TEMPERATURE
         if zone.mode_write is not None:
@@ -127,6 +129,11 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
             return float(self._val(self._zone.target_read))  # type: ignore[arg-type]
         except (TypeError, ValueError):
             return None
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        # read-only: only the current mode, so the UI offers nothing to switch to
+        return [self.hvac_mode] if self._read_only else self._attr_hvac_modes
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -169,11 +176,4 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
             await self._write(self._zone.mode_write, self._heat_default)
 
     async def _write(self, msg: MessageDef, value: object) -> None:
-        assert self.coordinator.engine is not None
-        if isinstance(value, float) and value.is_integer():
-            value = int(value)
-        try:
-            await self.coordinator.engine.write(msg, {msg.name: value})
-        except (TimeoutError, ReadError, ValueError, OSError) as err:
-            raise HomeAssistantError(f"eBUS write to {msg.name} failed: {err}") from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_write(msg, value)
