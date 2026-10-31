@@ -1476,6 +1476,13 @@
           "hwc": "hwc"
         }
       },
+      "statuscirpump": {
+        "name": "StatusCirPump",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
       "compressorhc_runtime": {
         "name": "CompressorHc runtime"
       },
@@ -1490,9 +1497,6 @@
       },
       "compressorblocktime": {
         "name": "CompressorBlocktime"
-      },
-      "supplytempweighted": {
-        "name": "SupplyTempWeighted"
       },
       "yieldcoolingmonth": {
         "name": "YieldCoolingMonth"

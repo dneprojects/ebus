@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import BROADCAST_ADDRESS, DOMAIN
 from .coordinator import EbusCoordinator
 from .device import adapter_identifier
-from .library import retired_unique_id
+from .library import renamed_unique_id, retired_unique_id
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR, Platform.SENSOR, Platform.NUMBER,
@@ -25,19 +25,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool
     await coordinator.async_discover()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
-    _remove_retired_entities(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # every entity is registered now: poll exactly what the enabled ones need
+    # (entities new in this version included, without waiting for a restart)
+    coordinator.async_rescope_polling()
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
 
 
-def _remove_retired_entities(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
-    """Drop registry entries of messages retired from the bundled definitions, so
-    they do not linger as orphaned 'unavailable' entities."""
+async def async_migrate_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool:
+    """Bring an entry from an older version up to date (runs once per step)."""
+    if entry.version > 1:
+        return False  # downgrade from a future version
+    if entry.minor_version < 2:
+        _migrate_retired_and_renamed(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+    return True
+
+
+def _migrate_retired_and_renamed(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
+    """1.1 -> 1.2: drop the entities of retired messages and move renamed ones to
+    their new unique_id, so they keep their entity_id and history. Where the
+    successor already exists (created by 0.3.0), the old entry is the orphan."""
     registry = er.async_get(hass)
     for ent in er.async_entries_for_config_entry(registry, entry.entry_id):
         if retired_unique_id(ent.unique_id):
             registry.async_remove(ent.entity_id)
+            continue
+        new_uid = renamed_unique_id(ent.unique_id)
+        if new_uid is None:
+            continue
+        if registry.async_get_entity_id(ent.domain, DOMAIN, new_uid):
+            registry.async_remove(ent.entity_id)
+        else:
+            registry.async_update_entity(ent.entity_id, new_unique_id=new_uid)
 
 
 async def _async_reload(hass: HomeAssistant, entry: EbusConfigEntry) -> None:

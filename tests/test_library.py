@@ -193,26 +193,49 @@ def test_hmu_energy_counters_decode_kwh():
     m = defs["EnergyEnvironmentHc"]
     assert m.decode_labeled("1000ffff42030000", "00000142035e35372f9f4b") == {
         "EnergyEnvironmentHc": 20864.622}
-    # one home per value: the duplicating registers are gone from the bundle
-    assert not library.RETIRED_MESSAGES & set(defs)
+    # one home per value: retired and renamed registers are gone from the bundle
+    assert not (library.RETIRED_MESSAGES | set(library.RENAMED_MESSAGES)) & set(defs)
+    assert set(library.RENAMED_MESSAGES.values()) <= set(defs)
+    # and no register is defined twice under different names
+    reg = [(m.pbsb, m.msgid, m.direction, tuple(m.conditions or ()))
+           for m in from_dicts(json.loads(hmu.read_text(encoding="utf-8")))]
+    assert len(reg) == len(set(reg))
 
 
 def test_both_heat_pumps_share_the_full_definition():
     # the HMU at 08 and the same HMU behind the V32 coupler at 18 get the same
-    # message set (incl. the energy counters), each stamped with its own address
-    devices = {0x08: _scan("HMU00", "5103"), 0x18: _scan("V32", "6004")}
+    # message set (incl. the energy counters), each stamped with its own address.
+    # Real firmware (sw 0902) so the conditional registers are in play too.
+    devices = {0x08: _scan("HMU00", "5103", "0902"), 0x18: _scan("V32", "6004", "0902")}
     reads = library.device_messages(devices, "r")
     by_zz = {zz: {m.name for m in reads if m.zz == zz} for zz in ("08", "18")}
     assert by_zz["08"] == by_zz["18"]
-    assert {"EnergyGeneratedHc", "PowerConsumptionHmu", "Status01"} <= by_zz["18"]
+    assert {"EnergyGeneratedHc", "PowerConsumptionHmu", "Status01",
+            "CompressorHc"} <= by_zz["18"]
+
+
+def test_disabled_fields_add_up():
+    # the profile's own entry adds to the file's unconnected channels
+    wp2 = library.disabled_field_labels(_scan("V32", "6004"))
+    wp1 = library.disabled_field_labels(_scan("HMU00", "5103"))
+    assert "Status01 temp_2" in wp1 and "SetMode hwctempdesired" not in wp1
+    assert wp1 | {"SetMode hwctempdesired"} == wp2
 
 
 def test_retired_unique_id():
     assert library.retired_unique_id("ebus_18_YieldHc_YieldHc")
-    assert library.retired_unique_id("ebus_08_EnergyYieldHeat_EnergyYieldHeat")  # 0.2.0 name
     assert not library.retired_unique_id("ebus_08_EnergyGeneratedHc_EnergyGeneratedHc")
     assert not library.retired_unique_id("ebus_08_Status01_Status01 temp")
     assert not library.retired_unique_id("ebus_192.168.178.179_9999_signal")  # adapter sensor
+
+
+def test_renamed_unique_id():
+    assert (library.renamed_unique_id("ebus_08_EnergyYieldHeat_EnergyYieldHeat")
+            == "ebus_08_EnergyGeneratedHc_EnergyGeneratedHc")  # 0.2.0 name
+    assert (library.renamed_unique_id("ebus_18_SupplyTempWeighted_SupplyTempWeighted")
+            == "ebus_18_TargetFlowTemp_TargetFlowTemp")
+    assert library.renamed_unique_id("ebus_08_EnergyGeneratedHc_EnergyGeneratedHc") is None
+    assert library.renamed_unique_id("ebus_18_YieldHc_YieldHc") is None  # retired, not renamed
 
 
 def test_scan_all_covers_known_addresses():

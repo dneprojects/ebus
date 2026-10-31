@@ -48,7 +48,7 @@ rules:
     comment: The adapter needs no credentials, so there is nothing to re-authenticate.
   test-coverage:
     status: todo
-    comment: Library resolution and the config flow are covered; full platform coverage is pending.
+    comment: Library resolution, the config flow, setup retry, link loss, the entry migration and late climate zones are covered; full platform coverage is pending.
 
   # --- Gold -----------------------------------------------------------------
   devices: done

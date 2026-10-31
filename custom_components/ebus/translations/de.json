@@ -312,6 +312,12 @@
           "on": "Ein"
         }
       },
+      "statuscirpump": {
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
       "yieldcoolingmonth": {
         "name": "Umweltertrag Kühlen Monat"
       },

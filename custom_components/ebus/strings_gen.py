@@ -82,8 +82,8 @@ CONFIG_DE = {
 }
 CONFIG = {"en": CONFIG_EN, "de": CONFIG_DE}
 
-# hand-curated overrides (our own work), used when upstream has no good label.
-# Only German is curated; other languages rely on the upstream translation alone.
+# hand-curated names (our own work); they win over the upstream label. Only
+# German is curated; other languages rely on the upstream translation alone.
 NAME_DE = {
     "flowtemp": "Vorlauftemperatur", "statenumber": "Status", "waterpressure": "Wasserdruck",
     "displayedoutsidetemp": "Außentemperatur", "systemflowtemp": "Anlagen-Vorlauftemperatur",
@@ -163,16 +163,18 @@ def _good(text) -> str | None:
 
 
 def _name(m: MessageDef, f: FieldDef, lang: str) -> str | None:
-    """Display name for ``lang``: upstream label from ``tr``, else a curated
-    override, else (English only) the technical name; None means omit so HA falls
-    back to English. A curated override on a multi-field entity is the full field
-    label and is used verbatim; the upstream path below appends the field name to
-    the message label, which only reads well for a lone 'value' field."""
+    """Display name for ``lang``: a curated name, else the upstream label from
+    ``tr``, else (English only) the technical name; None means omit so HA falls
+    back to English. Curated names win because they correct upstream (e.g. its
+    'Wärmeertrag' for what is the ambient yield). A curated name on a multi-field
+    entity is the full field label and is used verbatim; the upstream path below
+    appends the field name to the message label, which only reads well for a
+    lone 'value' field."""
     key = translation_key(m, f)
     curated = CURATED_NAMES.get(lang, {}).get(key)
     if curated and f.name != "value":
         return _cap(curated)
-    base = _good((m.tr or {}).get(lang)) or curated
+    base = curated or _good((m.tr or {}).get(lang))
     if not base:
         if lang != "en":
             return None
@@ -215,7 +217,9 @@ def build_entities(msgs: list[MessageDef], lang: str) -> dict:
                     put(select, key, name, states)
                 elif f.type.upper() in NUMBER_TYPES:
                     put(number, key, name, None)
-            elif m.direction[:1] in ("r", "u"):  # updates (broadcasts) are sensors too
+            # reads and updates (broadcasts) are sensors -- a 'uw' message is both
+            # a sensor and a writable, like the library classifies it
+            if m.direction[:1] in ("r", "u"):
                 put(sensor, key, name, states)
     return {"sensor": sensor, "number": number, "select": select}
 

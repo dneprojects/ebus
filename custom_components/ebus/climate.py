@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -45,12 +45,23 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
-    entities: list[EbusZoneClimate] = []
-    for zone in climate_zones(coordinator.devices, coordinator.user_dir):
-        roles = (zone.target_read, zone.current, zone.mode_read)
-        if any(coordinator.data.get(_key(m)) is not None for m in roles if m is not None):
-            entities.append(EbusZoneClimate(coordinator, zone))
-    async_add_entities(entities)
+    pending = climate_zones(coordinator.devices, coordinator.user_dir)
+
+    # a zone is in use once one of its registers has a value; on a fresh install
+    # nothing is cached yet, so keep checking as data arrives
+    @callback
+    def _add_active_zones() -> None:
+        active = [z for z in pending if any(
+            coordinator.data.get(_key(m)) is not None
+            for m in (z.target_read, z.current, z.mode_read) if m is not None)]
+        if active:
+            for zone in active:
+                pending.remove(zone)
+            async_add_entities(EbusZoneClimate(coordinator, z) for z in active)
+
+    _add_active_zones()
+    if pending:
+        entry.async_on_unload(coordinator.async_add_listener(_add_active_zones))
 
 
 class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):

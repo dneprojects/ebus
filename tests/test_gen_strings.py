@@ -64,6 +64,24 @@ def test_curated_energy_counter_names():
         assert de[name.lower()]["name"] == de_name
 
 
+def test_curated_name_beats_upstream_label():
+    # upstream calls the ambient yield 'Wärmeertrag'; our curated name corrects it
+    m = _msg("YieldHcDay", tr={"de": "Wärmeertrag Heizung Tag"},
+             fields=[FieldDef("value", "", "UIN", 10, None, "kWh", "")])
+    assert sg.build_entities([m], "de")["sensor"]["yieldhcday"]["name"] == (
+        "Umweltertrag Heizen heute")
+
+
+def test_update_write_message_is_also_a_sensor():
+    # a 'uw' message becomes a sensor AND a select (library classifies it as both),
+    # so the sensor needs its own named entry
+    m = _msg("StatusCirPump", direction="uw",
+             fields=[FieldDef("value", "", "UCH", None, {0: "off", 100: "on"}, "", "")])
+    en = sg.build_entities([m], "en")
+    assert en["sensor"]["statuscirpump"]["name"] == "StatusCirPump"
+    assert en["select"]["statuscirpump"]["name"] == "StatusCirPump"
+
+
 def test_de_omitted_without_translation_so_ha_falls_back():
     m = _msg("FooBar", fields=[FieldDef("value", "", "UIN", None, None, "", "")])
     en = sg.build_entities([m], "en")

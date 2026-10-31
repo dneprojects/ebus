@@ -1502,25 +1502,6 @@
   {
     "direction": "r",
     "circuit": "wp0",
-    "name": "SupplyTempWeighted",
-    "pbsb": "b51a",
-    "id": "05ff321f",
-    "zz": "08",
-    "fields": [
-      {
-        "name": "ign",
-        "type": "IGN:3"
-      },
-      {
-        "name": "value",
-        "type": "D2C",
-        "unit": "°C"
-      }
-    ]
-  },
-  {
-    "direction": "r",
-    "circuit": "wp0",
     "name": "YieldCoolingMonth",
     "pbsb": "b51a",
     "id": "05ff322a",

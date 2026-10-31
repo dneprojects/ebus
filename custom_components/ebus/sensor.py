@@ -27,6 +27,9 @@ _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | 
     "W": (SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT),
     "kWh": (SensorDeviceClass.ENERGY, SensorStateClass.TOTAL_INCREASING),
 }
+# a closed past period is a fixed figure, not a running counter: as
+# total_increasing, statistics would count each new month's total as consumption
+_PAST_PERIOD: Final = ("LastMonth", "LastYear")
 
 # eBUS field types that decode to a number (so the sensor can carry long-term
 # statistics); text, date/time, PIN, hex and bit-flag fields are excluded
@@ -136,7 +139,11 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
             # (total_increasing), everything else is a measurement; text, date/
             # time and flag fields stay without a state class
             if field.field.type.upper().split(":", 1)[0] in _NUMERIC_TYPES:
-                self._attr_state_class = unit_state or SensorStateClass.MEASUREMENT
+                state = unit_state or SensorStateClass.MEASUREMENT
+                if (state is SensorStateClass.TOTAL_INCREASING
+                        and field.msg.name.endswith(_PAST_PERIOD)):
+                    state = None
+                self._attr_state_class = state
 
         self._attr_device_info = device_info(
             zz, coordinator.devices.get(zz), coordinator.host, coordinator.port)

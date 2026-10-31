@@ -66,6 +66,7 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Ask for the enhanced adapter's host and port, or confirm a discovered one."""
 
     VERSION = 1
+    MINOR_VERSION = 2  # 1.2: registry clean-up of retired/renamed messages
 
     def __init__(self) -> None:
         self._discovered: dict[str, Any] = {}

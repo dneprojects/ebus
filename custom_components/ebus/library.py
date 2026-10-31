@@ -36,18 +36,26 @@ _KEYWORD_ICON: Final[tuple[tuple[str, str], ...]] = (
     ("temp", "mdi:thermometer"), ("mode", "mdi:tune"),
     ("error", "mdi:alert-circle-outline"), ("time", "mdi:clock-outline"))
 
-# Messages dropped from the bundled definitions, so their old registry entries are
-# removed at setup instead of lingering as 'unavailable'. Retired because another
-# register carries the same value (one home per value): the b51a lifetime yields
-# and TotalEnergyUsage (16-bit, wrap at 65535 kWh) duplicate the b516/10 float
-# counters; CurrentConsumedPower and RunDataElectricPowerConsumption duplicate
-# PowerConsumptionHmu. Superseded: the 0.2.0 names of the renamed b516/10 counters.
+# Registry clean-up for config entry minor version 2 (run once by the entry
+# migration). Retired: another register carries the same value (one home per
+# value) -- the b51a lifetime yields and TotalEnergyUsage duplicate the b516/10
+# float counters, CurrentConsumedPower and RunDataElectricPowerConsumption
+# duplicate PowerConsumptionHmu. Renamed: the 0.2.0 names of the b516/10 counters,
+# and SupplyTempWeighted, a second definition of TargetFlowTemp's register.
 RETIRED_MESSAGES: Final[frozenset[str]] = frozenset({
     "YieldHc", "YieldHwc", "YieldCooling", "TotalEnergyUsage",
     "CurrentConsumedPower", "RunDataElectricPowerConsumption",
-    "EnergyEnvironmentHeat", "EnergyEnvironmentWater", "EnergyYieldHeat",
-    "EnergyYieldWater", "EnergyYieldCool", "EnergyElectricHeat", "EnergyElectricWater",
 })
+RENAMED_MESSAGES: Final[dict[str, str]] = {
+    "EnergyEnvironmentHeat": "EnergyEnvironmentHc",
+    "EnergyEnvironmentWater": "EnergyEnvironmentHwc",
+    "EnergyYieldHeat": "EnergyGeneratedHc",
+    "EnergyYieldWater": "EnergyGeneratedHwc",
+    "EnergyYieldCool": "EnergyGeneratedCool",
+    "EnergyElectricHeat": "EnergyElectricHc",
+    "EnergyElectricWater": "EnergyElectricHwc",
+    "SupplyTempWeighted": "TargetFlowTemp",
+}
 
 
 @dataclass
@@ -104,8 +112,17 @@ def _profile_value(scan: ScanResult, key: str, table: str) -> Any:
 def disabled_field_labels(scan: ScanResult) -> set[str]:
     """Entity labels that should be created disabled by default for this device
     (unconnected channels, from 'disabled_fields' in index.json)."""
-    labels = _profile_value(scan, "disabled_fields", "disabled_fields")
-    return set(labels) if isinstance(labels, list) else set()
+    # unlike name/model this adds up: the file's own unconnected channels plus the
+    # ones a profile disables for its installation
+    profile = _profile(scan.ident, scan.hw)
+    if not profile:
+        return set()
+    out: set[str] = set()
+    for labels in (_index().get("disabled_fields", {}).get(profile["file"]),
+                   profile.get("disabled_fields")):
+        if isinstance(labels, list):
+            out.update(labels)
+    return out
 
 
 def device_name(scan: ScanResult) -> str:
@@ -130,6 +147,17 @@ def retired_unique_id(unique_id: str) -> bool:
     was retired from the bundled definitions (see RETIRED_MESSAGES)."""
     parts = unique_id.split("_", 3)
     return len(parts) == 4 and parts[0] == "ebus" and parts[2] in RETIRED_MESSAGES
+
+
+def renamed_unique_id(unique_id: str) -> str | None:
+    """The current unique_id for one whose message was renamed (see
+    RENAMED_MESSAGES), else None. The label starts with the message name."""
+    parts = unique_id.split("_", 3)
+    if len(parts) != 4 or parts[0] != "ebus" or parts[2] not in RENAMED_MESSAGES:
+        return None
+    old, new = parts[2], RENAMED_MESSAGES[parts[2]]
+    label = new + parts[3][len(old):] if parts[3].startswith(old) else parts[3]
+    return f"ebus_{parts[1]}_{new}_{label}"
 
 
 def resolve_user_file(scan: ScanResult, user_dir: Path) -> Path | None:

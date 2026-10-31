@@ -23,10 +23,12 @@ from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
 from aioebus.scan import Identification, ScanResult
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -58,6 +60,9 @@ from .translate import async_update_translations
 
 _LOGGER = logging.getLogger(__name__)
 _RECONNECT_BACKOFF: Final = 10  # seconds between reconnect attempts
+_CONNECT_TIMEOUT: Final = 10  # s to open the adapter connection
+_RECV_TIMEOUT: Final = 30  # s without a single byte before the link counts as dead
+_RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into one rebuild
 _CACHE_STORAGE_VERSION: Final = 1
 _CACHE_SAVE_DELAY: Final = 20  # s; throttle persisting the cache (below the
 # poll interval so the delayed write actually fires between updates)
@@ -99,6 +104,11 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._writer: asyncio.StreamWriter | None = None
         self._supervisor: asyncio.Task[None] | None = None
         self._base_interval = interval
+        # collapses a burst of registry changes (a platform registering its
+        # entities) into one poll-set rebuild
+        self._rescope: Debouncer[None] = Debouncer(
+            hass, _LOGGER, cooldown=_RESCOPE_COOLDOWN, immediate=False,
+            function=self.async_rescope_polling)
         # persisted value cache, so entities show their last value right after a
         # restart instead of being unavailable until the bus is read again
         self._store: Store[dict[str, object]] = Store(
@@ -109,7 +119,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             hass, _CACHE_STORAGE_VERSION, f"ebus_addrs_{entry.entry_id}")
 
     async def _connect(self) -> tuple[SendFn, RecvFn]:
-        reader, writer = await asyncio.open_connection(self.host, self.port)
+        async with asyncio.timeout(_CONNECT_TIMEOUT):
+            reader, writer = await asyncio.open_connection(self.host, self.port)
         self._writer = writer
 
         async def send(data: bytes) -> None:
@@ -117,12 +128,29 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             await writer.drain()
 
         async def recv() -> bytes:
-            return await reader.read(4096)
+            # a live bus streams SYN symbols continuously, so silence means a dead
+            # link (adapter rebooted, half-open TCP): time out and reconnect
+            async with asyncio.timeout(_RECV_TIMEOUT):
+                data = await reader.read(4096)
+            if not data:  # EOF; read() would return b"" at once forever
+                raise ConnectionResetError("adapter closed the connection")
+            return data
 
         return send, recv
 
     async def async_discover(self) -> None:
-        """Connect, scan the bus, choose entities to expose and start the engine."""
+        """Connect, scan the bus, choose entities to expose and start the engine.
+        Raises ConfigEntryNotReady when the adapter is unreachable, so Home
+        Assistant retries the setup instead of leaving the entry failed."""
+        try:
+            await self._discover()
+        except (OSError, TimeoutError) as err:
+            if self._writer is not None:
+                self._writer.close()
+            raise ConfigEntryNotReady(
+                f"eBUS adapter {self.host}:{self.port} not reachable: {err}") from err
+
+    async def _discover(self) -> None:
         send, recv = await self._connect()
         scanner = ActiveReader(send, recv, qq=SOURCE_ADDRESS)
         # probe the base addresses (plus any previously discovered) quickly; a deep
@@ -138,6 +166,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         for zz in targets:
             try:
                 self.devices[zz] = await scanner.scan(zz, timeout=timeout)
+            except ConnectionError:
+                raise  # the link dropped: retry the whole setup, not the next address
             except Exception as err:  # noqa: BLE001 - a missing device is normal
                 _LOGGER.debug("scan %#04x failed: %s", zz, err)
         # the extended Vaillant identification (article/serial) -- the model the
@@ -147,6 +177,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 continue
             try:
                 ident = await scanner.read_identification(zz)
+            except ConnectionError:
+                raise  # the link dropped: retry the whole setup
             except Exception as err:  # noqa: BLE001 - optional, never block setup
                 _LOGGER.debug("ident %#04x failed: %s", zz, err)
                 continue
@@ -212,7 +244,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self.engine = EbusEngine(send, recv, registry, scheduler=self._build_scheduler(),
                                  qq=SOURCE_ADDRESS, allow_write=self.allow_write)
         await self._warm_start_cache()
-        # re-scope polling when the user enables/disables entities
+        # re-scope polling when one of our entities is created, enabled or disabled
+        self.config_entry.async_on_unload(self._rescope.async_cancel)
         self.config_entry.async_on_unload(self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED, self._on_registry_update))
         self._supervisor = self.config_entry.async_create_background_task(
@@ -281,14 +314,31 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         return PollScheduler(polled, base_interval=self._base_interval,
                              default_priority=PLAIN_READ_PRIORITY)
 
-    async def _on_registry_update(self, event: Event[Any]) -> None:
-        """Rebuild the poll set when an entity is enabled or disabled."""
-        if event.data.get("action") != "update":
+    @callback
+    def async_rescope_polling(self) -> None:
+        """Rebuild the poll set from the entity registry as it is now. Registers
+        that stay polled keep their timing, so a rebuild causes no poll burst."""
+        if self.engine is None:
             return
-        if "disabled_by" not in event.data.get("changes", {}):
+        scheduler = self._build_scheduler()
+        if self.engine.scheduler is not None:
+            scheduler.carry_from(self.engine.scheduler)
+        self.engine.scheduler = scheduler
+
+    @callback
+    def _on_registry_update(self, event: Event[Any]) -> None:
+        """Re-scope polling when one of our entities is created (e.g. a climate
+        zone that appears once its data arrived), enabled or disabled."""
+        action = event.data.get("action")
+        if action == "update":
+            if "disabled_by" not in event.data.get("changes", {}):
+                return
+        elif action != "create":
             return
-        if self.engine is not None:
-            self.engine.scheduler = self._build_scheduler()
+        entity = er.async_get(self.hass).async_get(event.data["entity_id"])
+        if entity is None or entity.config_entry_id != self.config_entry.entry_id:
+            return  # another integration's entity
+        self._rescope.async_schedule_call()
 
     async def _run_forever(self) -> None:
         """Run the engine, reconnecting with backoff if the link drops."""
@@ -300,6 +350,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 raise
             except Exception as err:  # noqa: BLE001 - keep the supervisor alive
                 _LOGGER.debug("engine stopped: %s", err)
+            _LOGGER.debug("eBUS: link to %s:%s lost, reconnecting", self.host, self.port)
             if self._writer is not None:
                 self._writer.close()
             await asyncio.sleep(_RECONNECT_BACKOFF)
@@ -349,11 +400,17 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         values = stored.get("values")
         if not isinstance(values, list):
             return
+        # drop values of registers a scanned device no longer defines (retired or
+        # renamed), else they are carried along in the store forever; a device
+        # that missed this scan keeps its values for the next start
+        known = {(m.zz or m.circuit, m.name) for m in self.engine.registry.messages}
+        scanned = {zz for zz, _name in known}
         for item in values:
             if (isinstance(item, list) and len(item) == 2
                     and isinstance(item[0], list) and len(item[0]) == 3):
                 k = item[0]
-                self.engine.cache[(str(k[0]), str(k[1]), str(k[2]))] = item[1]
+                if str(k[0]) not in scanned or (str(k[0]), str(k[1])) in known:
+                    self.engine.cache[(str(k[0]), str(k[1]), str(k[2]))] = item[1]
         _LOGGER.debug("eBUS: warm-started %d cached value(s)", len(self.engine.cache))
 
     async def async_shutdown(self) -> None:
