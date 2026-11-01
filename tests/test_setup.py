@@ -12,7 +12,8 @@ pytest.importorskip("pytest_homeassistant_custom_component")
 from aioebus.engine import EbusEngine
 from aioebus.passive import MessageRegistry
 from aioebus.scan import ScanResult
-from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor.recorder import DEFAULT_STATISTICS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import area_registry as ar
@@ -261,7 +262,7 @@ async def test_registry_listener_ignores_other_integrations(hass: HomeAssistant)
         assert schedule.call_count == 2
 
 
-async def test_past_period_energy_has_no_state_class(hass: HomeAssistant):
+async def test_past_period_energy_is_a_total(hass: HomeAssistant):
     entry = _entry()
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
@@ -269,7 +270,14 @@ async def test_past_period_energy_has_no_state_class(hass: HomeAssistant):
     coord.data = {}
     sensors = {f.msg.name: EbusSensor(coord, f)
                for m in device_messages(coord.devices, "r") for f in fields_of(m)}
-    assert sensors["PrEnergySumHcLastMonth"].state_class is None
+    last = sensors["PrEnergySumHcLastMonth"]
+    # a total without reset: a lower next month is no new consumption cycle
+    assert last.state_class is SensorStateClass.TOTAL and last.last_reset is None
+    assert last.device_class is SensorDeviceClass.ENERGY
+    # statistics recorded while it was total_increasing stay valid (same kind)
+    old = DEFAULT_STATISTICS[SensorStateClass.TOTAL_INCREASING]
+    new = DEFAULT_STATISTICS[SensorStateClass.TOTAL]
+    assert (new.mean_type, new.types) == (old.mean_type, old.types)
     hmu = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
     coord.devices = hmu
     gen = next(f for m in device_messages(hmu, "r") for f in fields_of(m)
