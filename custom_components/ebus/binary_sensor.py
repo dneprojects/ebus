@@ -5,8 +5,8 @@ link state (set true while the stream is up and bytes arrive, false when it drop
 or stops). It mirrors the bridge's "Signal" sensor."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
+from homeassistant.components.binary_sensor import (  # type: ignore[attr-defined, unused-ignore]
+    BinarySensorDeviceClass,  # newer HA defines it in .const and re-exports it
     BinarySensorEntity,
 )
 from homeassistant.const import EntityCategory

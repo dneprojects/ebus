@@ -91,7 +91,9 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 int, vol.Range(min=1, max=65535)),
             vol.Required(CONF_ALLOW_WRITE, default=DEFAULT_ALLOW_WRITE): bool,
         })
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        # newer HA types its schema differently; both accept a voluptuous one
+        return self.async_show_form(step_id="user", data_schema=schema,  # type: ignore[arg-type, unused-ignore]
+                                    errors=errors)
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -126,7 +128,7 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_ALLOW_WRITE, default=DEFAULT_ALLOW_WRITE): bool,
         })
         return self.async_show_form(
-            step_id="zeroconf_confirm", data_schema=schema,
+            step_id="zeroconf_confirm", data_schema=schema,  # type: ignore[arg-type, unused-ignore]
             description_placeholders={"host": host})
 
     @staticmethod
@@ -162,4 +164,4 @@ class EbusOptionsFlow(OptionsFlow):
                 default=opts.get(CONF_DEEP_SCAN, DEFAULT_DEEP_SCAN),
             ): bool,
         })
-        return self.async_show_form(step_id="init", data_schema=schema)
+        return self.async_show_form(step_id="init", data_schema=schema)  # type: ignore[arg-type, unused-ignore]
