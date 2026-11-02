@@ -43,12 +43,13 @@ def tdir(tmp_path, monkeypatch):
 
 
 def test_marker_detects_replaced_files(tdir):
-    translate._write_files({"de": {"a": 1}, "en": {"a": 2}}, "sig1")
-    assert translate._marker_matches("sig1", ["de", "en"])
-    assert not translate._marker_matches("sig2", ["de", "en"])
+    translate._write_files({"de": {"a": 1}, "en": {"a": 2}}, {"e1": "sig1"})
+    assert translate._covered({"e1": "sig1"}, ["de", "en"])
+    assert not translate._covered({"e1": "sig2"}, ["de", "en"])
+    assert not translate._covered({"e1": "sig1", "e2": "sig9"}, ["de", "en"])
     # an update put the plain baseline back but left our marker behind
     (tdir / "en.json").write_text('{"a": 3}\n', encoding="utf-8")
-    assert not translate._marker_matches("sig1", ["de", "en"])
+    assert not translate._covered({"e1": "sig1"}, ["de", "en"])
 
 
 async def test_new_version_regenerates(hass: HomeAssistant, tdir):
@@ -96,6 +97,38 @@ async def test_two_adapters_share_the_files(hass: HomeAssistant, tdir):
     assert set(translate._sources(hass)) == {"a"}
 
 
+async def test_two_adapters_restart_without_rewriting(hass: HomeAssistant, tdir):
+    # on a restart one adapter finishes discovery first, alone: the files were
+    # generated for both, so neither run rewrites them or drops the other's names
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    for entry_id in ("a", "b"):
+        MockConfigEntry(domain="ebus", entry_id=entry_id).add_to_hass(hass)
+
+    async def fetch(_session, lang, path):
+        return _CSV
+
+    with patch.object(translate, "async_get_integration",
+                      AsyncMock(return_value=MagicMock(version="0.7.3"))):
+        await translate.async_update_translations(hass, "a", await _catalog(_HMU, fetch=fetch))
+        await translate.async_update_translations(hass, "b", await _catalog(_CTL, fetch=fetch))
+        both = _keys(tdir / "en.json")
+        for entry_id in ("a", "b"):  # HA restarts
+            translate.forget_entry(hass, entry_id)
+        writes = MagicMock(wraps=translate._write_files)
+        with patch.object(translate, "_write_files", writes):
+            await translate.async_update_translations(hass, "a", await _catalog(_HMU, fetch=fetch))
+            assert _keys(tdir / "en.json") == both
+            await translate.async_update_translations(hass, "b", await _catalog(_CTL, fetch=fetch))
+        assert writes.call_count == 0
+    # a new version: the first adapter's run keeps the second one's names
+    with patch.object(translate, "async_get_integration",
+                      AsyncMock(return_value=MagicMock(version="0.7.4"))):
+        translate.forget_entry(hass, "b")
+        await translate.async_update_translations(hass, "a", await _catalog(_HMU, fetch=fetch))
+    assert _keys(tdir / "en.json") == both
+
+
 @pytest.mark.parametrize("cdn", [_CSV, None])
 async def test_user_definitions_get_names(hass: HomeAssistant, tdir, tmp_path, cdn):
     # a device only a user definition covers has no CDN text of its own: its names
@@ -138,4 +171,4 @@ def test_unwritable_translation_dir_is_quiet(tdir, monkeypatch):
         raise WriteError("read-only")
 
     monkeypatch.setattr(translate, "write_utf8_file_atomic", fail)
-    assert translate._write_files({"en": {}}, "sig") is False
+    assert translate._write_files({"en": {}}, {"e1": "sig"}) is False

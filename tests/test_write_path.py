@@ -8,8 +8,8 @@ import pytest
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.active import ReadError, WriteUncertain
-from aioebus.engine import value_key
 from aioebus.scan import ScanResult
+from aioebus.values import value_key
 from homeassistant.components.climate import ClimateEntityFeature, HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -133,3 +133,37 @@ async def test_climate_is_read_only_without_write_permission(hass: HomeAssistant
     writable = EbusZoneClimate(await _coordinator(hass), zone)
     assert ClimateEntityFeature.TARGET_TEMPERATURE in writable.supported_features
     assert HVACMode.HEAT in writable.hvac_modes
+
+
+async def test_climate_modes_write_the_zone_mode_register(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    assert climate.hvac_modes == [HVACMode.OFF, HVACMode.HEAT, HVACMode.AUTO]
+    assert climate.preset_modes == ["day", "night"]
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg, value)))
+    await climate.async_set_hvac_mode(HVACMode.OFF)
+    await climate.async_set_hvac_mode(HVACMode.AUTO)
+    await climate.async_set_hvac_mode(HVACMode.HEAT)  # heating at the comfort setpoint
+    await climate.async_set_preset_mode("night")
+    await climate.async_turn_off()
+    await climate.async_turn_on()
+    assert {m.name for m, _ in written} == {"Z1OpMode"}
+    assert all(m.direction == "w" for m, _ in written)  # the active write, not the read
+    assert [v for _, v in written] == ["off", "auto", "day", "night", "off", "day"]
+    # the shown mode follows the read register's value
+    for value, mode in (("off", HVACMode.OFF), ("auto", HVACMode.AUTO), ("night", HVACMode.HEAT)):
+        coord.data = {value_key(zone.mode_read, zone.mode_read.name): value}
+        assert climate.hvac_mode is mode
+    assert climate.preset_mode == "night"
+
+
+async def test_zone_name_is_translated_unless_the_user_named_it(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 2)
+    plain = EbusZoneClimate(coord, zone)
+    assert plain.translation_key == "zone" and plain.translation_placeholders == {"n": "2"}
+    coord.data = {value_key(zone.shortname, zone.shortname.name): "Bad"}
+    assert EbusZoneClimate(coord, zone).name == "Bad"

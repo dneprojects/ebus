@@ -3,9 +3,6 @@ from __future__ import annotations
 
 from typing import Final
 
-# re-exported: the bus address of the broadcast circuit lives in aioebus
-from aioebus.discovery import BROADCAST_ADDRESS as BROADCAST_ADDRESS
-
 DOMAIN: Final = "ebus"
 
 CONF_SCAN_INTERVAL: Final = "scan_interval"
@@ -21,10 +18,6 @@ DEFAULT_ALLOW_WRITE: Final = False  # writing settings is opt-in
 
 CONF_DEEP_SCAN: Final = "deep_scan"  # options: probe the full address space once
 DEFAULT_DEEP_SCAN: Final = False
-
-# master address aioebus uses on the bus; must be free (ebusd's own address, so
-# this integration replaces ebusd rather than running alongside it)
-SOURCE_ADDRESS: Final = 0x31
 
 # per-entry stored files (value cache, extra addresses, identifications), each
 # named <prefix><entry_id> under .storage

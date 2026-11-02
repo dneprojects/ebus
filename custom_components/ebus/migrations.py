@@ -82,7 +82,7 @@ def _load_definitions() -> None:
 def _migrate_control_classes(hass: HomeAssistant, entry: ConfigEntry,
                              only: frozenset[str] | None = None) -> None:
     """1.4 -> 1.5: a writable register becomes a control only by its class
-    (index.json 'controls'). Switch off configuration ones that used to be
+    (presentation.json 'controls'). Switch off configuration ones that used to be
     created enabled; the user can switch them on again. Controls a register no
     longer gets are dropped at setup, where the device's own definition is known.
     Later steps pass the registers they moved to configuration (``only``), so

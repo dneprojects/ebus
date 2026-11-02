@@ -67,14 +67,18 @@ def test_curated_name_beats_upstream_label():
         "Umweltertrag Heizen heute")
 
 
-def test_update_write_message_is_also_a_sensor():
-    # a 'uw' message becomes a sensor AND a select (aioebus.values.control_of classifies it as both),
-    # so the sensor needs its own named entry
+def test_passive_update_is_a_sensor_without_a_control():
+    # a 'uw' message is what another master sends: a sensor, never a control
     m = _msg("StatusCirPump", direction="uw",
              fields=[FieldDef("value", "", "UCH", None, {0: "off", 100: "on"}, "", "")])
     en = sg.build_entities([m], "en")
     assert en["sensor"]["statuscirpump"]["name"] == "StatusCirPump"
-    assert en["select"]["statuscirpump"]["name"] == "StatusCirPump"
+    assert "statuscirpump" not in en["select"]
+
+
+def test_zone_name_is_translated():
+    assert sg.build_entities([], "de")["climate"]["zone"]["name"] == "Heizkreis {n}"
+    assert sg.build_entities([], "en")["climate"]["zone"]["name"] == "Heating circuit {n}"
 
 
 def test_de_omitted_without_translation_so_ha_falls_back():
@@ -109,9 +113,9 @@ def test_reviewed_names_cover_every_bundled_key():
     keys = {k for platform in strings["entity"].values() for k in platform}
     sample = {"z1daytemp", "sensordata1_s1", "hwctimer_monday0_htm", "status01_temp_1"}
     assert sample <= keys
-    assert sg.NAME_DE["z1daytemp"] == "Zone 1 Tag-Sollwert"
-    assert sg.NAME_DE["sensordata1_s1"] == "Temperatursensor S1"
-    assert not [k for k in sg.NAME_DE.values() if "Fühler" in k]
+    assert sg.CURATED_NAMES["de"]["z1daytemp"] == "Zone 1 Tag-Sollwert"
+    assert sg.CURATED_NAMES["de"]["sensordata1_s1"] == "Temperatursensor S1"
+    assert not [k for k in sg.CURATED_NAMES["de"].values() if "Fühler" in k]
 
 
 def test_build_strings_includes_ui_section():

@@ -8,9 +8,9 @@ import pytest
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.scan import Identification, ScanResult
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ebus import number, select, sensor
@@ -254,3 +254,34 @@ def test_integer_ranges_follow_the_type():
     assert _bounds(field("SIN")) == (-32767, 32767, 1)
     assert _bounds(field("UCH", -10)) == (0, 2540, 10)  # a negative divisor multiplies
     assert _bounds(field("D1C")) == (0, 100.0, 0.5)
+
+
+def test_bundled_class_lookup_takes_profile_keys():
+    # a reviewed section may be keyed by an IDENT/HW profile: the migrations that
+    # look a class up must resolve it to its file, not fail
+    from custom_components.ebus import entities
+    sections = {**entities.presentation()["controls"],
+                "V32/6004": {"user": ["Hc1DayTemp"], "installer": []}}
+    with patch.object(entities, "presentation",
+                      return_value={**entities.presentation(), "controls": sections}):
+        assert bundled_control_class("HwcOpMode") == "user"
+
+
+async def test_a_register_sent_elsewhere_stays_on_its_device(hass: HomeAssistant, tmp_path):
+    # a definition row may address another module (ebusd: a ZZ column): its
+    # entity still belongs to the device whose definition holds it
+    (tmp_path / "08.ehp.csv").write_text(
+        "type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment\n"
+        "r,,,HwcTemp,,,25,b509,290000,value,,D2C,,°C,\n", encoding="utf-8")
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            options={"config_dir": str(tmp_path)}, version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.devices = {0x08: ScanResult(0xB5, "Vaillant", "EHP00", "0100", "0200", 100, 200)}
+    await coord.async_load_definitions()
+    coord.data = {}
+    from aioebus.values import values_of
+    msg = next(m for m in coord.read_messages if m.name == "HwcTemp")
+    assert msg.zz == "25"
+    ent = sensor.EbusSensor(coord, values_of(msg)[0])
+    assert ent.device_info["identifiers"] == {(DOMAIN, "08")}

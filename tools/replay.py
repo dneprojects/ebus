@@ -1,8 +1,8 @@
 """Replay a captured telegram log through the integration pipeline.
 
-A regression check for the bundled device definitions: it reproduces exactly
-what the coordinator builds at runtime -- scan -> ident resolution -> message
-set -> passive decode -> entity value cache -- but fed from the recorded `raw`
+A regression check for the bundled device definitions: it runs the same aioebus
+steps the coordinator does -- scan -> catalog -> message set -> passive decode ->
+value cache (keyed as the entities read it) -- but fed from the recorded `raw`
 wire bytes of an ebusd SQLite capture instead of a live adapter. No bus or
 adapter is touched, so it runs while ebusd keeps the adapter.
 
@@ -26,10 +26,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pure_loader  # noqa: F401 -- finds aioebus (a sibling checkout if not installed)
 
 from aioebus.catalog import Catalog
-from aioebus.discovery import BASE_ADDRESSES, BROADCAST_ADDRESS
+from aioebus.discovery import BASE_ADDRESSES
 from aioebus.passive import MessageRegistry, decode_raw
 from aioebus.scan import ScanResult, decode_scan
-from aioebus.values import control_of
+from aioebus.values import control_of, value_key
 
 
 def _scan_devices(db: sqlite3.Connection, addrs: tuple[int, ...]) -> dict[int, ScanResult]:
@@ -41,7 +41,6 @@ def _scan_devices(db: sqlite3.Connection, addrs: tuple[int, ...]) -> dict[int, S
             "AND s_dd!='' ORDER BY ts DESC LIMIT 1", (zz,)).fetchone()
         if row:
             devices[zz] = decode_scan(bytes.fromhex(row[0]))
-    devices[BROADCAST_ADDRESS] = ScanResult(0, "", "Broadcast", "", "", None, None)
     return devices
 
 
@@ -56,7 +55,7 @@ def main(argv: list[str]) -> int:
     db = sqlite3.connect(args.db)
 
     devices = _scan_devices(db, addrs)
-    catalog = Catalog()  # bundled definitions only: no download
+    catalog = Catalog()  # bundled definitions only: no download; adds the broadcasts
     asyncio.run(catalog.load(devices))
     msgs = catalog.all_messages()
     registry = MessageRegistry(msgs)
@@ -71,9 +70,9 @@ def main(argv: list[str]) -> int:
             continue
         msg, values = res
         hits += 1
-        for field, val in values.items():
+        for label, val in values.items():
             if val is not None:
-                cache[(msg.zz, msg.name, field)] = val
+                cache[value_key(msg, label)] = val
 
     print(f"devices scanned: {len(devices)}  message defs: {len(msgs)}")
     print(f"messages: {len(reads)} read, {len(writes)} with a control")
@@ -82,7 +81,9 @@ def main(argv: list[str]) -> int:
     by_zz: dict[str, int] = defaultdict(int)
     for (zz, _, _) in cache:
         by_zz[zz] += 1
-    for zz, scan in sorted(devices.items()):
+    for zz in sorted(catalog.addresses):
+        scan = catalog.scan(zz)
+        assert scan is not None
         key = f"{zz:02x}"
         print(f"  {key} {scan.ident:10} {by_zz.get(key, 0):4} live values")
 

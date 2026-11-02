@@ -4,12 +4,11 @@ from __future__ import annotations
 from typing import cast
 
 from aioebus.codecs import value_range
-from aioebus.engine import value_key
-from aioebus.messages import FieldDef, MessageDef
-from aioebus.translations import translation_key
+from aioebus.messages import FieldDef
+from aioebus.values import Value
 from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -32,24 +31,21 @@ async def async_setup_entry(
 ) -> None:
     coordinator = entry.runtime_data
     async_add_entities(
-        EbusNumber(coordinator, msg, field.field, field.label, cls)
-        for msg, field, cls in coordinator.controls("number"))
+        EbusNumber(coordinator, value, cls) for value, cls in coordinator.controls("number"))
 
 
 class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
     _attr_has_entity_name = True
     _attr_mode = NumberMode.BOX
 
-    def __init__(
-        self, coordinator: EbusCoordinator, msg: MessageDef, field: FieldDef, label: str,
-        cls: str,
-    ) -> None:
+    def __init__(self, coordinator: EbusCoordinator, value: Value, cls: str) -> None:
         super().__init__(coordinator)
+        msg, field = value.msg, value.field
         self._msg = msg
-        self._key = value_key(msg, label)
-        zz = int(msg.zz, 16)
-        self._attr_unique_id = control_uid(coordinator.uid_prefix, msg, label)
-        self._attr_translation_key = translation_key(msg, field)
+        self._key = value.cache_key
+        zz = coordinator.catalog.owner(msg)
+        self._attr_unique_id = control_uid(coordinator.uid_prefix, msg, value.label)
+        self._attr_translation_key = value.key
         self._attr_icon = icon_for(field)
         if cls == "installer":  # a configuration setting: shown only once enabled
             self._attr_entity_category = EntityCategory.CONFIG

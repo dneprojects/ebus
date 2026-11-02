@@ -10,7 +10,7 @@ options.
 - Sits **behind a VR32/V32 bus coupler** at address **0x38**. The coupler
   reports scan ident **`V32`, HW `9802`** — that ident + HW is only the key that
   resolves to this definition; the coupler itself is not modelled.
-- Definition: `configs/vaillant/eloblock.json` (our own, Apache-2.0).
+- Definition: `eloblock.json` in aioebus (`aioebus/defs/vaillant/`, our own, Apache-2.0).
 
 ## Who commands it
 

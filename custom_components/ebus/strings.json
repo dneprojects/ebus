@@ -2311,13 +2311,6 @@
           "vr91_3": "VR91_3"
         }
       },
-      "statuscirpump": {
-        "name": "StatusCirPump",
-        "state": {
-          "off": "off",
-          "on": "on"
-        }
-      },
       "operatingmode": {
         "name": "OperatingMode",
         "state": {
@@ -2354,6 +2347,11 @@
     "binary_sensor": {
       "adapter_signal": {
         "name": "Signal"
+      }
+    },
+    "climate": {
+      "zone": {
+        "name": "Heating circuit {n}"
       }
     }
   }

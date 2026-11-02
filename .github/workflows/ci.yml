@@ -19,4 +19,5 @@ jobs:
       # test against the aioebus release users get: the manifest's requirement
       - run: pip install "$(python -c 'import json; print(json.load(open("custom_components/ebus/manifest.json"))["requirements"][0])')"
       - run: ruff check .
+      - run: mypy custom_components/ebus
       - run: python -m pytest -q

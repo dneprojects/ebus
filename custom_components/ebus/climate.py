@@ -1,21 +1,18 @@
 """Climate platform: heating zones.
 
-Zones are bundled from per-zone registers declared in index.json (not hardcoded
-here): one thermostat per zone, with target = the writable comfort setpoint,
-current = the room temperature, and HVAC mode / preset from the zone's operating
-mode (off -> OFF, auto -> AUTO, others -> HEAT + preset)."""
+The aioebus catalog bundles each zone's registers (setpoint, room temperature,
+operating mode) and names the mode values for off, automatic and heating: one
+thermostat per zone, with HVAC mode / preset from the zone's operating mode
+(off -> OFF, auto -> AUTO, others -> HEAT + preset)."""
 from __future__ import annotations
 
 from typing import Any
 
 from aioebus.catalog import ClimateZone
-from aioebus.engine import value_key
 from aioebus.messages import MessageDef
-from homeassistant.components.climate import (
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACMode,
-)
+from aioebus.values import value_key, values_of
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,8 +24,9 @@ from .ids import zone_uid
 
 
 def _key(msg: MessageDef) -> tuple[str, str, str]:
-    # zone registers are single-value, so the cache field is the message name
-    return value_key(msg, msg.name)
+    # zone registers are single-value: the cache key of that one value
+    values = values_of(msg)
+    return values[0].cache_key if values else value_key(msg, msg.name)
 
 
 def _enum_labels(msg: MessageDef | None) -> list[str]:
@@ -67,9 +65,9 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    # defaults; a zone takes its setpoint register's range (index.json number_bounds)
-    _attr_min_temp = 5
-    _attr_max_temp = 30
+    # defaults; a zone takes its setpoint register's range (from the aioebus catalog)
+    _attr_min_temp = 5.0
+    _attr_max_temp = 30.0
     _attr_target_temperature_step = 0.5
 
     def __init__(self, coordinator: EbusCoordinator, zone: ClimateZone) -> None:
@@ -77,7 +75,11 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         self._zone = zone
         zz = int(zone.zz, 16)
         short = coordinator.data.get(_key(zone.shortname)) if zone.shortname else None
-        self._attr_name = short if isinstance(short, str) and short.strip() else zone.name
+        if isinstance(short, str) and short.strip():
+            self._attr_name = short  # the name the user gave the zone on the controller
+        else:
+            self._attr_translation_key = "zone"
+            self._attr_translation_placeholders = {"n": str(zone.n)}
         self._attr_unique_id = zone_uid(coordinator.uid_prefix, zone.zz, zone.n)
         if zone.target_bounds is not None:  # the setpoint register's own range
             (self._attr_min_temp, self._attr_max_temp,
@@ -85,11 +87,10 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         self._attr_device_info = coordinator.device_info(zz)
 
         labels = _enum_labels(zone.mode_read) or _enum_labels(zone.mode_write)
-        low = {v.lower(): v for v in labels}
-        self._off = low.get("off")
-        self._auto = low.get("auto")
-        self._presets = [v for v in labels if v.lower() not in ("off", "auto")]
-        self._heat_default = low.get("day") or (self._presets[0] if self._presets else None)
+        self._off = zone.modes.get("off")
+        self._auto = zone.modes.get("auto")
+        self._presets = [v for v in labels if v not in (self._off, self._auto)]
+        self._heat_default = zone.modes.get("heat") or (self._presets[0] if self._presets else None)
 
         hvac: list[HVACMode] = [HVACMode.HEAT]
         if self._off:
@@ -144,10 +145,10 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
 
     @property
     def hvac_mode(self) -> HVACMode:
-        value = str(self._val(self._zone.mode_read) or "").lower()
-        if value == "off":
+        value = self._val(self._zone.mode_read)
+        if value is not None and value == self._off:
             return HVACMode.OFF
-        if value == "auto":
+        if value is not None and value == self._auto:
             return HVACMode.AUTO
         return HVACMode.HEAT
 

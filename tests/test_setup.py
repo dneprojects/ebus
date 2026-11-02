@@ -13,6 +13,7 @@ pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.active import ReadError
 from aioebus.engine import EbusEngine
+from aioebus.link import connect
 from aioebus.passive import MessageRegistry
 from aioebus.scan import ScanResult
 from aioebus.transport import RECEIVED, SYN, encode_symbol
@@ -140,7 +141,7 @@ async def test_migration_scopes_ids_to_the_entry(hass: HomeAssistant):
 async def test_unreachable_adapter_retries_setup(hass: HomeAssistant):
     entry = _entry()
     entry.add_to_hass(hass)
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
+    with patch("aioebus.link.asyncio.open_connection",
                AsyncMock(side_effect=OSError("unreachable"))):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -176,7 +177,7 @@ async def test_link_closed_during_scan_retries_setup(hass: HomeAssistant):
     entry.add_to_hass(hass)
     reader = _CountingEofReader()
     _r, writer = _closed_link()
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
+    with patch("aioebus.link.asyncio.open_connection",
                AsyncMock(return_value=(reader, writer))):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -187,7 +188,7 @@ async def test_link_closed_during_discovery_retries_setup(hass: HomeAssistant):
     # the bus was alive, then the adapter closed the link mid-discovery
     entry = _entry()
     entry.add_to_hass(hass)
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
+    with patch("aioebus.link.asyncio.open_connection",
                AsyncMock(return_value=_closed_link(syn=True))):
         async with asyncio.timeout(5):  # at once, not after every probe's timeout
             await hass.config_entries.async_setup(entry.entry_id)
@@ -210,7 +211,7 @@ async def test_silent_bus_retries_setup_instead_of_scanning(hass: HomeAssistant)
     entry.add_to_hass(hass)
     reader, writer = _open_link()
     scan = AsyncMock()
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
+    with patch("aioebus.link.asyncio.open_connection",
                AsyncMock(return_value=(reader, writer))), \
          patch("aioebus.discovery.TRAFFIC_WAIT", 0.05), \
          patch.object(EbusEngine, "scan", scan):
@@ -226,7 +227,7 @@ async def test_no_answer_from_known_devices_retries_setup(hass: HomeAssistant, h
     entry.add_to_hass(hass)
     dr.async_get(hass).async_get_or_create(config_entry_id=entry.entry_id,
                                            identifiers={(DOMAIN, "08")})
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
+    with patch("aioebus.link.asyncio.open_connection",
                AsyncMock(return_value=_open_link(encode_symbol(RECEIVED, SYN)))), \
          patch.object(EbusEngine, "scan", AsyncMock(side_effect=ReadError("no answer"))):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -267,10 +268,10 @@ async def test_supervisor_marks_when_the_link_went_down(hass: HomeAssistant):
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     opener = AsyncMock(side_effect=lambda *a, **k: _closed_link())
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection", opener), \
+    with patch("aioebus.link.asyncio.open_connection", opener), \
          patch("custom_components.ebus.coordinator._RECONNECT_BACKOFF", 0):
-        send, recv = await coord._connect()
-        coord.engine = EbusEngine(send, recv, MessageRegistry([]))
+        coord._link = link = await connect("1.2.3.4", 9999)
+        coord.engine = EbusEngine(link.send, link.recv, MessageRegistry([]))
         task = hass.async_create_task(coord._run_forever())
         async with asyncio.timeout(2):
             while opener.call_count < 3:
@@ -285,41 +286,15 @@ async def test_supervisor_marks_when_the_link_went_down(hass: HomeAssistant):
     assert first is not None and coord._link_down_since == first  # the outage start
 
 
-async def test_recv_raises_on_eof(hass: HomeAssistant):
-    entry = _entry()
-    entry.add_to_hass(hass)
-    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
-               AsyncMock(return_value=_closed_link())):
-        _send, recv = await coord._connect()
-    with pytest.raises(ConnectionResetError):
-        await recv()
-
-
-async def test_recv_times_out_on_a_silent_link(hass: HomeAssistant):
-    # half-open TCP: no EOF, just no bytes -- must not wait forever
-    entry = _entry()
-    entry.add_to_hass(hass)
-    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
-    writer = MagicMock()
-    writer.drain = AsyncMock()
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
-               AsyncMock(return_value=(asyncio.StreamReader(), writer))), \
-         patch("custom_components.ebus.coordinator._RECV_TIMEOUT", 0.05):
-        _send, recv = await coord._connect()
-        with pytest.raises(TimeoutError):
-            await recv()
-
-
 async def test_supervisor_reconnects_after_link_loss(hass: HomeAssistant):
     entry = _entry()
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     opener = AsyncMock(side_effect=lambda *a, **k: _closed_link())
-    with patch("custom_components.ebus.coordinator.asyncio.open_connection", opener), \
+    with patch("aioebus.link.asyncio.open_connection", opener), \
          patch("custom_components.ebus.coordinator._RECONNECT_BACKOFF", 0):
-        send, recv = await coord._connect()
-        coord.engine = EbusEngine(send, recv, MessageRegistry([]))
+        coord._link = link = await connect("1.2.3.4", 9999)
+        coord.engine = EbusEngine(link.send, link.recv, MessageRegistry([]))
         task = hass.async_create_task(coord._run_forever())
         async with asyncio.timeout(2):
             while opener.call_count < 3:  # dropped twice, reconnected each time
@@ -393,8 +368,8 @@ async def test_warm_start_drops_values_of_unknown_registers(hass: HomeAssistant)
     stored = {"values": [[["08", "FlowTemp", "FlowTemp"], 40.5],
                          [["08", "SupplyTempWeighted", "SupplyTempWeighted"], 31.0],
                          [["18", "FlowTemp", "FlowTemp"], 38.0]]}
-    with patch.object(coord._store, "async_load", AsyncMock(return_value=stored)):
-        await coord._warm_start_cache()
+    with patch.object(coord._cache._store, "async_load", AsyncMock(return_value=stored)):
+        await coord._cache.async_restore(coord.engine)
     # the retired register of the scanned device goes; the device at 18 merely
     # missed this scan and keeps its values for the next start
     assert coord.engine.cache == {("08", "FlowTemp", "FlowTemp"): 40.5,
@@ -436,8 +411,8 @@ async def test_stale_device_can_be_removed_while_the_entry_is_not_loaded(hass: H
 def test_cache_save_fires_between_the_fastest_updates():
     # each update re-arms the delayed save: a delay above the shortest interval
     # (10 s, options flow) would postpone it forever
-    from custom_components.ebus import coordinator
-    assert coordinator._CACHE_SAVE_DELAY < 10
+    from custom_components.ebus import cache
+    assert cache.SAVE_DELAY < 10
 
 
 async def test_catalog_downloads_through_home_assistant(hass: HomeAssistant, aioclient_mock):

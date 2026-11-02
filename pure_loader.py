@@ -1,6 +1,6 @@
-"""Load the integration's Home-Assistant-free modules (definitions, entities, ids,
-strings_gen, const) without running its ``__init__`` (which imports Home
-Assistant), for the dev tools and the pure tests.
+"""Load the integration's Home-Assistant-free modules (entities, ids, strings_gen,
+const) without running its ``__init__`` (which imports Home Assistant), for the
+dev tools and the pure tests.
 
 The package directory is registered as the bare package ``ebus_pure``, so the
 modules' relative imports resolve among themselves. Do NOT put the package

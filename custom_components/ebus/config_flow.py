@@ -1,12 +1,11 @@
 """Config flow for the eBUS integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 import voluptuous as vol
-from aioebus.transport import RECEIVED, EnhDecoder
+from aioebus.link import probe
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -34,33 +33,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _probe_adapter(host: str, port: int) -> str | None:
-    """Check the adapter is reachable AND actually streaming eBUS data.
-
-    Returns None on success, else an error key. A plain TCP connect is not
-    enough: an enhanced adapter streams symbols continuously (SYN while the bus
-    is idle), so if we connect but receive no eBUS symbol within a few seconds
-    the adapter is not usable as a data source -- typically because another
-    client (e.g. ebusd) holds it. That is reported as its own error instead of
-    letting setup proceed with no devices."""
+    """None when the adapter is reachable AND streams eBUS data, else an error
+    key: one that is reachable but silent is typically held by another client
+    (e.g. ebusd), reported as its own error instead of a setup without devices."""
     try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(host, port), timeout=5)
+        live = await probe(host, port)
     except (TimeoutError, OSError):
         return "cannot_connect"
-    decoder = EnhDecoder()
-    try:
-        async with asyncio.timeout(6):
-            while True:
-                chunk = await reader.read(256)
-                if not chunk:
-                    return "no_ebus_data"  # adapter closed the stream
-                for code, _data in decoder.feed(chunk):
-                    if code == RECEIVED:  # a real eBUS symbol -> live adapter
-                        return None
-    except TimeoutError:
-        return "no_ebus_data"  # reachable but silent / held by another client
-    finally:
-        writer.close()
+    return None if live else "no_ebus_data"
 
 
 async def _adapter_id(hass: HomeAssistant, host: str) -> str | None:

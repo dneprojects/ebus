@@ -71,9 +71,17 @@ def _coord(hass: HomeAssistant, **options) -> EbusCoordinator:
     return coord
 
 
+def _idle_link() -> MagicMock:
+    """An adapter link that stays quiet (the discovery itself is patched)."""
+    link = MagicMock()
+    link.send, link.recv = AsyncMock(), _idle
+    return link
+
+
 async def _discover_with(coord: EbusCoordinator, found: Discovery) -> AsyncMock:
     discover = AsyncMock(return_value=found)
-    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), _idle))), \
+    with patch("custom_components.ebus.coordinator.connect",
+               AsyncMock(return_value=_idle_link())), \
          patch("custom_components.ebus.coordinator.discover", discover), \
          patch("custom_components.ebus.coordinator.fetch_status", AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
@@ -96,7 +104,7 @@ async def test_discovery_results_are_kept_for_the_next_start(hass: HomeAssistant
     assert kwargs["remembered"] == {"f6": {"serial": "old"}}
     assert sorted(await coord._addr_store.async_load()) == [0x52, 0x76]
     assert (await coord._ident_store.async_load())["08"] == record
-    assert coord.idents == {0x08: _IDENT} and set(coord.devices) == {0x08, 0x76, 0xFE}
+    assert coord.idents == {0x08: _IDENT} and set(coord.devices) == {0x08, 0x76}
     adapter = dr.async_get(hass).async_get(coord.adapter_device_id)
     assert adapter is not None and adapter.config_entry_id == coord.config_entry.entry_id
     await coord.async_shutdown()
@@ -131,8 +139,8 @@ async def test_full_setup_uses_current_registry_apis(hass: HomeAssistant, caplog
     entry.add_to_hass(hass)
     deprecated = MagicMock(side_effect=AssertionError("deprecated async_get_device"))
     with patch.object(dr.DeviceRegistry, "async_get_device", deprecated), \
-         patch("custom_components.ebus.coordinator.EbusCoordinator._connect",
-               AsyncMock(return_value=(AsyncMock(), _idle))), \
+         patch("custom_components.ebus.coordinator.connect",
+               AsyncMock(return_value=_idle_link())), \
          patch("custom_components.ebus.coordinator.discover",
                AsyncMock(return_value=_found({0x08: (_HMU, None)}))), \
          patch("custom_components.ebus.coordinator.fetch_status",
@@ -297,7 +305,7 @@ async def test_slow_cdn_does_not_hold_up_setup(hass: HomeAssistant, tdir, monkey
     # names from the definitions meanwhile, without a signature: the next start
     # fetches the CDN again
     assert (tdir / "en.json").exists()
-    assert (tdir / ".ebus_gen").read_text(encoding="utf-8").startswith("\n")
+    assert (tdir / ".ebus_gen").read_text(encoding="utf-8").startswith("{}\n")
 
 
 async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
@@ -308,3 +316,111 @@ async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
     translate._clear_cache(hass)
     assert cache.cache_data.loaded["en"] == {"other"}
     assert cache.cache_data.cache["en"]["entity"] == {"other": {"b": "2"}}
+
+
+def _setup_patches(link, found, status):
+    return (patch("custom_components.ebus.coordinator.connect", AsyncMock(return_value=link)),
+            patch("custom_components.ebus.coordinator.discover", AsyncMock(return_value=found)),
+            patch("custom_components.ebus.coordinator.fetch_status", status),
+            patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()))
+
+
+async def test_setup_retry_keeps_the_saved_values(hass: HomeAssistant, hass_storage):
+    # a silent bus (heating off) sends the setup into retry: the values saved at
+    # the last shutdown must survive it for the warm start once the bus is back
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    saved = {"version": 1, "key": f"ebus_cache_{entry.entry_id}",
+             "data": {"values": [[["08", "FlowTemp", "FlowTemp"], 40.5]]}}
+    hass_storage[f"ebus_cache_{entry.entry_id}"] = dict(saved)
+    from aioebus.discovery import BusSilent
+    with patch("custom_components.ebus.coordinator.connect",
+               AsyncMock(return_value=_idle_link())), \
+         patch("custom_components.ebus.coordinator.discover",
+               AsyncMock(side_effect=BusSilent("no eBUS traffic"))):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    from homeassistant.config_entries import ConfigEntryState
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass_storage[f"ebus_cache_{entry.entry_id}"]["data"] == saved["data"]
+
+
+async def test_failed_platform_setup_closes_the_link(hass: HomeAssistant):
+    # discovery done, then the setup fails: the link and the engine must not
+    # outlive the failed entry
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    link = _idle_link()
+    p1, p2, p3, p4 = _setup_patches(link, _found({0x08: (_HMU, None)}),
+                                    AsyncMock(return_value={}))
+    with p1, p2, p3, p4, patch.object(hass.config_entries, "async_forward_entry_setups",
+                                      AsyncMock(side_effect=RuntimeError("platform broke"))):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    link.close.assert_called()
+    assert not [t for t in asyncio.all_tasks()
+                if t.get_name() in ("ebus-link", "ebus-supervisor") and not t.done()]
+
+
+async def test_web_status_answering_late_adds_its_sensors(hass: HomeAssistant):
+    # the adapter's web API was slow at setup: it is asked again later, then its
+    # sensors appear and the adapter device gets its firmware
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    status = {"id": "58e6c5e3ba58", "versions": "fw 1.2", "chip": "ESP32-C3",
+              "sta": {"rssi": -60}, "uptime": 7200, "heap": 2_000_000}
+    fetch = AsyncMock(return_value={})
+    p1, p2, p3, p4 = _setup_patches(_idle_link(), _found({0x08: (_HMU, None)}), fetch)
+    with p1, p2, p3, p4:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        coord = entry.runtime_data
+        from homeassistant.helpers import entity_registry as er
+        reg = er.async_get(hass)
+        assert reg.async_get_entity_id("sensor", DOMAIN, coord.uid("adapter", "wlan_signal")) is None
+        fetch.return_value = status
+        coord._web_asked -= 3600  # the retry is due
+        await coord.async_refresh()
+        await hass.async_block_till_done()
+        assert reg.async_get_entity_id("sensor", DOMAIN, coord.uid("adapter", "wlan_signal"))
+        adapter = dr.async_get(hass).async_get(coord.adapter_device_id)
+        assert adapter.sw_version == "fw 1.2" and entry.unique_id == "58e6c5e3ba58"
+        assert entry.runtime_data is coord  # keyed by the adapter's id without a reload
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_known_adapter_keeps_its_details_when_its_web_api_is_quiet(hass: HomeAssistant):
+    from custom_components.ebus.device import register_adapter
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999})
+    entry.add_to_hass(hass)
+    device_id = register_adapter(hass, entry.entry_id, "1.2.3.4",
+                                 {"versions": "fw 1.2", "chip": "ESP32-C3"})
+    assert register_adapter(hass, entry.entry_id, "1.2.3.4", {}) == device_id
+    adapter = dr.async_get(hass).async_get(device_id)
+    assert (adapter.sw_version, adapter.model) == ("fw 1.2", "eBUS Adapter Shield (ESP32-C3)")
+    # a new adapter without a web API gets the plain details
+    other = MockConfigEntry(domain=DOMAIN, data={"host": "5.6.7.8", "port": 9999})
+    other.add_to_hass(hass)
+    plain = dr.async_get(hass).async_get(register_adapter(hass, other.entry_id, "5.6.7.8", {}))
+    assert plain.model == "Enhanced adapter"
+
+
+async def test_diagnostics_show_the_bus_without_secrets(hass: HomeAssistant):
+    from custom_components.ebus.diagnostics import async_get_config_entry_diagnostics
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    p1, p2, p3, p4 = _setup_patches(_idle_link(), _found({0x08: (_HMU, _IDENT)}),
+                                    AsyncMock(return_value={}))
+    with p1, p2, p3, p4:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        diag = await async_get_config_entry_diagnostics(hass, entry)
+        assert diag["devices"] == {"0x08": {"ident": "HMU00", "manufacturer": "Vaillant",
+                                            "sw": "0902", "hw": "5103"}}
+        assert diag["counts"]["devices"] == 1 and diag["counts"]["read_registers"] > 0
+        assert _IDENT.serial not in str(diag)
+        assert await hass.config_entries.async_unload(entry.entry_id)

@@ -168,3 +168,41 @@ async def test_user_flow_rejects_a_port_out_of_range(hass: HomeAssistant):
             await hass.config_entries.flow.async_configure(
                 init["flow_id"], {"host": "1.2.3.4", "port": 70000, "allow_write": False})
     probe.assert_not_called()
+
+
+async def test_options_change_reloads_with_the_new_settings(hass: HomeAssistant):
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            options={"allow_write": False}, version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    reload = AsyncMock()
+    with patch("custom_components.ebus._async_reload", reload):
+        entry.add_update_listener(reload)
+        init = await hass.config_entries.options.async_init(entry.entry_id)
+        assert init["type"] is FlowResultType.FORM
+        result = await hass.config_entries.options.async_configure(init["flow_id"], {
+            "scan_interval": 30, "allow_write": True, "config_dir": "", "deep_scan": False})
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {"scan_interval": 30, "allow_write": True, "config_dir": "",
+                             "deep_scan": False}
+    reload.assert_awaited_once()
+    from custom_components.ebus.coordinator import EbusCoordinator
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    assert coord.allow_write and coord.update_interval.total_seconds() == 30
+
+
+async def test_only_an_options_change_reloads(hass: HomeAssistant):
+    from unittest.mock import MagicMock
+
+    from custom_components.ebus import _async_reload
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            options={"allow_write": False})
+    entry.add_to_hass(hass)
+    entry.runtime_data = MagicMock(options={"allow_write": False})
+    with patch.object(hass.config_entries, "async_reload", AsyncMock()) as reload:
+        hass.config_entries.async_update_entry(entry, unique_id="58e6c5e3ba58")
+        await _async_reload(hass, entry)
+        reload.assert_not_awaited()  # keyed by the adapter's id: nothing to rebuild
+        hass.config_entries.async_update_entry(entry, options={"allow_write": True})
+        await _async_reload(hass, entry)
+        reload.assert_awaited_once()

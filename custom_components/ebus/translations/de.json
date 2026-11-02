@@ -2047,13 +2047,6 @@
       "z3roomzonemapping": {
         "name": "Zone 3 Raumtemperatursensor-Zuordnung"
       },
-      "statuscirpump": {
-        "name": "Zirkulationspumpe",
-        "state": {
-          "off": "Aus",
-          "on": "Ein"
-        }
-      },
       "operatingmode": {
         "name": "Betriebsart",
         "state": {
@@ -2088,6 +2081,11 @@
     "binary_sensor": {
       "adapter_signal": {
         "name": "Signal"
+      }
+    },
+    "climate": {
+      "zone": {
+        "name": "Heizkreis {n}"
       }
     }
   }

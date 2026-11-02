@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 
-from .const import BROADCAST_ADDRESS, DEFS_CACHE, DOMAIN, STORE_PREFIXES, STORE_VERSION
+from .const import DEFS_CACHE, DOMAIN, STORE_PREFIXES, STORE_VERSION
 from .coordinator import EbusCoordinator
 from .device import ADAPTER_IDENTIFIER
 from .migrations import async_migrate_entry
@@ -48,8 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool
 
 
 async def _async_reload(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
-    """Reload the entry when its options change (interval / write enable)."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Reload the entry when its options change (interval, writing, ...); any
+    other update (e.g. the entry keyed by the adapter's id) needs none."""
+    if dict(entry.options) != entry.runtime_data.options:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool:
@@ -102,9 +104,5 @@ async def async_remove_config_entry_device(
     if coordinator is None:  # not loaded (adapter offline): the bus cannot vouch
         return not (device.identifiers & {ADAPTER_IDENTIFIER})
     kept = {ADAPTER_IDENTIFIER}
-    kept |= {
-        (DOMAIN, f"{zz:02x}")
-        for zz in coordinator.devices
-        if zz != BROADCAST_ADDRESS  # broadcasts belong to the adapter now
-    }
+    kept |= {(DOMAIN, f"{zz:02x}") for zz in coordinator.devices}
     return not (device.identifiers & kept)

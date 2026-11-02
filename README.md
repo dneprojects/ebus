@@ -9,11 +9,13 @@ how it appears in Home Assistant.
 
 ## Status
 
-Early. The integration connects to the adapter, scans the bus for devices
-(0704 identification) and runs the aioebus **passive-first engine**: it decodes
-the telegrams on the bus for free and actively polls only the registers that are
-due, publishing them as sensors grouped per device. Writable entities
-(number/select) and auto-generated entities are next.
+In use on a Vaillant installation (heat pumps, controller, hot-water and
+ventilation units). The integration discovers the devices on the bus and runs the
+aioebus **passive-first engine**: it decodes the telegrams on the bus for free and
+actively polls only the registers enabled entities need. It provides sensors per
+device, numbers and selects for settings (opt-in: writing is off by default), a
+thermostat per heating zone, the adapter's own diagnostics, and entity names in
+your language.
 
 ## Requirements
 
@@ -34,9 +36,8 @@ integration and enter the adapter host and port (default 9999).
 Delete the **eBUS** integration from *Settings → Devices & services* (this
 removes its entries, devices and entities). To uninstall completely, also remove
 the `custom_components/ebus` folder from your Home Assistant configuration (or
-remove the repository in HACS). Definitions downloaded for devices outside the
-bundled set are cached in `.storage/ebus_defs` of your configuration; delete that
-folder as well.
+remove the repository in HACS). Removing the last eBUS entry also deletes the
+definitions it downloaded (`.storage/ebus_defs`) and every entry's stored values.
 
 ## How it works
 

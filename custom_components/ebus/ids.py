@@ -7,8 +7,8 @@ drift between them.
 """
 from __future__ import annotations
 
-from aioebus.engine import value_key
 from aioebus.messages import MessageDef
+from aioebus.values import value_key
 
 CONTROL_SUFFIX = "_set"
 

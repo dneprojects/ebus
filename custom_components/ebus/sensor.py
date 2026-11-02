@@ -4,13 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Final, cast
 
-from aioebus.engine import value_key
-from aioebus.translations import translation_key
-from aioebus.values import Value, has_numeric_value, values_of
+from aioebus.values import Value, closes_period, has_numeric_value, values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
-from homeassistant.const import UnitOfInformation, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -30,12 +27,6 @@ _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | 
     "W": (SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT),
     "kWh": (SensorDeviceClass.ENERGY, SensorStateClass.TOTAL_INCREASING),
 }
-# a closed past period is a fixed figure, not a running counter: as
-# total_increasing, statistics would count each new month's total as consumption.
-# As total (no last_reset) its long-term history keeps every period's figure
-# (stat "state") and stays compatible with statistics recorded before; its sum only
-# follows the difference between periods, so it is no energy-dashboard source.
-_PAST_PERIOD: Final = ("LastMonth", "LastYear")
 
 
 # the adapter's own diagnostic sensors (unique_id slug -- kept from the former
@@ -95,11 +86,23 @@ async def async_setup_entry(
         for msg in coordinator.read_messages
         for field in values_of(msg)
     ]
-    specs = list(_ADAPTER_SENSORS)
-    if coordinator.adapter_status:  # adapter has a web UI -> add its own metrics
-        specs += _ADAPTER_WEB_SENSORS
-    entities += [EbusAdapterSensor(coordinator, *spec) for spec in specs]
+    entities += [EbusAdapterSensor(coordinator, *spec) for spec in _ADAPTER_SENSORS]
     async_add_entities(entities)
+
+    # an adapter with a web UI adds its own metrics, also once its web API
+    # answers later (it may have been slow at setup)
+    web_added = False
+
+    @callback
+    def _add_web_sensors() -> None:
+        nonlocal web_added
+        if not web_added and coordinator.adapter_status:
+            web_added = True
+            async_add_entities(
+                EbusAdapterSensor(coordinator, *spec) for spec in _ADAPTER_WEB_SENSORS)
+
+    _add_web_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_add_web_sensors))
 
     # per-device Vaillant identification (article/serial), static diagnostic
     # values; one read later at runtime adds its sensors then
@@ -135,10 +138,10 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     def __init__(self, coordinator: EbusCoordinator, field: Value) -> None:
         super().__init__(coordinator)
         self._field = field
-        self._key = value_key(field.msg, field.label)
-        zz = int(field.msg.zz, 16)
+        self._key = field.cache_key
+        zz = coordinator.catalog.owner(field.msg)
         self._attr_unique_id = entity_uid(coordinator.uid_prefix, field.msg, field.label)
-        self._attr_translation_key = translation_key(field.msg, field.field)
+        self._attr_translation_key = field.key
         self._attr_icon = icon_for(field.field)
         # channels known to be unconnected on this device type (from the def
         # metadata, so the decision is static at registration) are off by default
@@ -166,8 +169,11 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
             # time and flag fields stay without a state class
             if has_numeric_value(field.field.type):
                 state = unit_state or SensorStateClass.MEASUREMENT
-                if (state is SensorStateClass.TOTAL_INCREASING
-                        and field.msg.name.endswith(_PAST_PERIOD)):
+                if state is SensorStateClass.TOTAL_INCREASING and closes_period(field.msg):
+                    # a closed period's total is a fixed figure, no running
+                    # counter: as total (no last_reset) its history keeps every
+                    # period's figure and stays compatible with statistics
+                    # recorded before; its sum is no energy-dashboard source
                     state = SensorStateClass.TOTAL
                 self._attr_state_class = state
 

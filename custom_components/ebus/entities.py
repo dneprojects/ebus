@@ -2,10 +2,10 @@
 
 One home for the decisions the platforms, the polling scope and the translation
 generator share: a writable register's control class, a device's name, icons,
-what is polled. What a value is (numeric, the control a write allows) is
-aioebus.values'. The device facts (definition,
-model, ranges, heating zones) come from the aioebus catalog; how this
-integration presents them is ``presentation.json``. Imports only aioebus, the
+what is polled. What a value is (numeric, the control a write allows) comes from
+aioebus.values, the device facts (definition, model, ranges, heating zones) from
+the aioebus catalog; how this integration presents them is in
+``presentation.json``. Imports only aioebus, the
 standard library and other pure modules of this package, so tools and pure
 tests can load it without Home Assistant.
 """
@@ -16,7 +16,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any, Final
 
-from aioebus.catalog import ClimateZone, Definition, bundled_file
+from aioebus.catalog import ClimateZone, Definition, bundled_file, resolve_bundled
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
 from aioebus.values import is_float_type, values_of
@@ -77,10 +77,10 @@ def bundled_control_class(message: str) -> str | None:
     permissive class it has anywhere, "none" if those files define it without
     listing it, None if none of them defines it (a user definition)."""
     classes: set[str] = set()
-    for file, section in presentation()["controls"].items():
-        if file.startswith("_") or not isinstance(section, dict):
+    for key, section in presentation()["controls"].items():
+        if key.startswith("_") or not isinstance(section, dict):
             continue
-        if message not in {m.name for m in bundled_file(file)}:
+        if message not in {m.name for m in bundled_file(_file_of(key))}:
             continue
         classes.add(next((c for c in ("user", "installer") if message in section.get(c, ())),
                          "none"))
@@ -88,6 +88,18 @@ def bundled_control_class(message: str) -> str | None:
         if cls in classes:
             return cls
     return None
+
+
+def _file_of(key: str) -> str:
+    """The bundled file a presentation key stands for: the file itself, or the
+    one an ``IDENT/HW`` profile uses."""
+    if "/" not in key:
+        return key
+    ident, hw = key.split("/", 1)
+    definition = resolve_bundled(ScanResult(0, "", ident, "", hw, None, None))
+    if definition is None:
+        raise ValueError(f"presentation.json: no bundled profile {key!r}")
+    return definition.file
 
 
 def number_bounds(listed: tuple[float, float, float] | None, field: FieldDef

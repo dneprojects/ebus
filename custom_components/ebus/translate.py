@@ -6,8 +6,10 @@ the ebus.github.io CDN -- in the user's language and in English, cached like the
 definitions -- and this module writes ``translations/<lang>.json`` locally. The GPL-3.0
 upstream text therefore lives only on the user's machine, never in this
 repository; Home Assistant then localizes entity names per user through its own
-translation system. It is cached by a signature of the device set, languages and
-integration version, so the CDN is only fetched when one of those changes.
+translation system. The files are shared by all entries: each entry's part is
+cached by a signature of its devices, the languages and the integration version,
+so the CDN is only fetched when one of those changes -- and an entry's run keeps
+the names of entries not loaded (yet), so two adapters never undo each other.
 """
 from __future__ import annotations
 
@@ -16,8 +18,10 @@ import hashlib
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 from aioebus.catalog import Catalog
+from aioebus.messages import MessageDef
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.util.file import WriteError, write_utf8_file_atomic
@@ -40,36 +44,78 @@ def _files_digest(languages: list[str]) -> str:
     return h.hexdigest()
 
 
-def _marker_matches(sig: str, languages: list[str]) -> bool:
-    """The marker holds the signature AND a digest of the files it wrote, so files
-    replaced behind our back (an update shipping the plain baseline) regenerate."""
-    if not sig:
-        return False
+def _read_marker() -> tuple[dict[str, str], str]:
+    """The entries' signatures the files were generated for, and the digest of
+    the files then; ({}, "") when there is none (or an older form)."""
     try:
-        return _MARKER.read_text(encoding="utf-8").split() == [sig, _files_digest(languages)]
+        sigs, digest = _MARKER.read_text(encoding="utf-8").splitlines()[:2]
+        stored = json.loads(sigs)
+    except (OSError, ValueError):
+        return {}, ""
+    if not isinstance(stored, dict):
+        return {}, ""
+    return {str(k): str(v) for k, v in stored.items()}, digest
+
+
+def _covered(sigs: dict[str, str], languages: list[str]) -> bool:
+    """Whether the files were generated for every given entry as it is now. The
+    digest of the files is part of it, so files replaced behind our back (an
+    update shipping the plain baseline) regenerate."""
+    stored, digest = _read_marker()
+    try:
+        current = _files_digest(languages)
     except OSError:
         return False
+    return digest == current and all(
+        sig and stored.get(entry) == sig for entry, sig in sigs.items())
 
 
-def _write_files(files: dict[str, dict], sig: str) -> bool:
+def _merged(files: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """The new files with the entity names of the current ones they lack kept
+    (another adapter's devices, not loaded in this run)."""
+    out: dict[str, dict[str, Any]] = {}
+    for lang, data in files.items():
+        try:
+            current = json.loads((_TDIR / f"{lang}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            current = {}
+        entity = {platform: dict(names) for platform, names in current.get("entity", {}).items()
+                  if isinstance(names, dict)}
+        for platform, names in data.get("entity", {}).items():
+            entity.setdefault(platform, {}).update(names)
+        out[lang] = {**data, "entity": entity}
+    return out
+
+
+def _write_files(files: dict[str, dict[str, Any]], sigs: dict[str, str]) -> bool:
     # atomic: Home Assistant may read a translation file at any moment
     try:
         _TDIR.mkdir(exist_ok=True)
         for lang, data in files.items():
             write_utf8_file_atomic(
                 str(_TDIR / f"{lang}.json"), json.dumps(data, indent=2, ensure_ascii=False) + "\n")
-        write_utf8_file_atomic(str(_MARKER), f"{sig}\n{_files_digest(sorted(files))}\n")
+        write_utf8_file_atomic(
+            str(_MARKER), f"{json.dumps(sigs, sort_keys=True)}\n{_files_digest(sorted(files))}\n")
     except (OSError, WriteError) as err:  # e.g. a read-only install: names stay as shipped
         _LOGGER.debug("eBUS: translation files not written: %s", err)
         return False
     return True
 
 
-def _with_missing_names(files: dict[str, dict]) -> dict[str, dict] | None:
+def _write_generated(files: dict[str, dict[str, Any]], sigs: dict[str, str],
+                     keep: set[str]) -> bool:
+    """Write the files for the loaded entries (``sigs``), keeping what the files
+    hold for the other configured entries (``keep``) and their signatures."""
+    stored, _digest = _read_marker()
+    others = {entry: sig for entry, sig in stored.items() if entry in keep and entry not in sigs}
+    return _write_files(_merged(files), {**others, **sigs})
+
+
+def _with_missing_names(files: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]] | None:
     """The current translation files plus the entity names they lack (e.g. for a
     device from a user definition, which no shipped file covers); names already
     there, such as CDN text, are kept. None when nothing is missing."""
-    merged: dict[str, dict] = {}
+    merged: dict[str, dict[str, Any]] = {}
     changed = False
     for lang, data in files.items():
         try:
@@ -87,10 +133,10 @@ def _with_missing_names(files: dict[str, dict]) -> dict[str, dict] | None:
     return merged if changed else None
 
 
-def _write_base_if_needed(files: dict[str, dict]) -> bool:
+def _write_base_if_needed(files: dict[str, dict[str, Any]]) -> bool:
     merged = _with_missing_names(files)
-    # no signature: the next start fetches the CDN again
-    return merged is not None and _write_files(merged, "")
+    # no signatures: the next start fetches the CDN again
+    return merged is not None and _write_files(merged, {})
 
 
 def _clear_cache(hass: HomeAssistant) -> None:
@@ -124,7 +170,7 @@ def _sources(hass: HomeAssistant) -> _Sources:
     return sources
 
 
-def _all_defs(hass: HomeAssistant) -> list:
+def _all_defs(hass: HomeAssistant) -> list[MessageDef]:
     return [m for catalog in _sources(hass).values() for m in catalog.all_messages()]
 
 
@@ -144,42 +190,47 @@ def forget_entry(hass: HomeAssistant, entry_id: str) -> None:
     _sources(hass).pop(entry_id, None)
 
 
+def _signature(version: object, languages: list[str], catalog: Catalog) -> str:
+    """Cache key of one entry's part (not security): it changes with the schema,
+    the integration version (the name rules in strings_gen change with it), the
+    languages, the CDN paths or the resolved definitions."""
+    return hashlib.sha1("|".join((
+        str(_SCHEMA), str(version), ",".join(languages), ",".join(catalog.text_paths),
+        ",".join(sorted(f"{m.name}:{m.pbsb}:{m.msgid}" for m in catalog.all_messages())),
+    )).encode()).hexdigest()
+
+
 async def _async_update(hass: HomeAssistant) -> None:
     languages = sorted({hass.config.language or "en", "en"})
-    paths = sorted({p for catalog in _sources(hass).values() for p in catalog.text_paths})
+    sources = _sources(hass)
+    paths = sorted({p for catalog in sources.values() for p in catalog.text_paths})
     if not paths:
         await _async_write_base(hass, languages)
         return
-    defs = _all_defs(hass)
     version = (await async_get_integration(hass, DOMAIN)).version
-    # Cache key (not security): regenerate when the schema, the integration
-    # version (the name rules in strings_gen change with it), languages, CDN
-    # paths or the resolved definition set change.
-    sig = hashlib.sha1("|".join((
-        str(_SCHEMA), str(version), ",".join(languages), ",".join(paths),
-        ",".join(sorted(f"{m.name}:{m.pbsb}:{m.msgid}" for m in defs)),
-    )).encode()).hexdigest()
-    if await hass.async_add_executor_job(_marker_matches, sig, languages):
-        return  # already generated for this device set + languages + definitions
+    sigs = {entry: _signature(version, languages, catalog) for entry, catalog in sources.items()}
+    if await hass.async_add_executor_job(_covered, sigs, languages):
+        return  # already generated for these entries' devices + languages
 
-    catalogs = list(_sources(hass).values())
     try:  # never holding up the setup for long
         async with asyncio.timeout(_FETCH_BUDGET):
-            texts = [await catalog.load_texts(languages) for catalog in catalogs]
+            texts = {entry: await catalog.load_texts(languages)
+                     for entry, catalog in sources.items()}
     except TimeoutError:
         _LOGGER.debug("eBUS: CDN too slow, names stay as they are for now")
         await _async_write_base(hass, languages)
         return
-    if not any("en" in t.languages for t in texts):  # the English base must be present
+    if not any("en" in t.languages for t in texts.values()):  # the English base is a must
         await _async_write_base(hass, languages)
         return
-    defs = [m for t in texts for m in t.messages]
+    defs = [m for t in texts.values() for m in t.messages]
     files = {lang: strings_gen.build_strings(defs, lang) for lang in languages}
     # only a complete fetch is remembered: after one the CDN could not fully
     # serve (unreachable, timed out) the next start tries again instead of
     # keeping the gap; a file it does not have at all is final
-    complete = all(t.complete for t in texts)
-    if not await hass.async_add_executor_job(_write_files, files, sig if complete else ""):
+    written = {entry: sig if texts[entry].complete else "" for entry, sig in sigs.items()}
+    keep = {e.entry_id for e in hass.config_entries.async_entries(DOMAIN)}
+    if not await hass.async_add_executor_job(_write_generated, files, written, keep):
         return
     _clear_cache(hass)
     _LOGGER.info("eBUS: generated %s translations from %d CDN file(s)",
