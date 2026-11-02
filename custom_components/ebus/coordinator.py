@@ -24,6 +24,7 @@ from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
 from aioebus.scan import Identification, ScanResult
+from aioebus.values import Value, control_of, values_of
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -55,14 +56,7 @@ from .const import (
     STORE_VERSION,
 )
 from .device import ADAPTER_IDENTIFIER, adapter_registry_info, device_info
-from .entities import (
-    Field,
-    control_class,
-    control_of,
-    fields_of,
-    presentation,
-    select_polled,
-)
+from .entities import control_class, presentation, select_polled
 from .ids import CONTROL_SUFFIX, control_uid, uid
 from .translate import async_update_translations
 
@@ -169,7 +163,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         down = self._link_down_since
         return down is not None and time.monotonic() - down > _STALE_AFTER
 
-    def controls(self, platform: str) -> list[tuple[MessageDef, Field, str]]:
+    def controls(self, platform: str) -> list[tuple[MessageDef, Value, str]]:
         """The (message, field, class) of every control the platform provides. A
         register that no longer gets one loses its registry entry, and with
         writing switched off every control does (no 'no longer provided' orphans)."""
@@ -179,7 +173,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 if ent.domain == platform and ent.unique_id.endswith(CONTROL_SUFFIX):
                     registry.async_remove(ent.entity_id)
             return []
-        out: list[tuple[MessageDef, Field, str]] = []
+        out: list[tuple[MessageDef, Value, str]] = []
         for msg in self.write_messages:
             found = control_of(msg)
             if found is None or found[0] != platform:
@@ -201,12 +195,15 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self.write_messages = self.catalog.device_messages("w") if self.allow_write else []
 
     async def _fetch_text(self, url: str) -> str | None:
-        """A definition file from the CDN for the catalog; None when it is not
-        there or not reachable (the catalog then keeps its cached copy)."""
+        """A file from the CDN for the catalog: "" when the CDN says it is not
+        there (final), None when it cannot be reached (the catalog then keeps its
+        cached copy and tries again another time)."""
         try:
             async with (asyncio.timeout(_FETCH_TIMEOUT),
                         async_get_clientsession(self.hass).get(url) as resp):
-                return await resp.text() if resp.status == 200 else None
+                if resp.status == 200:
+                    return await resp.text()
+                return "" if resp.status == 404 else None
         except (TimeoutError, aiohttp.ClientError, ValueError) as err:  # ValueError: not UTF-8
             _LOGGER.debug("eBUS: %s not fetched: %s", url, err)
             return None
@@ -454,7 +451,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         """Write one value to a single-field register, then read it back so the
         entity shows what the device actually holds (if it cannot be read back,
         the written value is shown). Errors surface as HomeAssistantError."""
-        fields = fields_of(msg)
+        fields = values_of(msg)
         if self.engine is None or not self.allow_write or len(fields) != 1:
             raise HomeAssistantError(f"eBUS: {msg.name} is not writable")
         field = fields[0]

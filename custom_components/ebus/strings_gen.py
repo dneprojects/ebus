@@ -15,8 +15,7 @@ from __future__ import annotations
 
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.translations import slug, translation_key
-
-from .entities import control_of
+from aioebus.values import control_of
 
 # config-flow / options UI strings, per language (HA falls back to English for a
 # language not listed here)
@@ -657,7 +656,7 @@ def _states(f: FieldDef, lang: str) -> dict | None:
 
 def build_entities(msgs: list[MessageDef], lang: str) -> dict:
     """The HA ``entity`` sections for one language: the registers' sensors and
-    controls (classified like the platforms do, see entities.control_of) plus the
+    controls (classified like the platforms do, see aioebus.values.control_of) plus the
     fixed adapter/identification entities."""
     base = lang == "en"
     sensor: dict = {}

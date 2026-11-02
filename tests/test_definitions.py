@@ -13,8 +13,8 @@ from aioebus.catalog import (
     bundled_index,
     resolve_bundled,
 )
-from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
+from aioebus.values import values_of
 
 from pure_loader import PKG, pure
 
@@ -82,29 +82,13 @@ def test_select_polled_only_enabled():
     catalog = Catalog()
     asyncio.run(catalog.load({0x15: _scan("CTLV3", "8004", "808")}))
     reads = catalog.device_messages("r")
-    target = next(m for m in reads if m.is_polled_read and entities.fields_of(m))
-    label = entities.fields_of(target)[0].label
+    target = next(m for m in reads if m.is_polled_read and values_of(m))
+    label = values_of(target)[0].label
     assert entities.select_polled(reads, {ids.entity_uid("E1", target, label)}, [], "E1") == [target]
     # its number/select backs the read twin just the same
     assert entities.select_polled(reads, {ids.control_uid("E1", target, label)}, [], "E1") == [target]
     assert entities.select_polled(reads, set(), [], "E1") == []        # nothing enabled
     assert entities.select_polled(reads, {ids.entity_uid("E1", target, label)}, [], "E2") == []
-
-
-def test_controls_are_classified_once_for_platforms_and_names():
-    def msg(direction, *fields):
-        return MessageDef(direction, "", "", "M", "", "", "15", "b524", "00", list(fields))
-
-    num = FieldDef("value", "", "D2C", None, None, "", "")
-    enum = FieldDef("value", "", "UCH", None, {0: "off", 1: "on"}, "", "")
-    text = FieldDef("value", "", "STR:5", None, None, "", "")
-    assert entities.control_of(msg("w", num))[0] == "number"
-    assert entities.control_of(msg("w", enum))[0] == "select"
-    assert entities.control_of(msg("w", text)) is None
-    assert entities.control_of(msg("r", num)) is None           # reads get no control
-    assert entities.control_of(msg("w", num, num)) is None      # only single-field writes
-    assert entities.has_numeric_value("BCD") and not entities.is_number_type("BCD")
-    assert entities.is_number_type("EXP") and not entities.has_numeric_value("HEX:2")
 
 
 def test_presentation_names_only_what_the_catalog_defines():
@@ -133,7 +117,7 @@ def test_presentation_names_only_what_the_catalog_defines():
     for key, labels in pres["disabled_fields"].items():
         if key.startswith("_"):
             continue
-        known = {f.label for m in bundled_file(file_of(key)) for f in entities.fields_of(m)}
+        known = {f.label for m in bundled_file(file_of(key)) for f in values_of(m)}
         assert set(labels) <= known, (key, set(labels) - known)
 
 

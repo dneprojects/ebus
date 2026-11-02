@@ -17,8 +17,20 @@ _CSV = ("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/v
 _HMU = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
 
 
-async def _catalog(devices, user_dir=None) -> Catalog:
-    catalog = Catalog(user_dir=user_dir)  # no download in tests
+def _url_fetch(fetch):
+    """A catalog fetch from a (session, lang, path) stand-in of the CDN."""
+    if fetch is None:
+        return None
+
+    async def by_url(url):
+        lang, path = url.removeprefix("https://ebus.github.io/").split("/", 1)
+        return await fetch(None, lang, path.removesuffix(".csv"))
+
+    return by_url
+
+
+async def _catalog(devices, user_dir=None, fetch=None) -> Catalog:
+    catalog = Catalog(user_dir=user_dir, fetch=_url_fetch(fetch))  # texts via fetch
     await catalog.load(devices)
     return catalog
 
@@ -45,10 +57,10 @@ async def test_new_version_regenerates(hass: HomeAssistant, tdir):
 
     async def run(version: str) -> None:
         integration = MagicMock(version=version)
-        with patch.object(translate, "_fetch", fetch), \
-             patch.object(translate, "async_get_integration",
+        with patch.object(translate, "async_get_integration",
                           AsyncMock(return_value=integration)):
-            await translate.async_update_translations(hass, "e1", await _catalog(_HMU))
+            await translate.async_update_translations(
+                hass, "e1", await _catalog(_HMU, fetch=fetch))
 
     await run("0.3.1")
     first = fetch.await_count
@@ -73,12 +85,11 @@ async def test_two_adapters_share_the_files(hass: HomeAssistant, tdir):
     async def fetch(_session, lang, path):
         return _CSV
 
-    with patch.object(translate, "_fetch", fetch), \
-         patch.object(translate, "async_get_integration",
+    with patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.6.4"))):
-        await translate.async_update_translations(hass, "a", await _catalog(_HMU))
+        await translate.async_update_translations(hass, "a", await _catalog(_HMU, fetch=fetch))
         hmu_keys = _keys(tdir / "en.json")
-        await translate.async_update_translations(hass, "b", await _catalog(_CTL))
+        await translate.async_update_translations(hass, "b", await _catalog(_CTL, fetch=fetch))
     keys = _keys(tdir / "en.json")
     assert hmu_keys <= keys and len(keys) > len(hmu_keys)
     translate.forget_entry(hass, "b")
@@ -98,9 +109,8 @@ async def test_user_definitions_get_names(hass: HomeAssistant, tdir, tmp_path, c
         "direction": "r", "name": "MixerTemp", "pbsb": "b509", "id": "0d0100",
         "fields": [{"name": "value", "type": "D2C", "unit": "°C"}]}]), encoding="utf-8")
     vr70 = {0x26: ScanResult(0xB5, "Vaillant", "VR70", "0100", "0200", 100, 200)}
-    catalog = await _catalog(vr70, user)
-    with patch.object(translate, "_fetch", AsyncMock(return_value=cdn)), \
-         patch.object(translate, "async_get_integration",
+    catalog = await _catalog(vr70, user, fetch=AsyncMock(return_value=cdn))
+    with patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.8.0"))):
         await translate.async_update_translations(hass, "e1", catalog)
     assert any("mixertemp" in k for k in _keys(tdir / "en.json"))

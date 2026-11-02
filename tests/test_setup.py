@@ -16,6 +16,7 @@ from aioebus.engine import EbusEngine
 from aioebus.passive import MessageRegistry
 from aioebus.scan import ScanResult
 from aioebus.transport import RECEIVED, SYN, encode_symbol
+from aioebus.values import values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sensor.recorder import DEFAULT_STATISTICS
 from homeassistant.config_entries import ConfigEntryState
@@ -30,7 +31,6 @@ from custom_components.ebus.binary_sensor import EbusAdapterSignal
 from custom_components.ebus.const import DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
 from custom_components.ebus.device import ADAPTER_IDENTIFIER
-from custom_components.ebus.entities import fields_of
 from custom_components.ebus.sensor import EbusAdapterSensor, EbusSensor
 
 _DATA = {"host": "1.2.3.4", "port": 9999}
@@ -241,7 +241,7 @@ async def test_values_become_unavailable_after_a_long_outage(hass: HomeAssistant
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     coord.devices = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
     await coord.async_load_definitions()
-    field = next(f for m in coord.read_messages for f in fields_of(m)
+    field = next(f for m in coord.read_messages for f in values_of(m)
                  if m.name == "EnergyGeneratedHc")
     flow = EbusSensor(coord, field)
     coord.engine = EbusEngine(AsyncMock(), AsyncMock(), MessageRegistry([]))
@@ -365,7 +365,7 @@ async def test_past_period_energy_is_a_total(hass: HomeAssistant):
     coord.data = {}
     await coord.async_load_definitions()
     sensors = {f.msg.name: EbusSensor(coord, f)
-               for m in coord.read_messages for f in fields_of(m)}
+               for m in coord.read_messages for f in values_of(m)}
     last = sensors["PrEnergySumHcLastMonth"]
     # a total without reset: a lower next month is no new consumption cycle
     assert last.state_class is SensorStateClass.TOTAL and last.last_reset is None
@@ -377,7 +377,7 @@ async def test_past_period_energy_is_a_total(hass: HomeAssistant):
     hmu = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
     coord.devices = hmu
     await coord.async_load_definitions()
-    gen = next(f for m in coord.read_messages for f in fields_of(m)
+    gen = next(f for m in coord.read_messages for f in values_of(m)
                if m.name == "EnergyGeneratedHc")
     assert EbusSensor(coord, gen).state_class is SensorStateClass.TOTAL_INCREASING
 
@@ -451,7 +451,7 @@ async def test_catalog_downloads_through_home_assistant(hass: HomeAssistant, aio
     aioclient_mock.get("https://ebus.github.io/en/vaillant/missing.csv", status=404)
     aioclient_mock.get("https://ebus.github.io/en/vaillant/down.csv", exc=TimeoutError())
     assert await coord._fetch_text("https://ebus.github.io/en/vaillant/52.vr_70.csv") == "r,,,X"
-    assert await coord._fetch_text("https://ebus.github.io/en/vaillant/missing.csv") is None
+    assert await coord._fetch_text("https://ebus.github.io/en/vaillant/missing.csv") == ""
     assert await coord._fetch_text("https://ebus.github.io/en/vaillant/down.csv") is None
 
 
@@ -468,11 +468,11 @@ async def test_unreviewed_definitions_leave_on_demand_reads_off(hass: HomeAssist
                      "r2,,,Polled,,,52,b509,0d0200,value,,UCH,,,\n"
                      "u,,,Passive,,,52,b509,0d0300,value,,UCH,,,\n")
     coord.catalog._defs[0x52] = Definition("cdn", "vaillant/52.vr_70.csv")
-    enabled = {m.name: EbusSensor(coord, fields_of(m)[0]).entity_registry_enabled_default
+    enabled = {m.name: EbusSensor(coord, values_of(m)[0]).entity_registry_enabled_default
                for m in msgs}
     assert enabled == {"OnDemand": False, "Polled": True, "Passive": True}
     coord.catalog._defs[0x52] = Definition("bundled", "vr_71.json")
-    assert EbusSensor(coord, fields_of(msgs[0])[0]).entity_registry_enabled_default
+    assert EbusSensor(coord, values_of(msgs[0])[0]).entity_registry_enabled_default
 
 
 async def test_removing_the_last_entry_drops_the_definition_cache(hass: HomeAssistant, tmp_path):

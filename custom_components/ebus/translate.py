@@ -1,9 +1,9 @@
 """Runtime generation of the integration's translation files, on the user's own
 machine, from the upstream per-language CSVs.
 
-At setup we fetch the display text for the scanned devices from the ebus.github.io
-CDN -- in the user's language and in English -- merge it onto the (facts-only)
-bundled definitions, and write ``translations/<lang>.json`` locally. The GPL-3.0
+At setup the aioebus catalog loads the display text of the scanned devices from
+the ebus.github.io CDN -- in the user's language and in English, cached like the
+definitions -- and this module writes ``translations/<lang>.json`` locally. The GPL-3.0
 upstream text therefore lives only on the user's machine, never in this
 repository; Home Assistant then localizes entity names per user through its own
 translation system. It is cached by a signature of the device set, languages and
@@ -15,15 +15,10 @@ import asyncio
 import hashlib
 import json
 import logging
-from dataclasses import replace
 from pathlib import Path
 
-import aiohttp
 from aioebus.catalog import Catalog
-from aioebus.convert import attach_translations
-from aioebus.messages import parse_csv
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 from homeassistant.util.file import WriteError, write_utf8_file_atomic
 
@@ -31,26 +26,11 @@ from . import strings_gen
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_CDN = "https://ebus.github.io"
 _SCHEMA = 4  # bump to force regeneration when the generated structure changes
 _PKG = Path(__file__).parent
 _TDIR = _PKG / "translations"
 _MARKER = _TDIR / ".ebus_gen"
 _FETCH_BUDGET = 20  # s for the whole CDN fetch at setup
-
-
-async def _fetch(session, lang: str, path: str) -> str | None:
-    """The file's text; "" when the CDN has no such file (final: e.g. a language
-    upstream does not translate); None when it could not be reached (retry)."""
-    url = f"{_CDN}/{lang}/{path}.csv"
-    try:
-        async with asyncio.timeout(15), session.get(url) as resp:
-            if resp.status != 200:
-                return ""
-            return await resp.text()
-    except (TimeoutError, aiohttp.ClientError) as err:
-        _LOGGER.debug("eBUS: CDN %s unreachable: %s", url, err)
-        return None
 
 
 def _files_digest(languages: list[str]) -> str:
@@ -166,8 +146,7 @@ def forget_entry(hass: HomeAssistant, entry_id: str) -> None:
 
 async def _async_update(hass: HomeAssistant) -> None:
     languages = sorted({hass.config.language or "en", "en"})
-    paths = sorted({p for catalog in _sources(hass).values() for zz in catalog.addresses
-                    if (d := catalog.definition(zz)) is not None for p in d.text_paths})
+    paths = sorted({p for catalog in _sources(hass).values() for p in catalog.text_paths})
     if not paths:
         await _async_write_base(hass, languages)
         return
@@ -183,40 +162,28 @@ async def _async_update(hass: HomeAssistant) -> None:
     if await hass.async_add_executor_job(_marker_matches, sig, languages):
         return  # already generated for this device set + languages + definitions
 
-    session = async_get_clientsession(hass)
-    jobs = [(lang, path) for lang in languages for path in paths]
-    try:  # all files at once, and never holding up the setup for long
+    catalogs = list(_sources(hass).values())
+    try:  # never holding up the setup for long
         async with asyncio.timeout(_FETCH_BUDGET):
-            texts = await asyncio.gather(*(_fetch(session, lang, path) for lang, path in jobs))
+            texts = [await catalog.load_texts(languages) for catalog in catalogs]
     except TimeoutError:
         _LOGGER.debug("eBUS: CDN too slow, names stay as they are for now")
         await _async_write_base(hass, languages)
         return
-    by_lang: dict[str, list] = {}
-    for (lang, _path), text in zip(jobs, texts, strict=True):
-        if text:
-            by_lang.setdefault(lang, []).extend(parse_csv(text))
-    if "en" not in by_lang:  # the English base must be present
+    if not any("en" in t.languages for t in texts):  # the English base must be present
         await _async_write_base(hass, languages)
         return
-
-    # fresh copies: attaching texts must not touch the cached definitions
-    defs = [_copy(m) for m in _all_defs(hass)]
-    attach_translations(defs, by_lang)
+    defs = [m for t in texts for m in t.messages]
     files = {lang: strings_gen.build_strings(defs, lang) for lang in languages}
     # only a complete fetch is remembered: after one the CDN could not fully
     # serve (unreachable, timed out) the next start tries again instead of
     # keeping the gap; a file it does not have at all is final
-    complete = all(text is not None for text in texts)
+    complete = all(t.complete for t in texts)
     if not await hass.async_add_executor_job(_write_files, files, sig if complete else ""):
         return
     _clear_cache(hass)
     _LOGGER.info("eBUS: generated %s translations from %d CDN file(s)",
                  "/".join(languages), len(paths))
-
-
-def _copy(msg):
-    return replace(msg, fields=[replace(f) for f in msg.fields])
 
 
 async def _async_write_base(hass: HomeAssistant, languages: list[str]) -> None:

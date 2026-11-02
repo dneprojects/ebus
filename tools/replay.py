@@ -16,22 +16,21 @@ installation produced the log. --values also prints a sample of decoded values.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import sqlite3
 import sys
 from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from pure_loader import pure  # first: it finds aioebus (a sibling checkout if not installed)
-
-import asyncio
+import pure_loader  # noqa: F401 -- finds aioebus (a sibling checkout if not installed)
 
 from aioebus.catalog import Catalog
 from aioebus.discovery import BASE_ADDRESSES, BROADCAST_ADDRESS
 from aioebus.passive import MessageRegistry, decode_raw
 from aioebus.scan import ScanResult, decode_scan
+from aioebus.values import control_of
 
-entities = pure("entities")
 
 def _scan_devices(db: sqlite3.Connection, addrs: tuple[int, ...]) -> dict[int, ScanResult]:
     """Resolve each address from its latest 0704 answer in the capture."""
@@ -62,7 +61,7 @@ def main(argv: list[str]) -> int:
     msgs = catalog.all_messages()
     registry = MessageRegistry(msgs)
     reads = catalog.device_messages("r")
-    writes = [m for m in catalog.device_messages("w") if entities.control_of(m)]
+    writes = [m for m in catalog.device_messages("w") if control_of(m)]
 
     cache: dict[tuple[str, str, str], object] = {}
     hits = 0

@@ -1,8 +1,9 @@
 """What Home Assistant entities a device's messages become.
 
 One home for the decisions the platforms, the polling scope and the translation
-generator share: which field is a sensor, a number or a select, a writable
-register's control class, a device's name, icons. The device facts (definition,
+generator share: a writable register's control class, a device's name, icons,
+what is polled. What a value is (numeric, the control a write allows) is
+aioebus.values'. The device facts (definition,
 model, ranges, heating zones) come from the aioebus catalog; how this
 integration presents them is ``presentation.json``. Imports only aioebus, the
 standard library and other pure modules of this package, so tools and pure
@@ -11,20 +12,18 @@ tests can load it without Home Assistant.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final
 
 from aioebus.catalog import ClimateZone, Definition, bundled_file
-from aioebus.codecs import is_numeric
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
+from aioebus.values import is_float_type, values_of
 
 from .ids import control_uid, entity_uid, zone_uid
 
 PRESENTATION: Final = Path(__file__).parent / "presentation.json"
-FLOAT_TYPES: Final[frozenset[str]] = frozenset({"EXP", "EXR"})  # numbers need explicit bounds
 
 # mdi icon by unit, else by a keyword in the field name (mirrors the eBUS Bridge)
 _UNIT_ICON: Final[dict[str, str]] = {
@@ -46,52 +45,6 @@ def presentation() -> dict[str, Any]:
     """presentation.json (blocking read: load it in an executor first)."""
     data: dict[str, Any] = json.loads(PRESENTATION.read_text(encoding="utf-8"))
     return data
-
-
-@dataclass
-class Field:
-    """One decodable field of a message, with its HA label and key."""
-    msg: MessageDef
-    field: FieldDef
-    label: str  # HA-style label (decode_labeled key)
-
-
-def fields_of(msg: MessageDef) -> list[Field]:
-    """One entry per entity the message's values give."""
-    fields = msg.value_fields
-    lone_value = [f.name for f in fields] == ["value"]
-    return [Field(msg, f, msg.name if (f.name == "value" or lone_value)
-                  else f"{msg.name} {f.name}") for f in fields]
-
-
-def _base(type_: str) -> str:
-    return type_.upper().split(":", 1)[0]
-
-
-def is_number_type(type_: str) -> bool:
-    """A type a number control can write (integers, and floats with bounds)."""
-    return is_numeric(type_) or _base(type_) in FLOAT_TYPES
-
-
-def has_numeric_value(type_: str) -> bool:
-    """A type that decodes to a number, so its sensor carries statistics."""
-    return is_number_type(type_) or _base(type_) == "BCD"
-
-
-def control_of(msg: MessageDef) -> tuple[Literal["number", "select"], Field] | None:
-    """The control a write message becomes: a select for a value table, a number
-    for a numeric type; only single-field writes get one."""
-    if not msg.is_write:
-        return None
-    fields = fields_of(msg)
-    if len(fields) != 1:
-        return None
-    field = fields[0]
-    if field.field.values:
-        return "select", field
-    if is_number_type(field.field.type):
-        return "number", field
-    return None
 
 
 def _keys(definition: Definition | None) -> list[str]:
@@ -143,7 +96,7 @@ def number_bounds(listed: tuple[float, float, float] | None, field: FieldDef
     default for a float register; None leaves an integer type's own range."""
     if listed is not None:
         return listed
-    if _base(field.type) in FLOAT_TYPES:
+    if is_float_type(field.type):
         return _UNIT_BOUNDS.get(field.unit or "", _UNIT_BOUNDS[""])
     return None
 
@@ -203,7 +156,7 @@ def select_polled(
     for m in read_messages:
         if not m.is_polled_read:
             continue
-        for field in fields_of(m):
+        for field in values_of(m):
             if ({entity_uid(prefix, m, field.label), control_uid(prefix, m, field.label)}
                     & enabled_uids):
                 add(m)

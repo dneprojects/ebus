@@ -6,6 +6,7 @@ from typing import Final, cast
 
 from aioebus.engine import value_key
 from aioebus.translations import translation_key
+from aioebus.values import Value, has_numeric_value, values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
@@ -18,7 +19,7 @@ from . import EbusConfigEntry
 from .adapter import wifi
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
-from .entities import Field, disabled_field_labels, fields_of, has_numeric_value, icon_for
+from .entities import disabled_field_labels, icon_for
 from .ids import entity_uid
 
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
@@ -92,7 +93,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = [
         EbusSensor(coordinator, field)
         for msg in coordinator.read_messages
-        for field in fields_of(msg)
+        for field in values_of(msg)
     ]
     specs = list(_ADAPTER_SENSORS)
     if coordinator.adapter_status:  # adapter has a web UI -> add its own metrics
@@ -131,7 +132,7 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: EbusCoordinator, field: Field) -> None:
+    def __init__(self, coordinator: EbusCoordinator, field: Value) -> None:
         super().__init__(coordinator)
         self._field = field
         self._key = value_key(field.msg, field.label)

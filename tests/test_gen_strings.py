@@ -68,7 +68,7 @@ def test_curated_name_beats_upstream_label():
 
 
 def test_update_write_message_is_also_a_sensor():
-    # a 'uw' message becomes a sensor AND a select (entities.control_of classifies it as both),
+    # a 'uw' message becomes a sensor AND a select (aioebus.values.control_of classifies it as both),
     # so the sensor needs its own named entry
     m = _msg("StatusCirPump", direction="uw",
              fields=[FieldDef("value", "", "UCH", None, {0: "off", 100: "on"}, "", "")])

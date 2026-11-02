@@ -44,8 +44,20 @@ def _found(devices, extra=(), remembered=None, dropped=()):
                      list(extra), dict(remembered or {}), set(dropped))
 
 
-async def _catalog(devices) -> Catalog:
-    catalog = Catalog()  # bundled definitions only
+def _url_fetch(fetch):
+    """A catalog fetch from a (session, lang, path) stand-in of the CDN."""
+    if fetch is None:
+        return None
+
+    async def by_url(url):
+        lang, path = url.removeprefix("https://ebus.github.io/").split("/", 1)
+        return await fetch(None, lang, path.removesuffix(".csv"))
+
+    return by_url
+
+
+async def _catalog(devices, fetch=None) -> Catalog:
+    catalog = Catalog(fetch=_url_fetch(fetch))  # bundled definitions, texts via fetch
     await catalog.load(devices)
     return catalog
 
@@ -190,12 +202,11 @@ async def test_partial_cdn_fetch_is_not_remembered(hass: HomeAssistant, tdir):
         calls.append(lang)
         return None if lang == "de" else _CSV  # the German file is unreachable this time
 
-    with patch.object(translate, "_fetch", fetch), \
-         patch.object(translate, "async_get_integration",
+    with patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
         first = len(calls)
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
     assert (tdir / "en.json").exists()
     assert len(calls) == 2 * first  # fetched again: the gap is not kept
 
@@ -209,12 +220,11 @@ async def test_language_the_cdn_lacks_is_not_refetched(hass: HomeAssistant, tdir
         calls.append(lang)
         return "" if lang == "fr" else _CSV
 
-    with patch.object(translate, "_fetch", fetch), \
-         patch.object(translate, "async_get_integration",
+    with patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
         first = len(calls)
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
     assert first and len(calls) == first  # remembered: no fetch on the second start
 
 
@@ -280,11 +290,10 @@ async def test_slow_cdn_does_not_hold_up_setup(hass: HomeAssistant, tdir, monkey
     async def fetch(_session, _lang, _path):
         await asyncio.sleep(5)
 
-    with patch.object(translate, "_fetch", fetch), \
-         patch.object(translate, "async_get_integration",
+    with patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
         async with asyncio.timeout(1):
-            await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
+            await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
     # names from the definitions meanwhile, without a signature: the next start
     # fetches the CDN again
     assert (tdir / "en.json").exists()
