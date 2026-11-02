@@ -48,9 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool
 
 
 async def _async_reload(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
-    """Reload the entry when its options change (interval, writing, ...); any
-    other update (e.g. the entry keyed by the adapter's id) needs none."""
-    if dict(entry.options) != entry.runtime_data.options:
+    """Reload the entry when its address (the adapter moved to a new IP) or its
+    options change; any other update (e.g. the entry keyed by the adapter's id)
+    needs none."""
+    coordinator = entry.runtime_data
+    if dict(entry.data) != coordinator.entry_data or dict(entry.options) != coordinator.options:
         await hass.config_entries.async_reload(entry.entry_id)
 
 

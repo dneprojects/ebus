@@ -198,7 +198,7 @@ async def test_only_an_options_change_reloads(hass: HomeAssistant):
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
                             options={"allow_write": False})
     entry.add_to_hass(hass)
-    entry.runtime_data = MagicMock(options={"allow_write": False})
+    entry.runtime_data = MagicMock(entry_data=dict(entry.data), options={"allow_write": False})
     with patch.object(hass.config_entries, "async_reload", AsyncMock()) as reload:
         hass.config_entries.async_update_entry(entry, unique_id="58e6c5e3ba58")
         await _async_reload(hass, entry)
@@ -206,3 +206,28 @@ async def test_only_an_options_change_reloads(hass: HomeAssistant):
         hass.config_entries.async_update_entry(entry, options={"allow_write": True})
         await _async_reload(hass, entry)
         reload.assert_awaited_once()
+
+
+async def test_adapter_at_a_new_ip_is_reconnected(hass: HomeAssistant):
+    # zeroconf finds the known adapter at a new address: its entry must reload,
+    # or the running link keeps reconnecting to the old one
+    from custom_components.ebus import _async_reload
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="58e6c5e3ba58",
+                            data={"host": "192.168.178.179", "port": 9999},
+                            version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    entry.runtime_data = AsyncMock(entry_data=dict(entry.data), options=dict(entry.options))
+    entry.add_update_listener(_async_reload)
+    with patch("custom_components.ebus.config_flow._adapter_id",
+               AsyncMock(return_value="58e6c5e3ba58")), \
+         patch.object(hass.config_entries, "async_reload", AsyncMock()) as reload:
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("192.168.178.50"),
+                ip_addresses=[ip_address("192.168.178.50")], port=9999,
+                hostname="ebus-dne.local.", type="_ebusd._tcp.local.",
+                name="ebus-dne._ebusd._tcp.local.", properties={}))
+        await hass.async_block_till_done()
+    assert entry.data["host"] == "192.168.178.50"
+    reload.assert_awaited_once_with(entry.entry_id)

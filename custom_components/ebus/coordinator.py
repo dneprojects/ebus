@@ -93,7 +93,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._entry = entry  # config_entry, typed as always present
         self.host = host
         self.port = port
-        # the options this run was built with: only a change of them reloads
+        # the address and options this run was built with: only a change reloads
+        self.entry_data = dict(entry.data)
         self.options = dict(entry.options)
         self.allow_write = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
         self.deep_scan = entry.options.get(CONF_DEEP_SCAN, DEFAULT_DEEP_SCAN)
