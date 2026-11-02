@@ -14,28 +14,17 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .library import fields_of, icon_for
+from .entities import icon_for
+from .ids import control_uid
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
-    coordinator.remove_controls_if_read_only("select")
-    entities: list[EbusSelect] = []
-    for msg in coordinator.write_messages:
-        fields = fields_of(msg)
-        if len(fields) != 1:
-            continue
-        field = fields[0]
-        if not field.field.values:  # value table -> selectable options
-            continue
-        cls = coordinator.control_class(msg)
-        if cls == "none":
-            coordinator.remove_control("select", msg, field.label)
-        else:
-            entities.append(EbusSelect(coordinator, msg, field.field, field.label, cls))
-    async_add_entities(entities)
+    async_add_entities(
+        EbusSelect(coordinator, msg, field.field, field.label, cls)
+        for msg, field, cls in coordinator.controls("select"))
 
 
 class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
@@ -50,7 +39,7 @@ class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
         self._msg = msg
         self._key = value_key(msg, label)
         zz = int(msg.zz, 16)
-        self._attr_unique_id = coordinator.uid(*self._key, "set")
+        self._attr_unique_id = control_uid(coordinator.uid_prefix, msg, label)
         self._attr_translation_key = translation_key(msg, field)
         self._attr_icon = icon_for(field)
         if cls == "installer":  # a configuration setting: shown only once enabled

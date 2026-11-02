@@ -1,7 +1,7 @@
 """Build Home Assistant translation files from device definitions.
 
-Shared by the dev tool (``tools/gen_strings.py``) and the runtime generator in the
-coordinator: entity display names come from each definition's ``tr`` (merged from
+Shared by the dev tool (``tools/gen_strings.py``) and the runtime generator
+(``translate.py``): entity display names come from each definition's ``tr`` (merged from
 the per-language CSVs), so the same code produces the English base and any other
 language. English always gets a name (the technical name as a last resort); other
 languages emit a name only where a translation exists, so Home Assistant falls
@@ -14,7 +14,9 @@ CDN fetch, and these files are written into the user's install, never this repo.
 from __future__ import annotations
 
 from aioebus.messages import FieldDef, MessageDef
-from aioebus.translations import _slug, translation_key
+from aioebus.translations import slug, translation_key
+
+from .entities import control_of
 
 # config-flow / options UI strings, per language (HA falls back to English for a
 # language not listed here)
@@ -590,12 +592,26 @@ STATE_DE = {
 CURATED_NAMES = {"de": NAME_DE}
 CURATED_STATES = {"de": STATE_DE}
 
-NUMBER_TYPES = frozenset(
-    {"UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "D1B", "D1C", "D2B", "D2C", "FLT", "EXP", "EXR"})
-
-
-def _decodable(msg: MessageDef) -> list[FieldDef]:
-    return [f for f in msg.fields if f.name and not f.type.upper().startswith("IGN")]
+# entities that are no bus register (the adapter link, the identification):
+# translation key -> name per language
+FIXED_NAMES = {
+    "sensor": {
+        "adapter_host": {"en": "Host", "de": "Host"},
+        "adapter_telegrams": {"en": "Telegrams", "de": "Telegramme"},
+        "adapter_polls_answered": {"en": "Polls answered", "de": "Abfragen beantwortet"},
+        "adapter_polls_unanswered": {"en": "Polls unanswered", "de": "Abfragen ohne Antwort"},
+        "adapter_cached_values": {"en": "Cached values", "de": "Werte zwischengespeichert"},
+        "adapter_wifi_signal": {"en": "Wi-Fi signal", "de": "WLAN-Signal"},
+        "adapter_uptime": {"en": "Uptime", "de": "Laufzeit"},
+        "adapter_free_memory": {"en": "Free memory", "de": "Freier Speicher"},
+        "ident_article": {"en": "Article number", "de": "Artikelnummer"},
+        "ident_serial": {"en": "Serial number", "de": "Seriennummer"},
+        "ident_manufactured": {"en": "Manufactured", "de": "Baujahr"},
+    },
+    "binary_sensor": {
+        "adapter_signal": {"en": "Signal", "de": "Signal"},
+    },
+}
 
 
 def _cap(text: str) -> str:
@@ -633,18 +649,23 @@ def _states(f: FieldDef, lang: str) -> dict | None:
     if not f.values:
         return None
     if lang == "en":
-        return {_slug(v): v for v in f.values.values()}
+        return {slug(v): v for v in f.values.values()}
     table = CURATED_STATES.get(lang, {})
-    out = {_slug(v): table[_slug(v)] for v in f.values.values() if _slug(v) in table}
+    out = {slug(v): table[slug(v)] for v in f.values.values() if slug(v) in table}
     return out or None
 
 
 def build_entities(msgs: list[MessageDef], lang: str) -> dict:
-    """The HA ``entity`` sections (sensor/number/select) for one language."""
+    """The HA ``entity`` sections for one language: the registers' sensors and
+    controls (classified like the platforms do, see entities.control_of) plus the
+    fixed adapter/identification entities."""
     base = lang == "en"
     sensor: dict = {}
     number: dict = {}
     select: dict = {}
+    binary_sensor: dict = {}
+    platforms = {"sensor": sensor, "number": number, "select": select,
+                 "binary_sensor": binary_sensor}
 
     def put(target: dict, key: str, name: str | None, states: dict | None) -> None:
         entry = {**({"name": name} if name else {}), **({"state": states} if states else {})}
@@ -654,21 +675,20 @@ def build_entities(msgs: list[MessageDef], lang: str) -> dict:
     for m in msgs:
         if not (m.zz and len(m.zz) == 2):
             continue
-        decs = _decodable(m)
-        writable = "w" in m.direction
-        for f in decs:
-            key = translation_key(m, f)
-            name, states = _name(m, f, lang), _states(f, lang)
-            if writable and len(decs) == 1:
-                if f.values:
-                    put(select, key, name, states)
-                elif f.type.upper() in NUMBER_TYPES:
-                    put(number, key, name, None)
-            # reads and updates (broadcasts) are sensors -- a 'uw' message is both
-            # a sensor and a writable, like the library classifies it
-            if m.direction[:1] in ("r", "u"):
-                put(sensor, key, name, states)
-    return {"sensor": sensor, "number": number, "select": select}
+        if (control := control_of(m)) is not None:
+            platform, field = control
+            f = field.field
+            put(platforms[platform], translation_key(m, f), _name(m, f, lang),
+                _states(f, lang) if platform == "select" else None)
+        # reads and updates (broadcasts) are sensors -- a 'uw' message is both
+        # a sensor and a writable
+        if m.is_read:
+            for f in m.value_fields:
+                put(sensor, translation_key(m, f), _name(m, f, lang), _states(f, lang))
+    for platform, names in FIXED_NAMES.items():
+        for key, by_lang in names.items():
+            put(platforms[platform], key, by_lang.get(lang), None)
+    return platforms
 
 
 def build_strings(msgs: list[MessageDef], lang: str) -> dict:

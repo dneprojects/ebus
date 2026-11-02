@@ -1,7 +1,8 @@
-"""Round-3 behaviour: remembered identification, kept extra addresses, one-shot
-deep scan, stored-file clean-up, translation fetch, link-loss logging (run under
-pytest-homeassistant-custom-component; skipped where Home Assistant is not
-installed)."""
+"""Setup behaviour around discovery (stored addresses and identifications, the
+one-shot deep scan, late identification), stored-file clean-up, translation
+fetch, link-loss logging (run under pytest-homeassistant-custom-component;
+skipped where Home Assistant is not installed). The discovery itself (scan,
+identification, duplicates) is aioebus's and tested there."""
 import asyncio
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,8 +12,8 @@ import pytest
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.active import ReadError
+from aioebus.discovery import Device, Discovery
 from aioebus.scan import Identification, ScanResult
-from aioebus.transport import RECEIVED, SYN, encode_symbol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -23,6 +24,7 @@ from custom_components.ebus.coordinator import EbusCoordinator
 
 _HMU = ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)
 _GW = ScanResult(0xB5, "Vaillant", "NETX3", "0130", "0404", 130, 404)
+_IDENT = Identification("0010021122", "21212300100210211220000000N7", 2021, 12)
 
 
 @pytest.fixture(autouse=True)
@@ -30,67 +32,75 @@ def _enable(enable_custom_integrations):
     yield
 
 
-def _live_bus() -> AsyncMock:
-    """recv of a bus that is alive: SYN symbols (the scanner itself is mocked)."""
-    return AsyncMock(return_value=encode_symbol(RECEIVED, SYN))
+async def _idle() -> bytes:
+    """recv of a link that stays quiet (the discovery itself is patched)."""
+    await asyncio.Event().wait()
+    return b""
+
+
+def _found(devices, extra=(), remembered=None, dropped=()):
+    return Discovery({zz: Device(zz, scan, ident) for zz, (scan, ident) in devices.items()},
+                     list(extra), dict(remembered or {}), set(dropped))
 
 
 def _coord(hass: HomeAssistant, **options) -> EbusCoordinator:
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
-                            options=options, version=1, minor_version=4)
+                            options=options, version=1, minor_version=7)
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     coord.update_interval = None
     return coord
 
 
-async def test_identification_is_remembered(hass: HomeAssistant):
-    # the gateway answers once, then not (busy after a restart): the remembered
-    # identification stands in, so article/serial stay available
-    coord = _coord(hass)
-    coord.devices = {0xF6: _GW}
-    ident = Identification("0020260914", "21234500100260914000000000N1", 2021, 23)
-    scanner = MagicMock()
-    scanner.read_identification = AsyncMock(return_value=ident)
-    await coord._identify(scanner)
-    assert coord.idents[0xF6] == ident
-
-    coord.idents = {}
-    scanner.read_identification = AsyncMock(side_effect=ReadError("no answer from slave"))
-    await coord._identify(scanner)
-    assert coord.idents[0xF6] == ident
-
-    # a different device now at that address does not inherit it
-    coord.idents = {}
-    coord.devices = {0xF6: _HMU}
-    scanner.read_identification = AsyncMock(return_value=None)
-    await coord._identify(scanner)
-    assert 0xF6 not in coord.idents
-
-
-async def test_normal_scan_keeps_extras_that_miss_one_start(hass: HomeAssistant):
-    coord = _coord(hass)
-    await coord._addr_store.async_save([0x76, 0x52])  # 0x52 found by an earlier deep scan
-    present = {0x08: _HMU, 0x76: _HMU}  # 0x52 misses this scan
-
-    async def scan(zz, timeout):
-        if zz in present:
-            return present[zz]
-        raise ReadError("no answer from slave")
-
-    scanner = MagicMock()
-    scanner.scan = AsyncMock(side_effect=scan)
-    scanner.read_identification = AsyncMock(return_value=None)
-    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), _live_bus()))), \
-         patch("custom_components.ebus.coordinator.ActiveReader", return_value=scanner), \
-         patch.object(coord, "_fetch_adapter_status", AsyncMock(return_value={})), \
+async def _discover_with(coord: EbusCoordinator, found: Discovery) -> AsyncMock:
+    discover = AsyncMock(return_value=found)
+    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), _idle))), \
+         patch("custom_components.ebus.coordinator.discover", discover), \
+         patch("custom_components.ebus.coordinator.fetch_status", AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
          patch.object(coord, "_run_forever", AsyncMock()), \
          patch.object(coord, "_late_identify", AsyncMock()):
         await coord._discover()
-    assert sorted(await coord._addr_store.async_load()) == [0x52, 0x76]  # 0x52 not forgotten
+    return discover
+
+
+async def test_discovery_results_are_kept_for_the_next_start(hass: HomeAssistant):
+    coord = _coord(hass)
+    await coord._addr_store.async_save([0x76, 0x52])
+    await coord._ident_store.async_save({"f6": {"serial": "old"}})
+    record = {"ident": "HMU00", "hw": "5103", "sw": "0902", "serial": _IDENT.serial}
+    discover = await _discover_with(coord, _found(
+        {0x08: (_HMU, _IDENT), 0x76: (_HMU, None)}, extra=[0x52, 0x76],
+        remembered={"f6": {"serial": "old"}, "08": record}))
+    kwargs = discover.await_args.kwargs
+    assert kwargs["extra_addresses"] == [0x76, 0x52] and kwargs["deep"] is False
+    assert kwargs["remembered"] == {"f6": {"serial": "old"}}
+    assert sorted(await coord._addr_store.async_load()) == [0x52, 0x76]
+    assert (await coord._ident_store.async_load())["08"] == record
+    assert coord.idents == {0x08: _IDENT} and set(coord.devices) == {0x08, 0x76, 0xFE}
     adapter = dr.async_get(hass).async_get(coord.adapter_device_id)
     assert adapter is not None and adapter.config_entry_id == coord.config_entry.entry_id
+    await coord.async_shutdown()
+
+
+async def test_deep_scan_runs_once(hass: HomeAssistant):
+    coord = _coord(hass, **{CONF_DEEP_SCAN: True})
+    await coord._addr_store.async_save([0x52, 0x53])  # stale: nothing there any more
+    discover = await _discover_with(coord, _found({0x08: (_HMU, None)}))
+    assert discover.await_args.kwargs["deep"] is True
+    assert await coord._addr_store.async_load() == []
+    assert coord.config_entry.options[CONF_DEEP_SCAN] is False  # done: probe once only
+    await coord.async_shutdown()
+
+
+async def test_duplicate_address_leaves_the_device_registry(hass: HomeAssistant):
+    coord = _coord(hass)
+    devices = dr.async_get(hass)
+    devices.async_get_or_create(config_entry_id=coord.config_entry.entry_id,
+                                identifiers={(DOMAIN, "52")})
+    await _discover_with(coord, _found({0x18: (_HMU, _IDENT)}, dropped={0x52}))
+    assert devices.async_get_device_by_identifier(
+        (DOMAIN, "52"), coord.config_entry.entry_id) is None
     await coord.async_shutdown()
 
 
@@ -100,26 +110,13 @@ async def test_full_setup_uses_current_registry_apis(hass: HomeAssistant, caplog
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
                             version=1, minor_version=4)
     entry.add_to_hass(hass)
-    idle = asyncio.Event()
-    first = [True]
-
-    async def recv() -> bytes:
-        if first[0]:  # one SYN shows the bus is alive, then it stays silent
-            first[0] = False
-            return encode_symbol(RECEIVED, SYN)
-        await idle.wait()
-        return b""
-
-    scanner = MagicMock()
-    scanner.scan = AsyncMock(side_effect=lambda zz, timeout: _HMU if zz == 0x08
-                             else (_ for _ in ()).throw(ReadError("no answer")))
-    scanner.read_identification = AsyncMock(return_value=None)
     deprecated = MagicMock(side_effect=AssertionError("deprecated async_get_device"))
     with patch.object(dr.DeviceRegistry, "async_get_device", deprecated), \
          patch("custom_components.ebus.coordinator.EbusCoordinator._connect",
-               AsyncMock(return_value=(AsyncMock(), recv))), \
-         patch("custom_components.ebus.coordinator.ActiveReader", return_value=scanner), \
-         patch("custom_components.ebus.coordinator.EbusCoordinator._fetch_adapter_status",
+               AsyncMock(return_value=(AsyncMock(), _idle))), \
+         patch("custom_components.ebus.coordinator.discover",
+               AsyncMock(return_value=_found({0x08: (_HMU, None)}))), \
+         patch("custom_components.ebus.coordinator.fetch_status",
                AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -136,7 +133,6 @@ async def test_full_setup_uses_current_registry_apis(hass: HomeAssistant, caplog
     assert ents and all(e.unique_id.startswith(f"{entry.entry_id}_") for e in ents)
     assert not [r for r in caplog.records
                 if "Detected" in r.getMessage() or "blocking" in r.getMessage()]
-    idle.set()
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -216,7 +212,7 @@ async def test_language_the_cdn_lacks_is_not_refetched(hass: HomeAssistant, tdir
 
 
 async def test_user_files_are_reread_on_setup(tmp_path):
-    from custom_components.ebus import library
+    from custom_components.ebus import definitions as library
     dev = {0x26: ScanResult(0xB5, "Vaillant", "VR71X", "0000", "0000", 0, 0)}
     library.preload(dev, tmp_path)
     assert library.all_messages(dev, tmp_path) == []
@@ -227,58 +223,19 @@ async def test_user_files_are_reread_on_setup(tmp_path):
     assert [m.name for m in library.all_messages(dev, tmp_path)] == ["Foo"]
 
 
-async def test_deep_scan_drops_addresses_nothing_answers_on(hass: HomeAssistant):
-    coord = _coord(hass, **{CONF_DEEP_SCAN: True})
-    await coord._addr_store.async_save([0x52, 0x53])  # stale: no device there any more
-    scanner = MagicMock()
-    scanner.scan = AsyncMock(side_effect=lambda zz, timeout: _HMU if zz == 0x08
-                             else (_ for _ in ()).throw(ReadError("no answer")))
-    scanner.read_identification = AsyncMock(return_value=None)
-    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), _live_bus()))), \
-         patch("custom_components.ebus.coordinator.ActiveReader", return_value=scanner), \
-         patch.object(coord, "_fetch_adapter_status", AsyncMock(return_value={})), \
-         patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
-         patch.object(coord, "_run_forever", AsyncMock()), \
-         patch.object(coord, "_late_identify", AsyncMock()):
-        await coord._discover()
-    assert await coord._addr_store.async_load() == []
-    assert coord.config_entry.options[CONF_DEEP_SCAN] is False  # done: probe once only
-    await coord.async_shutdown()
-
-
-async def test_remembered_identification_needs_the_same_unit(hass: HomeAssistant):
-    # a replaced unit of the same model (other hw/sw) must not inherit the serial
-    coord = _coord(hass)
-    coord.devices = {0xF6: _GW}
-    ident = Identification("0020260914", "21234500100260914000000000N1", 2021, 23)
-    scanner = MagicMock()
-    scanner.read_identification = AsyncMock(return_value=ident)
-    await coord._identify(scanner)
-    coord.idents = {}
-    coord.devices = {0xF6: ScanResult(0xB5, "Vaillant", "NETX3", "0200", "0404", 200, 404)}
-    scanner.read_identification = AsyncMock(return_value=None)
-    await coord._identify(scanner)
-    assert 0xF6 not in coord.idents
-
-
 async def test_identification_missed_at_setup_is_read_at_runtime(hass: HomeAssistant):
     # a heat pump behind the coupler skipped the identification at setup: the
     # running engine reads it later, stores it and tells the platforms
     coord = _coord(hass)
-    coord.devices = {0x18: _HMU}
-    ident = Identification("0010021122", "21212300100210211220000000N7", 2021, 12)
+    coord._found = {0x18: Device(0x18, _HMU)}
     coord.engine = MagicMock()
-    coord.engine.read_raw = AsyncMock(side_effect=[ReadError("no answer from slave"),
-                                                   b"1", b"2", b"3", b"4"])
+    coord.engine.read_identification = AsyncMock(side_effect=[None, _IDENT])
     listener = MagicMock()
     coord.async_add_listener(listener)
-    with patch("custom_components.ebus.coordinator._IDENT_RETRY_DELAYS", (0, 0, 0)), \
-         patch("custom_components.ebus.coordinator.decode_identification",
-               return_value=ident) as decode:
+    with patch("custom_components.ebus.coordinator._IDENT_RETRY_DELAYS", (0, 0, 0)):
         await coord._late_identify()
-    decode.assert_called_once_with(b"1", b"2", b"3", b"4")
-    assert coord.idents[0x18] == ident
-    assert (await coord._ident_store.async_load())["18"]["serial"] == ident.serial
+    assert coord.idents[0x18] == _IDENT
+    assert (await coord._ident_store.async_load())["18"]["serial"] == _IDENT.serial
     listener.assert_called()
 
 
@@ -288,17 +245,15 @@ async def test_identification_that_never_comes_gives_up_quietly(hass: HomeAssist
     # every retry fails (or the answer is not a Vaillant identification): no
     # ident, nothing stored, no exception out of the background task
     coord = _coord(hass)
-    coord.devices = {0x18: _HMU}
+    coord._found = {0x18: Device(0x18, _HMU)}
     coord.engine = MagicMock()
-    if answer is None:
-        coord.engine.read_raw = AsyncMock(return_value=b"")
-    else:
-        coord.engine.read_raw = AsyncMock(side_effect=answer)
+    coord.engine.read_identification = (
+        AsyncMock(return_value=None) if answer is None else AsyncMock(side_effect=answer))
     listener = MagicMock()
     coord.async_add_listener(listener)
     with patch("custom_components.ebus.coordinator._IDENT_RETRY_DELAYS", (0, 0, 0)):
         await coord._late_identify()
-    assert coord.engine.read_raw.await_count == (12 if answer is None else 3)
+    assert coord.engine.read_identification.await_count == 3
     assert 0x18 not in coord.idents
     assert await coord._ident_store.async_load() is None
     listener.assert_not_called()
@@ -306,7 +261,7 @@ async def test_identification_that_never_comes_gives_up_quietly(hass: HomeAssist
 
 async def test_identification_waits_for_the_engine(hass: HomeAssistant):
     coord = _coord(hass)
-    coord.devices = {0x18: _HMU}
+    coord._found = {0x18: Device(0x18, _HMU)}
     coord.engine = None
     with patch("custom_components.ebus.coordinator._IDENT_RETRY_DELAYS", (0, 0)):
         await coord._late_identify()
@@ -352,7 +307,7 @@ async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
 
 
 async def test_broken_user_file_costs_only_its_device(tmp_path, caplog):
-    from custom_components.ebus import library
+    from custom_components.ebus import definitions as library
     dev = {0x26: ScanResult(0xB5, "Vaillant", "VR71X", "0000", "0000", 0, 0)}
     (tmp_path / "26.vr71x.json").write_text('[{"name": "NoDirection"}]', encoding="utf-8")
     library.preload(dev, tmp_path)

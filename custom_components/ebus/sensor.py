@@ -15,9 +15,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
+from .adapter import wifi
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
-from .library import Field, disabled_field_labels, fields_of, icon_for
+from .entities import Field, disabled_field_labels, fields_of, has_numeric_value, icon_for
+from .ids import entity_uid
 
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
     "°C": (SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT),
@@ -34,21 +36,12 @@ _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | 
 # follows the difference between periods, so it is no energy-dashboard source.
 _PAST_PERIOD: Final = ("LastMonth", "LastYear")
 
-# eBUS field types that decode to a number (so the sensor can carry long-term
-# statistics); text, date/time, PIN, hex and bit-flag fields are excluded
-_NUMERIC_TYPES: Final[frozenset[str]] = frozenset({
-    "UCH", "SCH", "UIN", "SIN", "ULG", "U2L", "U4L", "UIR", "SIR",
-    "D1B", "D1C", "D2B", "D2C", "FLT", "EXP", "EXR", "BCD"})
 
-
-# the adapter's own diagnostic sensors (name, value, unit, device class, state
-# class, icon), attached to the adapter device alongside the connection sensor
-_AdapterSpec = tuple[str, Callable[[EbusCoordinator], StateType], str | None,
+# the adapter's own diagnostic sensors (unique_id slug -- kept from the former
+# German names --, translation key, value, unit, device class, state class, icon),
+# attached to the adapter device alongside the connection sensor
+_AdapterSpec = tuple[str, str, Callable[[EbusCoordinator], StateType], str | None,
                      SensorDeviceClass | None, SensorStateClass | None, str | None]
-
-
-def _sta(c: EbusCoordinator, key: str) -> StateType:
-    return (c.adapter_status.get("sta") or {}).get(key)
 
 
 def _hours(value: object) -> StateType:
@@ -61,14 +54,19 @@ def _megabytes(value: object) -> StateType:
 
 # always available: derived from the engine / connection
 _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
-    ("Host", lambda c: f"{c.host}:{c.port}", None, None, None, "mdi:ip-network"),
-    ("Telegramme", lambda c: c.engine.stats.telegrams if c.engine else None,
+    ("host", "adapter_host", lambda c: f"{c.host}:{c.port}",
+     None, None, None, "mdi:ip-network"),
+    ("telegramme", "adapter_telegrams",
+     lambda c: c.engine.stats.telegrams if c.engine else None,
      None, None, SensorStateClass.TOTAL_INCREASING, "mdi:bus"),
-    ("Abfragen beantwortet", lambda c: c.engine.stats.polls_ok if c.engine else None,
+    ("abfragen_beantwortet", "adapter_polls_answered",
+     lambda c: c.engine.stats.polls_ok if c.engine else None,
      None, None, SensorStateClass.TOTAL_INCREASING, "mdi:check-network"),
-    ("Abfragen ohne Antwort", lambda c: c.engine.stats.polls_failed if c.engine else None,
+    ("abfragen_ohne_antwort", "adapter_polls_unanswered",
+     lambda c: c.engine.stats.polls_failed if c.engine else None,
      None, None, SensorStateClass.TOTAL_INCREASING, "mdi:network-off"),
-    ("Werte zwischengespeichert", lambda c: len(c.engine.cache) if c.engine else None,
+    ("werte_zwischengespeichert", "adapter_cached_values",
+     lambda c: len(c.engine.cache) if c.engine else None,
      None, None, SensorStateClass.MEASUREMENT, "mdi:database"),
 ]
 
@@ -76,11 +74,13 @@ _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
 # uptime and free memory are converted to h / MB up front (no state class, so
 # the unit is just a display unit and HA raises no "unit changed" statistics flag)
 _ADAPTER_WEB_SENSORS: Final[list[_AdapterSpec]] = [
-    ("WLAN-Signal", lambda c: _sta(c, "rssi"), "dBm",
+    ("wlan_signal", "adapter_wifi_signal",
+     lambda c: cast(StateType, wifi(c.adapter_status).get("rssi")), "dBm",
      SensorDeviceClass.SIGNAL_STRENGTH, SensorStateClass.MEASUREMENT, None),
-    ("Laufzeit", lambda c: _hours(c.adapter_status.get("uptime")), UnitOfTime.HOURS,
-     SensorDeviceClass.DURATION, None, "mdi:timer-outline"),
-    ("Freier Speicher", lambda c: _megabytes(c.adapter_status.get("heap")),
+    ("laufzeit", "adapter_uptime", lambda c: _hours(c.adapter_status.get("uptime")),
+     UnitOfTime.HOURS, SensorDeviceClass.DURATION, None, "mdi:timer-outline"),
+    ("freier_speicher", "adapter_free_memory",
+     lambda c: _megabytes(c.adapter_status.get("heap")),
      UnitOfInformation.MEGABYTES, SensorDeviceClass.DATA_SIZE, None, "mdi:memory"),
 ]
 
@@ -111,14 +111,14 @@ async def async_setup_entry(
             if zz in identified:
                 continue
             identified.add(zz)
-            new.append(
-                EbusIdentSensor(coordinator, zz, "Artikelnummer", ident.article, "mdi:barcode"))
-            new.append(
-                EbusIdentSensor(coordinator, zz, "Seriennummer", ident.serial, "mdi:identifier"))
+            new.append(EbusIdentSensor(
+                coordinator, zz, "artikelnummer", "ident_article", ident.article, "mdi:barcode"))
+            new.append(EbusIdentSensor(
+                coordinator, zz, "seriennummer", "ident_serial", ident.serial, "mdi:identifier"))
             if ident.year:
                 new.append(EbusIdentSensor(
-                    coordinator, zz, "Baujahr", f"{ident.year} KW{ident.week:02d}",
-                    "mdi:calendar"))
+                    coordinator, zz, "baujahr", "ident_manufactured",
+                    f"{ident.year} KW{ident.week:02d}", "mdi:calendar"))
         if new:
             async_add_entities(new)
 
@@ -136,7 +136,7 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         self._field = field
         self._key = value_key(field.msg, field.label)
         zz = int(field.msg.zz, 16)
-        self._attr_unique_id = coordinator.uid(*self._key)
+        self._attr_unique_id = entity_uid(coordinator.uid_prefix, field.msg, field.label)
         self._attr_translation_key = translation_key(field.msg, field.field)
         self._attr_icon = icon_for(field.field)
         # channels known to be unconnected on this device type (from the def
@@ -157,7 +157,7 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
             # a numeric reading gets long-term statistics: energy accumulates
             # (total_increasing), everything else is a measurement; text, date/
             # time and flag fields stay without a state class
-            if field.field.type.upper().split(":", 1)[0] in _NUMERIC_TYPES:
+            if has_numeric_value(field.field.type):
                 state = unit_state or SensorStateClass.MEASUREMENT
                 if (state is SensorStateClass.TOTAL_INCREASING
                         and field.msg.name.endswith(_PAST_PERIOD)):
@@ -192,7 +192,8 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: EbusCoordinator,
-        name: str,
+        slug: str,
+        key: str,
         value: Callable[[EbusCoordinator], StateType],
         unit: str | None,
         device_class: SensorDeviceClass | None,
@@ -201,13 +202,12 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     ) -> None:
         super().__init__(coordinator)
         self._value = value
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         if icon is not None:
             self._attr_icon = icon
-        slug = name.lower().replace(" ", "_").replace("-", "_")
         self._attr_unique_id = coordinator.uid("adapter", slug)
         self._attr_device_info = adapter_device_info()
 
@@ -223,13 +223,14 @@ class EbusIdentSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
-        self, coordinator: EbusCoordinator, zz: int, name: str, value: str, icon: str
+        self, coordinator: EbusCoordinator, zz: int, slug: str, key: str, value: str,
+        icon: str,
     ) -> None:
         super().__init__(coordinator)
         self._val = value
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_icon = icon
-        self._attr_unique_id = coordinator.uid(f"{zz:02x}", name.lower())
+        self._attr_unique_id = coordinator.uid(f"{zz:02x}", slug)
         self._attr_device_info = coordinator.device_info(zz)
 
     @property

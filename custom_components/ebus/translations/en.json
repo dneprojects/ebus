@@ -1854,6 +1854,39 @@
       },
       "sensordata2_ignore": {
         "name": "SensorData2 ignore"
+      },
+      "adapter_host": {
+        "name": "Host"
+      },
+      "adapter_telegrams": {
+        "name": "Telegrams"
+      },
+      "adapter_polls_answered": {
+        "name": "Polls answered"
+      },
+      "adapter_polls_unanswered": {
+        "name": "Polls unanswered"
+      },
+      "adapter_cached_values": {
+        "name": "Cached values"
+      },
+      "adapter_wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "adapter_uptime": {
+        "name": "Uptime"
+      },
+      "adapter_free_memory": {
+        "name": "Free memory"
+      },
+      "ident_article": {
+        "name": "Article number"
+      },
+      "ident_serial": {
+        "name": "Serial number"
+      },
+      "ident_manufactured": {
+        "name": "Manufactured"
       }
     },
     "number": {
@@ -2316,6 +2349,11 @@
           "off": "off",
           "on": "on"
         }
+      }
+    },
+    "binary_sensor": {
+      "adapter_signal": {
+        "name": "Signal"
       }
     }
   }

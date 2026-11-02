@@ -18,7 +18,8 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.ebus.climate import EbusZoneClimate
 from custom_components.ebus.const import CONF_ALLOW_WRITE, DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
-from custom_components.ebus.library import climate_zones, device_messages
+from custom_components.ebus.definitions import device_messages
+from custom_components.ebus.entities import climate_zones
 
 _CTL = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004)}
 

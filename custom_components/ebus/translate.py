@@ -29,7 +29,7 @@ from homeassistant.util.file import WriteError, write_utf8_file_atomic
 
 from . import strings_gen
 from .const import DOMAIN
-from .library import _index, all_messages, resolve_file
+from .definitions import all_messages, cdn_paths
 
 _LOGGER = logging.getLogger(__name__)
 _CDN = "https://ebus.github.io"
@@ -38,16 +38,6 @@ _PKG = Path(__file__).parent
 _TDIR = _PKG / "translations"
 _MARKER = _TDIR / ".ebus_gen"
 _FETCH_BUDGET = 20  # s for the whole CDN fetch at setup
-
-
-def _cdn_paths(devices: dict[int, ScanResult]) -> list[str]:
-    cdn = _index().get("cdn", {})
-    paths: set[str] = set()
-    for scan in devices.values():
-        file = resolve_file(scan.ident, scan.hw)
-        if file:
-            paths.update(cdn.get(file, []))
-    return sorted(paths)
 
 
 async def _fetch(session, lang: str, path: str) -> str | None:
@@ -178,7 +168,7 @@ def forget_entry(hass: HomeAssistant, entry_id: str) -> None:
 
 async def _async_update(hass: HomeAssistant) -> None:
     languages = sorted({hass.config.language or "en", "en"})
-    paths = sorted({p for devices, _ in _sources(hass).values() for p in _cdn_paths(devices)})
+    paths = sorted({p for devices, _ in _sources(hass).values() for p in cdn_paths(devices)})
     if not paths:
         await _async_write_base(hass, languages)
         return

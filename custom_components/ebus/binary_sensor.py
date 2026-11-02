@@ -30,7 +30,7 @@ class EbusAdapterSignal(CoordinatorEntity[EbusCoordinator], BinarySensorEntity):
     """Is the adapter link up and the bus alive?"""
 
     _attr_has_entity_name = True
-    _attr_name = "Signal"
+    _attr_translation_key = "adapter_signal"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 

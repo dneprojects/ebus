@@ -12,35 +12,24 @@ The scan addresses default to a typical Vaillant bus; device idents and SW/HW
 are read from the capture's own 0704 answers, so the result reflects whatever
 installation produced the log. --values also prints a sample of decoded values.
 """
+# ruff: noqa: I001 -- pure_loader must come before the aioebus imports
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import sqlite3
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-PKG = ROOT / "custom_components" / "ebus"
-# use a sibling aioebus source checkout if present, else the installed package
-_AIOEBUS_SRC = ROOT.parent / "aioebus" / "src"
-if _AIOEBUS_SRC.is_dir():
-    sys.path.insert(0, str(_AIOEBUS_SRC))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pure_loader import pure  # first: it finds aioebus (a sibling checkout if not installed)
 
-from aioebus.passive import MessageRegistry, decode_raw  # noqa: E402
-from aioebus.scan import ScanResult, decode_scan  # noqa: E402
+from aioebus.discovery import BASE_ADDRESSES, BROADCAST_ADDRESS
+from aioebus.passive import MessageRegistry, decode_raw
+from aioebus.scan import ScanResult, decode_scan
 
-# library.py imports only aioebus + stdlib, so load it by path (the package
-# __init__ would require Home Assistant). Register it so its dataclasses resolve.
-_spec = importlib.util.spec_from_file_location("ebus_library", PKG / "library.py")
-library = importlib.util.module_from_spec(_spec)
-sys.modules["ebus_library"] = library
-_spec.loader.exec_module(library)
-
-DEFAULT_SCAN = (0x08, 0x0A, 0x15, 0x18, 0x26, 0x38, 0x76, 0xF6)
-BROADCAST = 0xFE
-
+definitions = pure("definitions")
+entities = pure("entities")
 
 def _scan_devices(db: sqlite3.Connection, addrs: tuple[int, ...]) -> dict[int, ScanResult]:
     """Resolve each address from its latest 0704 answer in the capture."""
@@ -51,7 +40,7 @@ def _scan_devices(db: sqlite3.Connection, addrs: tuple[int, ...]) -> dict[int, S
             "AND s_dd!='' ORDER BY ts DESC LIMIT 1", (zz,)).fetchone()
         if row:
             devices[zz] = decode_scan(bytes.fromhex(row[0]))
-    devices[BROADCAST] = ScanResult(0, "", "Broadcast", "", "", None, None)
+    devices[BROADCAST_ADDRESS] = ScanResult(0, "", "Broadcast", "", "", None, None)
     return devices
 
 
@@ -62,14 +51,14 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--values", action="store_true", help="also print a sample of decoded values")
     args = ap.parse_args(argv)
 
-    addrs = (tuple(int(x, 16) for x in args.scan.split(",")) if args.scan else DEFAULT_SCAN)
+    addrs = (tuple(int(x, 16) for x in args.scan.split(",")) if args.scan else BASE_ADDRESSES)
     db = sqlite3.connect(args.db)
 
     devices = _scan_devices(db, addrs)
-    msgs = library.all_messages(devices)
+    msgs = definitions.all_messages(devices)
     registry = MessageRegistry(msgs)
-    reads = library.device_messages(devices, "r")
-    writes = library.device_messages(devices, "w")
+    reads = definitions.device_messages(devices, "r")
+    writes = [m for m in definitions.device_messages(devices, "w") if entities.control_of(m)]
 
     cache: dict[tuple[str, str, str], object] = {}
     hits = 0
@@ -84,7 +73,7 @@ def main(argv: list[str]) -> int:
                 cache[(msg.zz, msg.name, field)] = val
 
     print(f"devices scanned: {len(devices)}  message defs: {len(msgs)}")
-    print(f"entities the integration would create: {len(reads)} read, {len(writes)} write")
+    print(f"messages: {len(reads)} read, {len(writes)} with a control")
     print(f"telegrams decoded: {hits}; distinct values cached: {len(cache)}\n")
 
     by_zz: dict[str, int] = defaultdict(int)

@@ -22,7 +22,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
-from .library import ClimateZone, climate_zones
+from .entities import ClimateZone, climate_zones
+from .ids import zone_uid
 
 
 def _key(msg: MessageDef) -> tuple[str, str, str]:
@@ -66,6 +67,7 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    # defaults; a zone takes its setpoint register's range (index.json number_bounds)
     _attr_min_temp = 5
     _attr_max_temp = 30
     _attr_target_temperature_step = 0.5
@@ -76,7 +78,10 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         zz = int(zone.zz, 16)
         short = coordinator.data.get(_key(zone.shortname)) if zone.shortname else None
         self._attr_name = short if isinstance(short, str) and short.strip() else zone.name
-        self._attr_unique_id = coordinator.uid(zone.zz, f"z{zone.n}", "climate")
+        self._attr_unique_id = zone_uid(coordinator.uid_prefix, zone.zz, zone.n)
+        if zone.target_bounds is not None:  # the setpoint register's own range
+            (self._attr_min_temp, self._attr_max_temp,
+             self._attr_target_temperature_step) = zone.target_bounds
         self._attr_device_info = coordinator.device_info(zz)
 
         labels = _enum_labels(zone.mode_read) or _enum_labels(zone.mode_write)

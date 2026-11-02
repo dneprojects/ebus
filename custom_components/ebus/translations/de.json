@@ -1650,6 +1650,39 @@
       },
       "sensordata2_ignore": {
         "name": "Sensordaten 2 Rest"
+      },
+      "adapter_host": {
+        "name": "Host"
+      },
+      "adapter_telegrams": {
+        "name": "Telegramme"
+      },
+      "adapter_polls_answered": {
+        "name": "Abfragen beantwortet"
+      },
+      "adapter_polls_unanswered": {
+        "name": "Abfragen ohne Antwort"
+      },
+      "adapter_cached_values": {
+        "name": "Werte zwischengespeichert"
+      },
+      "adapter_wifi_signal": {
+        "name": "WLAN-Signal"
+      },
+      "adapter_uptime": {
+        "name": "Laufzeit"
+      },
+      "adapter_free_memory": {
+        "name": "Freier Speicher"
+      },
+      "ident_article": {
+        "name": "Artikelnummer"
+      },
+      "ident_serial": {
+        "name": "Seriennummer"
+      },
+      "ident_manufactured": {
+        "name": "Baujahr"
       }
     },
     "number": {
@@ -2050,6 +2083,11 @@
           "off": "Aus",
           "on": "Ein"
         }
+      }
+    },
+    "binary_sensor": {
+      "adapter_signal": {
+        "name": "Signal"
       }
     }
   }

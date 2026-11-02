@@ -15,7 +15,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .library import FLOAT_TYPES, NUMBER_TYPES, fields_of, icon_for, number_bounds
+from .entities import icon_for, number_bounds
+from .ids import control_uid
 
 _UNIT_DEFAULT = (0.0, 100.0, 1.0)  # never used for the integer types numbers take
 
@@ -30,22 +31,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
-    coordinator.remove_controls_if_read_only("number")
-    entities: list[EbusNumber] = []
-    for msg in coordinator.write_messages:
-        fields = fields_of(msg)
-        if len(fields) != 1:
-            continue  # only simple single-field writes for now
-        field = fields[0]
-        kind = field.field.type.upper()
-        if field.field.values or kind not in NUMBER_TYPES | FLOAT_TYPES:
-            continue
-        cls = coordinator.control_class(msg)
-        if cls == "none":
-            coordinator.remove_control("number", msg, field.label)
-        else:
-            entities.append(EbusNumber(coordinator, msg, field.field, field.label, cls))
-    async_add_entities(entities)
+    async_add_entities(
+        EbusNumber(coordinator, msg, field.field, field.label, cls)
+        for msg, field, cls in coordinator.controls("number"))
 
 
 class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
@@ -60,7 +48,7 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         self._msg = msg
         self._key = value_key(msg, label)
         zz = int(msg.zz, 16)
-        self._attr_unique_id = coordinator.uid(*self._key, "set")
+        self._attr_unique_id = control_uid(coordinator.uid_prefix, msg, label)
         self._attr_translation_key = translation_key(msg, field)
         self._attr_icon = icon_for(field)
         if cls == "installer":  # a configuration setting: shown only once enabled

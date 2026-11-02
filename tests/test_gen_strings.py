@@ -1,18 +1,12 @@
 """strings_gen builds per-language entity names from each definition's `tr`:
 English always has a name (technical fallback), other languages only where a
 translation exists (so HA falls back to English per user), and enum states use
-the curated table. Loaded by path -- it imports only aioebus + stdlib."""
-import importlib.util
-import sys
-from pathlib import Path
-
+the curated table. Loaded without Home Assistant (see pure_loader)."""
 from aioebus.messages import FieldDef, MessageDef
 
-_MOD = Path(__file__).resolve().parents[1] / "custom_components" / "ebus" / "strings_gen.py"
-_spec = importlib.util.spec_from_file_location("ebus_strings_gen", _MOD)
-sg = importlib.util.module_from_spec(_spec)
-sys.modules["ebus_strings_gen"] = sg
-_spec.loader.exec_module(sg)
+from pure_loader import PKG, pure
+
+sg = pure("strings_gen")
 
 
 def _msg(name, direction="r", fields=None, tr=None):
@@ -74,7 +68,7 @@ def test_curated_name_beats_upstream_label():
 
 
 def test_update_write_message_is_also_a_sensor():
-    # a 'uw' message becomes a sensor AND a select (library classifies it as both),
+    # a 'uw' message becomes a sensor AND a select (entities.control_of classifies it as both),
     # so the sensor needs its own named entry
     m = _msg("StatusCirPump", direction="uw",
              fields=[FieldDef("value", "", "UCH", None, {0: "off", 100: "on"}, "", "")])
@@ -111,7 +105,7 @@ def test_select_keeps_de_states_but_omits_english_name():
 def test_reviewed_names_cover_every_bundled_key():
     # every entity of the bundled definitions has a reviewed German name
     import json as _json
-    strings = _json.loads((_MOD.parent / "strings.json").read_text(encoding="utf-8"))
+    strings = _json.loads((PKG / "strings.json").read_text(encoding="utf-8"))
     keys = {k for platform in strings["entity"].values() for k in platform}
     sample = {"z1daytemp", "sensordata1_s1", "hwctimer_monday0_htm", "status01_temp_1"}
     assert sample <= keys
@@ -123,4 +117,7 @@ def test_reviewed_names_cover_every_bundled_key():
 def test_build_strings_includes_ui_section():
     data = sg.build_strings([], "de")
     assert data["config"]["step"]["user"]["title"] == "eBUS-Adapter"
-    assert data["entity"] == {"sensor": {}, "number": {}, "select": {}}
+    # no registers: only the fixed adapter/identification entities
+    assert set(data["entity"]["sensor"]) == set(sg.FIXED_NAMES["sensor"])
+    assert data["entity"]["number"] == {} and data["entity"]["select"] == {}
+    assert data["entity"]["binary_sensor"]["adapter_signal"]["name"] == "Signal"

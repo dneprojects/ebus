@@ -3,7 +3,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 line-length = 100
 
 [tool.ruff.lint]
@@ -14,7 +14,7 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "BLE", "RUF"]
 "tools/*" = ["E501"]  # dev scripts carry long help/config strings
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 strict = true
 warn_unreachable = true
 show_error_codes = true

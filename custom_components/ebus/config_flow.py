@@ -5,7 +5,6 @@ import asyncio
 import logging
 from typing import Any
 
-import aiohttp
 import voluptuous as vol
 from aioebus.transport import RECEIVED, EnhDecoder
 from homeassistant.config_entries import (
@@ -16,9 +15,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .adapter import fetch_status
 from .const import (
     CONF_ALLOW_WRITE,
     CONF_CONFIG_DIR,
@@ -67,13 +66,7 @@ async def _probe_adapter(host: str, port: int) -> str | None:
 async def _adapter_id(hass: HomeAssistant, host: str) -> str | None:
     """The adapter shield's own id (its MAC) from its web API, or None for an
     adapter without one. Keys the entry independently of the IP address."""
-    try:
-        async with (asyncio.timeout(3),
-                    async_get_clientsession(hass).get(f"http://{host}/api/v1/status") as resp):
-            data = await resp.json(content_type=None) if resp.status == 200 else None
-    except (TimeoutError, aiohttp.ClientError, ValueError):
-        return None
-    adapter_id = data.get("id") if isinstance(data, dict) else None
+    adapter_id = (await fetch_status(hass, host, timeout=3)).get("id")
     return adapter_id if isinstance(adapter_id, str) and adapter_id else None
 
 

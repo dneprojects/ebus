@@ -1,8 +1,9 @@
-"""Test setup: make aioebus importable from a sibling source checkout when it is
-not installed (in CI it is installed as a dependency, so this is a no-op)."""
+"""Test setup: the installed aioebus is used (CI installs the version the manifest
+requires); only when none is installed does a sibling source checkout stand in."""
 import pathlib
 import sys
 
-_aioebus_src = pathlib.Path(__file__).resolve().parent.parent / "aioebus" / "src"
-if _aioebus_src.is_dir() and str(_aioebus_src) not in sys.path:
-    sys.path.insert(0, str(_aioebus_src))
+try:
+    import aioebus  # noqa: F401
+except ImportError:
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "aioebus" / "src"))

@@ -28,8 +28,9 @@ from custom_components.ebus import climate
 from custom_components.ebus.binary_sensor import EbusAdapterSignal
 from custom_components.ebus.const import DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
+from custom_components.ebus.definitions import all_messages, device_messages
 from custom_components.ebus.device import ADAPTER_IDENTIFIER
-from custom_components.ebus.library import all_messages, device_messages, fields_of
+from custom_components.ebus.entities import fields_of
 from custom_components.ebus.sensor import EbusAdapterSensor, EbusSensor
 
 _DATA = {"host": "1.2.3.4", "port": 9999}
@@ -182,32 +183,37 @@ async def test_link_closed_during_scan_retries_setup(hass: HomeAssistant):
     assert reader.calls == 1
 
 
-async def test_link_closed_during_identification_retries_setup(hass: HomeAssistant):
+async def test_link_closed_during_discovery_retries_setup(hass: HomeAssistant):
+    # the bus was alive, then the adapter closed the link mid-discovery
     entry = _entry()
     entry.add_to_hass(hass)
-    hmu = ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)
-    ident = AsyncMock(side_effect=ConnectionResetError("closed"))
     with patch("custom_components.ebus.coordinator.asyncio.open_connection",
-               AsyncMock(return_value=_closed_link(syn=True))), \
-         patch("custom_components.ebus.coordinator.ActiveReader.scan",
-               AsyncMock(return_value=hmu)), \
-         patch("custom_components.ebus.coordinator.ActiveReader.read_identification", ident):
-        await hass.config_entries.async_setup(entry.entry_id)
+               AsyncMock(return_value=_closed_link(syn=True))):
+        async with asyncio.timeout(5):  # at once, not after every probe's timeout
+            await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert ident.called  # got as far as the identification
+
+
+def _open_link(*symbols: bytes):
+    """A link that delivers ``symbols`` and then stays open and quiet."""
+    reader = asyncio.StreamReader()
+    for symbol in symbols:
+        reader.feed_data(symbol)
+    writer = MagicMock()
+    writer.drain = AsyncMock()
+    return reader, writer
 
 
 async def test_silent_bus_retries_setup_instead_of_scanning(hass: HomeAssistant):
     # heating off: the adapter is reachable but no eBUS symbol arrives
     entry = _entry()
     entry.add_to_hass(hass)
-    writer = MagicMock()
-    writer.drain = AsyncMock()
+    reader, writer = _open_link()
     scan = AsyncMock()
     with patch("custom_components.ebus.coordinator.asyncio.open_connection",
-               AsyncMock(return_value=(asyncio.StreamReader(), writer))), \
-         patch("custom_components.ebus.coordinator._BUS_WAIT", 0.05), \
-         patch("custom_components.ebus.coordinator.ActiveReader.scan", scan):
+               AsyncMock(return_value=(reader, writer))), \
+         patch("aioebus.discovery.TRAFFIC_WAIT", 0.05), \
+         patch.object(EbusEngine, "scan", scan):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     scan.assert_not_called()
@@ -221,9 +227,8 @@ async def test_no_answer_from_known_devices_retries_setup(hass: HomeAssistant, h
     dr.async_get(hass).async_get_or_create(config_entry_id=entry.entry_id,
                                            identifiers={(DOMAIN, "08")})
     with patch("custom_components.ebus.coordinator.asyncio.open_connection",
-               AsyncMock(return_value=_closed_link(syn=True))), \
-         patch("custom_components.ebus.coordinator.ActiveReader.scan",
-               AsyncMock(side_effect=ReadError("no answer from slave"))):
+               AsyncMock(return_value=_open_link(encode_symbol(RECEIVED, SYN)))), \
+         patch.object(EbusEngine, "scan", AsyncMock(side_effect=ReadError("no answer"))):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert f"ebus_addrs_{entry.entry_id}" not in hass_storage  # nothing forgotten
@@ -249,7 +254,8 @@ async def test_values_become_unavailable_after_a_long_outage(hass: HomeAssistant
     assert coord.bus_stale and not flow.available
     # the link's own entities keep reporting (and refreshing) during the outage
     assert EbusAdapterSignal(coord).available
-    assert EbusAdapterSensor(coord, "Host", lambda c: "x", None, None, None, None).available
+    assert EbusAdapterSensor(coord, "host", "adapter_host", lambda c: "x",
+                             None, None, None, None).available
     coord.engine.stats.connected = True  # back: values are current again
     coord.data = await coord._async_update_data()
     assert coord._link_down_since is None and flow.available

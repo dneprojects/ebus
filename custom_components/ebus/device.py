@@ -1,15 +1,21 @@
 """Shared Home Assistant device info for the eBUS adapter and scanned devices."""
 from __future__ import annotations
 
+from typing import Any
+
+from aioebus import __version__ as AIOEBUS_VERSION
 from aioebus.scan import ScanResult
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .adapter import wifi
 from .const import BROADCAST_ADDRESS, DOMAIN
-from .library import device_model, device_name
+from .entities import device_model, device_name
 
 # device identifiers are unique within a config entry, so the adapter of each
 # entry is simply "adapter" -- independent of its IP address
 ADAPTER_IDENTIFIER: tuple[str, str] = (DOMAIN, "adapter")
+ADAPTER_NAME = "eBUS Adapter"
 
 
 def adapter_device_info() -> DeviceInfo:
@@ -19,7 +25,32 @@ def adapter_device_info() -> DeviceInfo:
     Deliberately minimal (identifiers + name): the coordinator registers the same
     device with the rich fields (firmware, hardware, web-UI link) from the adapter
     status, and entities must not overwrite those with placeholders here."""
-    return DeviceInfo(identifiers={ADAPTER_IDENTIFIER}, name="eBUS Adapter")
+    return DeviceInfo(identifiers={ADAPTER_IDENTIFIER}, name=ADAPTER_NAME)
+
+
+def adapter_registry_info(entry_id: str, host: str, status: dict[str, Any]) -> dict[str, Any]:
+    """Device registry fields of the adapter hub, enriched from its web status."""
+    info: dict[str, Any] = {
+        "config_entry_id": entry_id,
+        "identifiers": {ADAPTER_IDENTIFIER},
+        "name": ADAPTER_NAME,
+        "manufacturer": "eBUS",
+        "model": (f"eBUS Adapter Shield ({status['chip']})"
+                  if status.get("chip") else "Enhanced adapter"),
+        # the adapter firmware is what the user means by "firmware"; fall back
+        # to the library version when there is no web API to ask
+        "sw_version": status.get("versions") or AIOEBUS_VERSION,
+    }
+    if status.get("pcb"):
+        info["hw_version"] = status["pcb"]
+    if status.get("id"):
+        info["serial_number"] = status["id"]
+    mac = wifi(status).get("mac")
+    if isinstance(mac, str) and mac:
+        info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+    if status:  # only link a web UI we actually reached
+        info["configuration_url"] = f"http://{host}/"
+    return info
 
 
 def device_info(zz: int, scan: ScanResult | None, adapter_device_id: str | None) -> DeviceInfo:

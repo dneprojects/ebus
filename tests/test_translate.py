@@ -89,8 +89,8 @@ async def test_user_definitions_get_names_without_the_cdn(hass: HomeAssistant, t
         "direction": "r", "name": "MixerTemp", "pbsb": "b509", "id": "0d0100",
         "fields": [{"name": "value", "type": "D2C", "unit": "°C"}]}]), encoding="utf-8")
     vr70 = {0x26: ScanResult(0xB5, "Vaillant", "VR70", "0100", "0200", 100, 200)}
-    from custom_components.ebus import library
-    library.preload(vr70, user)
+    from custom_components.ebus import definitions
+    definitions.preload(vr70, user)
     fetch = AsyncMock(return_value=_CSV)
     with patch.object(translate, "_fetch", fetch):
         await translate.async_update_translations(hass, "e1", vr70, user)

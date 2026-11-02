@@ -15,29 +15,29 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Final
 
-import aiohttp
-from aioebus import __version__ as AIOEBUS_VERSION
-from aioebus.active import ActiveReader, ReadError, WriteUncertain
+from aioebus.active import ReadError, WriteUncertain
+from aioebus.discovery import BusSilent, Device, discover, identify_later, remember
 from aioebus.engine import EbusEngine, value_key
 from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
-from aioebus.scan import Identification, ScanResult, decode_identification
-from aioebus.transport import RECEIVED, EnhDecoder
+from aioebus.scan import Identification, ScanResult
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .adapter import fetch_status
 from .const import (
+    ADDRESS_STORE,
     BROADCAST_ADDRESS,
     BROADCAST_IDENT,
+    CACHE_STORE,
     CONF_ALLOW_WRITE,
     CONF_CONFIG_DIR,
     CONF_DEEP_SCAN,
@@ -46,22 +46,22 @@ from .const import (
     DEFAULT_DEEP_SCAN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    IDENT_STORE,
     PLAIN_READ_PRIORITY,
-    SCAN_ADDRESSES,
-    SCAN_ALL_ADDRESSES,
     SOURCE_ADDRESS,
+    STORE_VERSION,
 )
-from .device import ADAPTER_IDENTIFIER, device_info
-from .library import (
-    all_messages,
+from .definitions import all_messages, device_messages, preload
+from .device import ADAPTER_IDENTIFIER, adapter_registry_info, device_info
+from .entities import (
+    Field,
     climate_zones,
     control_class,
-    device_messages,
+    control_of,
     fields_of,
-    preload,
     select_polled,
-    timer_schedules,
 )
+from .ids import CONTROL_SUFFIX, control_uid, uid
 from .translate import async_update_translations
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,10 +71,8 @@ _RECV_TIMEOUT: Final = 30  # s without a single byte before the link counts as d
 _RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into one rebuild
 # pauses (s) before each runtime attempt at an identification missed at setup
 _IDENT_RETRY_DELAYS: Final = (60, 240, 600, 900, 1800)
-_CACHE_STORAGE_VERSION: Final = 1
 _CACHE_SAVE_DELAY: Final = 5  # s; throttle persisting the cache (below the
 # shortest update interval: each update re-arms the delay, a longer one never fires)
-_BUS_WAIT: Final = 10  # s for the first bus symbol before scanning
 _STALE_AFTER: Final = 600  # s without the link before values count as unavailable
 _JSON_SCALARS: Final = (str, int, float, bool, type(None))
 
@@ -119,6 +117,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._has_web = False
         self._writer: asyncio.StreamWriter | None = None
         self._supervisor: asyncio.Task[None] | None = None
+        self._link_task: asyncio.Task[None] | None = None  # the first engine run
+        self._found: dict[int, Device] = {}  # discovered devices (for late idents)
         self._base_interval = interval
         # collapses a burst of registry changes (a platform registering its
         # entities) into one poll-set rebuild
@@ -128,30 +128,30 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # persisted value cache, so entities show their last value right after a
         # restart instead of being unavailable until the bus is read again
         self._store: Store[dict[str, object]] = Store(
-            hass, _CACHE_STORAGE_VERSION, f"ebus_cache_{entry.entry_id}")
+            hass, STORE_VERSION, f"{CACHE_STORE}{entry.entry_id}")
         # addresses found beyond the known base (from a deep scan), so later setups
         # keep scanning them without repeating the full-space probe
         self._addr_store: Store[list[int]] = Store(
-            hass, _CACHE_STORAGE_VERSION, f"ebus_addrs_{entry.entry_id}")
+            hass, STORE_VERSION, f"{ADDRESS_STORE}{entry.entry_id}")
         # last identification read per device (it never changes)
         self._ident_store: Store[dict[str, Any]] = Store(
-            hass, _CACHE_STORAGE_VERSION, f"ebus_idents_{entry.entry_id}")
+            hass, STORE_VERSION, f"{IDENT_STORE}{entry.entry_id}")
         self._ident_known: dict[str, Any] = {}  # the store's content, kept current
 
     def uid(self, *parts: object) -> str:
-        """An entity unique_id scoped to this config entry."""
-        return "_".join((self.uid_prefix, *(str(p) for p in parts)))
+        """An entity unique_id scoped to this config entry (see ids.py)."""
+        return uid(self.uid_prefix, *parts)
 
     def control_class(self, msg: MessageDef) -> str:
-        """"user", "installer" or "none" for a writable register (see library)."""
+        """"user", "installer" or "none" for a writable register (see entities)."""
         return control_class(self.devices.get(int(msg.zz, 16)), msg.name)
 
     def remove_control(self, domain: str, msg: MessageDef, label: str) -> None:
         """Drop the registry entry of a control this register no longer gets
         (registered by a version before the classes existed)."""
         registry = er.async_get(self.hass)
-        uid = self.uid(*value_key(msg, label), "set")
-        if entity_id := registry.async_get_entity_id(domain, DOMAIN, uid):
+        if entity_id := registry.async_get_entity_id(
+                domain, DOMAIN, control_uid(self.uid_prefix, msg, label)):
             registry.async_remove(entity_id)
 
     @property
@@ -161,15 +161,28 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         down = self._link_down_since
         return down is not None and time.monotonic() - down > _STALE_AFTER
 
-    def remove_controls_if_read_only(self, domain: str) -> None:
-        """With writing switched off no control is provided: drop their registry
-        entries instead of leaving them as 'no longer provided' orphans."""
-        if self.allow_write:
-            return
+    def controls(self, platform: str) -> list[tuple[MessageDef, Field, str]]:
+        """The (message, field, class) of every control the platform provides. A
+        register that no longer gets one loses its registry entry, and with
+        writing switched off every control does (no 'no longer provided' orphans)."""
         registry = er.async_get(self.hass)
-        for ent in er.async_entries_for_config_entry(registry, self.config_entry.entry_id):
-            if ent.domain == domain and ent.unique_id.endswith("_set"):
-                registry.async_remove(ent.entity_id)
+        if not self.allow_write:
+            for ent in er.async_entries_for_config_entry(registry, self.config_entry.entry_id):
+                if ent.domain == platform and ent.unique_id.endswith(CONTROL_SUFFIX):
+                    registry.async_remove(ent.entity_id)
+            return []
+        out: list[tuple[MessageDef, Field, str]] = []
+        for msg in self.write_messages:
+            found = control_of(msg)
+            if found is None or found[0] != platform:
+                continue
+            field = found[1]
+            cls = self.control_class(msg)
+            if cls == "none":
+                self.remove_control(platform, msg, field.label)
+            else:
+                out.append((msg, field, cls))
+        return out
 
     def device_info(self, zz: int) -> DeviceInfo:
         """DeviceInfo for a scanned device (hanging off the adapter hub)."""
@@ -210,22 +223,12 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             raise
 
     def _close(self) -> None:
+        if self.engine is not None:
+            self.engine.stop()
+        if self._link_task is not None:
+            self._link_task.cancel()
         if self._writer is not None:
             self._writer.close()
-
-    @staticmethod
-    async def _await_bus(recv: RecvFn) -> None:
-        """Return once the adapter delivers an eBUS symbol. A silent bus (heating
-        off, half-open link) would make every probe fail slowly and the setup end
-        without devices; it retries later instead."""
-        decoder = EnhDecoder()
-        try:
-            async with asyncio.timeout(_BUS_WAIT):
-                while True:
-                    if any(code == RECEIVED for code, _ in decoder.feed(await recv())):
-                        return
-        except TimeoutError as err:
-            raise ConfigEntryNotReady("no eBUS traffic yet (is the heating on?)") from err
 
     def _known_devices(self) -> bool:
         """Whether this entry already has bus devices (from an earlier start)."""
@@ -237,38 +240,38 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
 
     async def _discover(self) -> None:
         send, recv = await self._connect()
-        await self._await_bus(recv)
-        scanner = ActiveReader(send, recv, qq=SOURCE_ADDRESS)
-        # probe the base addresses (plus any previously discovered) quickly; a deep
-        # scan instead sweeps the whole address space once, with a short per-probe
-        # timeout so absent addresses fail fast
+        # the engine runs from the start: discovery goes through it (one transaction
+        # policy), and it decodes the bus passively once the definitions are known
+        self.engine = EbusEngine(send, recv, MessageRegistry([]),
+                                 qq=SOURCE_ADDRESS, allow_write=self.allow_write)
+        self._link_task = asyncio.create_task(self.engine.run(), name="ebus-link")
         cached = await self._addr_store.async_load() or []
-        extras = {a for a in cached if isinstance(a, int)}
+        stored = await self._ident_store.async_load() or {}
         if self.deep_scan:
-            targets, timeout = sorted(set(SCAN_ALL_ADDRESSES) | extras), 1.5
-            _LOGGER.info("eBUS: deep scan of %d addresses", len(targets))
-        else:
-            targets, timeout = sorted(set(SCAN_ADDRESSES) | extras), 4.0
-        for zz in targets:
-            try:
-                self.devices[zz] = await scanner.scan(zz, timeout=timeout)
-            except ConnectionError:
-                raise  # the link dropped: retry the whole setup, not the next address
-            except Exception as err:  # noqa: BLE001 - a missing device is normal
-                _LOGGER.debug("scan %#04x failed: %s", zz, err)
-        if not self.devices and self._known_devices():
+            _LOGGER.info("eBUS: deep scan of the whole address space")
+        try:
+            found = await discover(self.engine, extra_addresses=cached, deep=self.deep_scan,
+                                   remembered=stored)
+        except BusSilent as err:
+            raise ConfigEntryNotReady("no eBUS traffic yet (is the heating on?)") from err
+        if not found.devices and self._known_devices():
             # the bus is alive but nobody answered (devices still booting): try
             # again later rather than dropping every device until a reload
             raise ConfigEntryNotReady("no eBUS device answered the scan")
-        await self._identify(scanner)
-        dropped = self._drop_duplicates()
-        # remember devices found beyond the base (after dedup), so later setups keep
-        # scanning them; a normal scan keeps one that missed this start, a deep
-        # scan (which probed every address) stores exactly what answered
-        found = set(self.devices) - set(SCAN_ADDRESSES)
-        keep = sorted((found if self.deep_scan else extras | found) - dropped)
-        if keep != sorted(extras):
-            await self._addr_store.async_save(keep)
+        self.devices = {zz: d.scan for zz, d in found.devices.items()}
+        self.idents = {zz: d.ident for zz, d in found.devices.items() if d.ident is not None}
+        self._found = found.devices
+        self._ident_known = found.remembered
+        registry = dr.async_get(self.hass)
+        for drop in found.dropped:  # a phantom address of a unit found elsewhere
+            dev = registry.async_get_device_by_identifier(
+                (DOMAIN, f"{drop:02x}"), self.config_entry.entry_id)
+            if dev is not None:
+                registry.async_remove_device(dev.id)
+        if found.extra_addresses != sorted(a for a in cached if isinstance(a, int)):
+            await self._addr_store.async_save(found.extra_addresses)
+        if found.remembered != stored:
+            await self._ident_store.async_save(found.remembered)
         if self.deep_scan:  # the option means "probe everything once": done
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options={**self.config_entry.options, CONF_DEEP_SCAN: False})
@@ -281,12 +284,12 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # (via_device_id) and the broadcast entities belong to it. Enrich it from
         # the adapter shield's own web API when present (real firmware/hardware +
         # a link straight to its web UI)
-        self.adapter_status = await self._fetch_adapter_status()
+        self.adapter_status = await fetch_status(self.hass, self.host)
         self._has_web = bool(self.adapter_status)
         self._adopt_adapter_id()
-        registry = dr.async_get(self.hass)
         self.adapter_device_id = registry.async_get_or_create(
-            **self._adapter_device_info()).id
+            **adapter_registry_info(
+                self.config_entry.entry_id, self.host, self.adapter_status)).id
         # drop the former synthetic 'Broadcast' device: its entities now live on
         # the adapter, so it lingers as an empty shell from older versions
         stale = registry.async_get_device_by_identifier(
@@ -294,7 +297,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         if stale is not None:
             registry.async_remove_device(stale.id)
         # every definition file is read now, off the event loop; from here on the
-        # library works from memory
+        # definitions come from memory
         await self.hass.async_add_executor_job(preload, self.devices, self.user_dir)
         # generate localized entity names on the user's machine from the upstream
         # CDN (never bundled): best-effort, so a CDN hiccup just leaves names English
@@ -306,10 +309,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self.read_messages = device_messages(self.devices, "r", self.user_dir)
         self.write_messages = (
             device_messages(self.devices, "w", self.user_dir) if self.allow_write else [])
-
-        registry = MessageRegistry(all_messages(self.devices, self.user_dir))
-        self.engine = EbusEngine(send, recv, registry, scheduler=self._build_scheduler(),
-                                 qq=SOURCE_ADDRESS, allow_write=self.allow_write)
+        self.engine.registry = MessageRegistry(all_messages(self.devices, self.user_dir))
+        self.engine.scheduler = self._build_scheduler()
         await self._warm_start_cache()
         # re-scope polling when one of our entities is created, enabled or disabled
         self.config_entry.async_on_unload(self._rescope.async_cancel)
@@ -322,98 +323,19 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
                      len(self.devices), len(self.read_messages), len(self.write_messages))
 
-    async def _identify(self, scanner: ActiveReader) -> None:
-        """Read the extended Vaillant identification (article/serial) -- the model
-        the shared control-board id hides. It never changes, so the last one read
-        is remembered and stands in when a device does not answer at this start
-        (a gateway busy right after a restart)."""
-        stored = await self._ident_store.async_load() or {}
-        self._ident_known = {**stored}
-        for zz, scan in list(self.devices.items()):
-            if scan.mf != 0xB5:
-                continue
-            try:
-                ident = await scanner.read_identification(zz)
-            except ConnectionError:
-                raise  # the link dropped: retry the whole setup
-            except Exception as err:  # noqa: BLE001 - optional, never block setup
-                _LOGGER.debug("ident %#04x failed: %s", zz, err)
-                ident = None
-            key = f"{zz:02x}"
-            if ident is not None:
-                self._remember_ident(zz, scan, ident)
-            elif (isinstance(prev := stored.get(key), dict) and prev.get("ident") == scan.ident
-                  and prev.get("hw") == scan.hw and prev.get("sw") == scan.sw):
-                self.idents[zz] = Identification(
-                    prev.get("article", ""), prev.get("serial", ""),
-                    prev.get("year"), prev.get("week"))
-                _LOGGER.debug("ident %#04x: using the remembered identification", zz)
-        if self._ident_known != stored:
-            await self._ident_store.async_save(self._ident_known)
-
-    def _remember_ident(self, zz: int, scan: ScanResult, ident: Identification) -> None:
-        self.idents[zz] = ident
-        self._ident_known[f"{zz:02x}"] = {
-            "ident": scan.ident, "hw": scan.hw, "sw": scan.sw, "article": ident.article,
-            "serial": ident.serial, "year": ident.year, "week": ident.week}
-
     async def _late_identify(self) -> None:
-        """Read the identification of Vaillant devices that did not answer it at
-        setup (e.g. behind a slow bus coupler) through the running engine, a few
-        times with growing pauses. Once read it is remembered for later starts."""
-        for delay in _IDENT_RETRY_DELAYS:
-            missing = [zz for zz, scan in self.devices.items()
-                       if scan.mf == 0xB5 and zz not in self.idents]
-            if not missing:
-                return
-            await asyncio.sleep(delay)
-            for zz in missing:
-                ident = await self._read_ident(zz)
-                if ident is None:
-                    continue
-                self._remember_ident(zz, self.devices[zz], ident)
-                await self._ident_store.async_save(self._ident_known)
-                _LOGGER.debug("ident %#04x read at runtime", zz)
-                self.async_update_listeners()  # the sensor platform adds its entities
-
-    async def _read_ident(self, zz: int) -> Identification | None:
+        """Read the identification of Vaillant devices that did not give it at
+        setup (e.g. behind a slow bus coupler), a few times with growing pauses.
+        Once read it is remembered for later starts."""
         if self.engine is None:
-            return None
-        try:
-            parts = [await self.engine.read_raw(zz, "b509", msgid)
-                     for msgid in ("24", "25", "26", "27")]
-        except (TimeoutError, ReadError, OSError) as err:
-            _LOGGER.debug("ident %#04x at runtime failed: %s", zz, err)
-            return None
-        return decode_identification(*parts)
-
-    def _drop_duplicates(self) -> set[int]:
-        """Drop phantom addresses: a device answering on several addresses with the
-        same serial is one physical device. Keep a known base address (else the
-        lowest) and discard the duplicates, also from the device registry."""
-        registry = dr.async_get(self.hass)
-        primary: dict[str, int] = {}
-        dropped: set[int] = set()
-        for zz in sorted(self.devices):
-            ident = self.idents.get(zz)
-            if ident is None or not ident.serial:
-                continue
-            prev = primary.get(ident.serial)
-            if prev is None:
-                primary[ident.serial] = zz
-                continue
-            drop = zz if (prev in SCAN_ADDRESSES or zz not in SCAN_ADDRESSES) else prev
-            if drop == prev:
-                primary[ident.serial] = zz
-            self.devices.pop(drop, None)
-            self.idents.pop(drop, None)
-            dropped.add(drop)
-            dev = registry.async_get_device_by_identifier(
-                (DOMAIN, f"{drop:02x}"), self.config_entry.entry_id)
-            if dev is not None:
-                registry.async_remove_device(dev.id)
-            _LOGGER.debug("eBUS: dropped duplicate %#04x (serial %s)", drop, ident.serial)
-        return dropped
+            return
+        async for device in identify_later(self.engine, self._found, _IDENT_RETRY_DELAYS):
+            assert device.ident is not None
+            self.idents[device.address] = device.ident
+            self._ident_known[f"{device.address:02x}"] = remember(device)
+            await self._ident_store.async_save(self._ident_known)
+            _LOGGER.debug("ident %#04x read at runtime", device.address)
+            self.async_update_listeners()  # the sensor platform adds its entities
 
     def _adopt_adapter_id(self) -> None:
         """Key the entry by the adapter's own id (its MAC) once it is known, so a
@@ -427,47 +349,6 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             return  # another entry already claims it; leave both untouched
         self.hass.config_entries.async_update_entry(entry, unique_id=adapter_id)
 
-    async def _fetch_adapter_status(self) -> dict[str, Any]:
-        """Best-effort read of the adapter shield's web API (eBUS Adapter Shield /
-        ebusd-ESP). Returns {} when the adapter has no web UI or is unreachable, so
-        a plain serial/Pi adapter simply gets no extra info."""
-        url = f"http://{self.host}/api/v1/status"
-        try:
-            session = async_get_clientsession(self.hass)
-            async with asyncio.timeout(5), session.get(url) as resp:
-                if resp.status != 200:
-                    return {}
-                data = await resp.json(content_type=None)
-        except (TimeoutError, aiohttp.ClientError, ValueError) as err:
-            _LOGGER.debug("eBUS: adapter web status unavailable: %s", err)
-            return {}
-        return data if isinstance(data, dict) else {}
-
-    def _adapter_device_info(self) -> dict[str, Any]:
-        """DeviceInfo kwargs for the adapter hub, enriched from its web status."""
-        st = self.adapter_status
-        info: dict[str, Any] = {
-            "config_entry_id": self.config_entry.entry_id,
-            "identifiers": {ADAPTER_IDENTIFIER},
-            "name": "eBUS Adapter",
-            "manufacturer": "eBUS",
-            "model": (f"eBUS Adapter Shield ({st['chip']})"
-                      if st.get("chip") else "Enhanced adapter"),
-            # the adapter firmware is what the user means by "firmware"; fall back
-            # to the library version when there is no web API to ask
-            "sw_version": st.get("versions") or AIOEBUS_VERSION,
-        }
-        if st.get("pcb"):
-            info["hw_version"] = st["pcb"]
-        if st.get("id"):
-            info["serial_number"] = st["id"]
-        mac = (st.get("sta") or {}).get("mac")
-        if isinstance(mac, str) and mac:
-            info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac)}
-        if st:  # only link a web UI we actually reached
-            info["configuration_url"] = f"http://{self.host}/"
-        return info
-
     def _build_scheduler(self) -> PollScheduler:
         """Poll only the read registers that back an enabled entity. Before any
         entity is registered (fresh install) poll every read, so values arrive
@@ -477,13 +358,12 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
         if not entries:
             polled: list[MessageDef] = [
-                m for m in self.read_messages if m.direction[:1] == "r"]
+                m for m in self.read_messages if m.is_polled_read]
         else:
             enabled = {e.unique_id for e in entries if e.disabled_by is None}
             polled = select_polled(
                 self.read_messages, enabled,
-                climate_zones(self.devices, self.user_dir),
-                timer_schedules(self.devices, self.user_dir), self.uid_prefix)
+                climate_zones(self.devices, self.user_dir), self.uid_prefix)
         return PollScheduler(polled, base_interval=self._base_interval,
                              default_priority=PLAIN_READ_PRIORITY)
 
@@ -516,9 +396,14 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
     async def _run_forever(self) -> None:
         """Run the engine, reconnecting with backoff if the link drops."""
         assert self.engine is not None
+        first = self._link_task  # started for discovery
         while True:
             try:
-                await self.engine.run()
+                if first is not None:
+                    first, run = None, first
+                    await run
+                else:
+                    await self.engine.run()
             except asyncio.CancelledError:
                 raise
             except Exception as err:  # noqa: BLE001 - keep the supervisor alive
@@ -563,7 +448,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         except (TimeoutError, ReadError, ValueError, OSError, NotImplementedError) as err:
             raise HomeAssistantError(f"eBUS write to {msg.name} failed: {err}") from err
         twin = next((m for m in self.read_messages if m.zz == msg.zz
-                     and m.name == msg.name and m.direction[:1] == "r"), None)
+                     and m.name == msg.name and m.is_polled_read), None)
         read_back = False
         try:
             if twin is None:
@@ -592,7 +477,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # refresh the adapter's web status for its diagnostic entities (only when
         # the adapter actually has a web UI, so a plain adapter isn't probed)
         if self._has_web:
-            self.adapter_status = await self._fetch_adapter_status()
+            self.adapter_status = await fetch_status(self.hass, self.host)
         # persist the cache (throttled) so a restart can warm-start from it
         self._store.async_delay_save(self._serialize_cache, _CACHE_SAVE_DELAY)
         return dict(self.engine.cache)
@@ -645,5 +530,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             self.engine.stop()
         if self._supervisor is not None:
             self._supervisor.cancel()
+        if self._link_task is not None:
+            self._link_task.cancel()
         if self._writer is not None:
             self._writer.close()
