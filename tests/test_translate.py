@@ -41,7 +41,7 @@ async def test_new_version_regenerates(hass: HomeAssistant, tdir):
         with patch.object(translate, "_fetch", fetch), \
              patch.object(translate, "async_get_integration",
                           AsyncMock(return_value=integration)):
-            await translate.async_update_translations(hass, _HMU, None)
+            await translate.async_update_translations(hass, "e1", _HMU, None)
 
     await run("0.3.1")
     first = fetch.await_count
@@ -50,3 +50,74 @@ async def test_new_version_regenerates(hass: HomeAssistant, tdir):
     assert fetch.await_count == first  # cached: same version, same files
     await run("0.3.2")
     assert fetch.await_count > first  # name rules may have changed: regenerate
+
+
+_CTL = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004)}
+
+
+def _keys(path) -> set[str]:
+    import json
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {k for keys in data["entity"].values() for k in keys}
+
+
+async def test_two_adapters_share_the_files(hass: HomeAssistant, tdir):
+    # each adapter's setup writes the files: the last one must keep the other's names
+    async def fetch(_session, lang, path):
+        return _CSV
+
+    with patch.object(translate, "_fetch", fetch), \
+         patch.object(translate, "async_get_integration",
+                      AsyncMock(return_value=MagicMock(version="0.6.4"))):
+        await translate.async_update_translations(hass, "a", _HMU, None)
+        hmu_keys = _keys(tdir / "en.json")
+        await translate.async_update_translations(hass, "b", _CTL, None)
+    keys = _keys(tdir / "en.json")
+    assert hmu_keys <= keys and len(keys) > len(hmu_keys)
+    translate.forget_entry(hass, "b")
+    assert set(translate._sources(hass)) == {"a"}
+
+
+async def test_user_definitions_get_names_without_the_cdn(hass: HomeAssistant, tdir, tmp_path):
+    # a device only a user definition covers has no CDN mapping: its names come
+    # from the definition, so its entities never get nameless ids
+    import json
+    (tdir / "en.json").write_text(json.dumps({"entity": {"sensor": {}}}), encoding="utf-8")
+    user = tmp_path / "user"
+    user.mkdir()
+    (user / "26.vr70.json").write_text(json.dumps([{
+        "direction": "r", "name": "MixerTemp", "pbsb": "b509", "id": "0d0100",
+        "fields": [{"name": "value", "type": "D2C", "unit": "°C"}]}]), encoding="utf-8")
+    vr70 = {0x26: ScanResult(0xB5, "Vaillant", "VR70", "0100", "0200", 100, 200)}
+    from custom_components.ebus import library
+    library.preload(vr70, user)
+    fetch = AsyncMock(return_value=_CSV)
+    with patch.object(translate, "_fetch", fetch):
+        await translate.async_update_translations(hass, "e1", vr70, user)
+    fetch.assert_not_called()
+    assert any("mixertemp" in k for k in _keys(tdir / "en.json"))
+
+
+def test_names_from_definitions_only_fill_gaps(tdir):
+    # a CDN-generated file stays as it is; only the missing name is added
+    import json
+    current = {"title": "eBUS", "entity": {"sensor": {"flowtemp": {"name": "Vorlauf (CDN)"}}}}
+    (tdir / "de.json").write_text(json.dumps(current), encoding="utf-8")
+    base = {"entity": {"sensor": {"flowtemp": {"name": "FlowTemp"},
+                                  "mixertemp": {"name": "MixerTemp"}}}}
+    assert translate._write_base_if_needed({"de": base})
+    data = json.loads((tdir / "de.json").read_text(encoding="utf-8"))
+    assert data["title"] == "eBUS"
+    assert data["entity"]["sensor"] == {"flowtemp": {"name": "Vorlauf (CDN)"},
+                                        "mixertemp": {"name": "MixerTemp"}}
+    assert not translate._write_base_if_needed({"de": base})  # nothing missing now
+
+
+def test_unwritable_translation_dir_is_quiet(tdir, monkeypatch):
+    from homeassistant.util.file import WriteError
+
+    def fail(*_a, **_k):
+        raise WriteError("read-only")
+
+    monkeypatch.setattr(translate, "write_utf8_file_atomic", fail)
+    assert translate._write_files({"en": {}}, "sig") is False

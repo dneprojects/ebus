@@ -114,7 +114,8 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema({
             vol.Required(CONF_HOST): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+                int, vol.Range(min=1, max=65535)),
             vol.Required(CONF_ALLOW_WRITE, default=DEFAULT_ALLOW_WRITE): bool,
         })
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

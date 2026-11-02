@@ -20,6 +20,7 @@ from .const import BROADCAST_ADDRESS, DOMAIN, STORE_PREFIXES
 from .coordinator import EbusCoordinator
 from .device import ADAPTER_IDENTIFIER
 from .library import bundled_control_class, renamed_unique_id, retired_unique_id
+from .translate import forget_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,6 +188,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> boo
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         await entry.runtime_data.async_shutdown()
+        forget_entry(hass, entry.entry_id)
     return unloaded
 
 
@@ -224,7 +226,9 @@ async def async_remove_config_entry_device(
 
     The adapter and every scanned device are kept; anything else (e.g. the former
     synthetic 'Broadcast' device, now folded into the adapter) may be removed."""
-    coordinator = entry.runtime_data
+    coordinator = getattr(entry, "runtime_data", None)
+    if coordinator is None:  # not loaded (adapter offline): the bus cannot vouch
+        return not (device.identifiers & {ADAPTER_IDENTIFIER})
     kept = {ADAPTER_IDENTIFIER}
     kept |= {
         (DOMAIN, f"{zz:02x}")

@@ -21,6 +21,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
+    coordinator.remove_controls_if_read_only("select")
     entities: list[EbusSelect] = []
     for msg in coordinator.write_messages:
         fields = fields_of(msg)
@@ -57,6 +58,10 @@ class EbusSelect(CoordinatorEntity[EbusCoordinator], SelectEntity):
             self._attr_entity_registry_enabled_default = False
         self._attr_options = list(dict.fromkeys(field.values.values()))
         self._attr_device_info = coordinator.device_info(zz)
+
+    @property
+    def available(self) -> bool:
+        return super().available and not self.coordinator.bus_stale
 
     @property
     def current_option(self) -> str | None:

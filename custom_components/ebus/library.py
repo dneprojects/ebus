@@ -7,6 +7,7 @@ sensor, a number or a select) and small presentation helpers (icons).
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass, replace
 from functools import cache
@@ -20,6 +21,7 @@ from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
 from aioebus.translations import localized
 
+_LOGGER = logging.getLogger(__name__)
 _CONFIG_DIR: Final = Path(__file__).parent / "configs" / "vaillant"
 
 # numeric field types that can be written as a Home Assistant number
@@ -264,7 +266,12 @@ def _user_messages(ident: str, hw: str, user_dir: str) -> tuple[MessageDef, ...]
     p = resolve_user_file(scan, Path(user_dir))
     if p is None:
         return ()
-    return tuple(from_dicts(json.loads(p.read_text(encoding="utf-8"))))
+    try:
+        return tuple(from_dicts(json.loads(p.read_text(encoding="utf-8"))))
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as err:
+        # one broken file costs its device, never the whole entry
+        _LOGGER.warning("eBUS: definition file %s skipped: %s", p.name, err)
+        return ()
 
 
 def preload(devices: dict[int, ScanResult], user_dir: Path | None = None) -> None:

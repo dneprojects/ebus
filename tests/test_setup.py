@@ -3,15 +3,18 @@ pytest-homeassistant-custom-component; skipped where Home Assistant is not
 installed)."""
 import asyncio
 import contextlib
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
+from aioebus.active import ReadError
 from aioebus.engine import EbusEngine
 from aioebus.passive import MessageRegistry
 from aioebus.scan import ScanResult
+from aioebus.transport import RECEIVED, SYN, encode_symbol
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sensor.recorder import DEFAULT_STATISTICS
 from homeassistant.config_entries import ConfigEntryState
@@ -22,11 +25,12 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ebus import climate
+from custom_components.ebus.binary_sensor import EbusAdapterSignal
 from custom_components.ebus.const import DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
 from custom_components.ebus.device import ADAPTER_IDENTIFIER
 from custom_components.ebus.library import all_messages, device_messages, fields_of
-from custom_components.ebus.sensor import EbusSensor
+from custom_components.ebus.sensor import EbusAdapterSensor, EbusSensor
 
 _DATA = {"host": "1.2.3.4", "port": 9999}
 
@@ -141,8 +145,10 @@ async def test_unreachable_adapter_retries_setup(hass: HomeAssistant):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-def _closed_link():
+def _closed_link(syn: bool = False):
     reader = asyncio.StreamReader()
+    if syn:  # the bus was alive before the drop
+        reader.feed_data(encode_symbol(RECEIVED, SYN))
     reader.feed_eof()  # the adapter closed the connection
     writer = MagicMock()
     writer.drain = AsyncMock()
@@ -180,14 +186,96 @@ async def test_link_closed_during_identification_retries_setup(hass: HomeAssista
     entry = _entry()
     entry.add_to_hass(hass)
     hmu = ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)
+    ident = AsyncMock(side_effect=ConnectionResetError("closed"))
     with patch("custom_components.ebus.coordinator.asyncio.open_connection",
-               AsyncMock(return_value=_closed_link())), \
+               AsyncMock(return_value=_closed_link(syn=True))), \
          patch("custom_components.ebus.coordinator.ActiveReader.scan",
                AsyncMock(return_value=hmu)), \
-         patch("custom_components.ebus.coordinator.ActiveReader.read_identification",
-               AsyncMock(side_effect=ConnectionResetError("closed"))):
+         patch("custom_components.ebus.coordinator.ActiveReader.read_identification", ident):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert ident.called  # got as far as the identification
+
+
+async def test_silent_bus_retries_setup_instead_of_scanning(hass: HomeAssistant):
+    # heating off: the adapter is reachable but no eBUS symbol arrives
+    entry = _entry()
+    entry.add_to_hass(hass)
+    writer = MagicMock()
+    writer.drain = AsyncMock()
+    scan = AsyncMock()
+    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
+               AsyncMock(return_value=(asyncio.StreamReader(), writer))), \
+         patch("custom_components.ebus.coordinator._BUS_WAIT", 0.05), \
+         patch("custom_components.ebus.coordinator.ActiveReader.scan", scan):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    scan.assert_not_called()
+    writer.close.assert_called()
+
+
+async def test_no_answer_from_known_devices_retries_setup(hass: HomeAssistant, hass_storage):
+    # the bus is alive but its devices are still booting: keep them, try again
+    entry = _entry()
+    entry.add_to_hass(hass)
+    dr.async_get(hass).async_get_or_create(config_entry_id=entry.entry_id,
+                                           identifiers={(DOMAIN, "08")})
+    with patch("custom_components.ebus.coordinator.asyncio.open_connection",
+               AsyncMock(return_value=_closed_link(syn=True))), \
+         patch("custom_components.ebus.coordinator.ActiveReader.scan",
+               AsyncMock(side_effect=ReadError("no answer from slave"))):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert f"ebus_addrs_{entry.entry_id}" not in hass_storage  # nothing forgotten
+    assert dr.async_get(hass).async_get_device_by_identifier((DOMAIN, "08"), entry.entry_id)
+
+
+async def test_values_become_unavailable_after_a_long_outage(hass: HomeAssistant):
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.devices = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
+    field = next(f for m in device_messages(coord.devices, "r") for f in fields_of(m)
+                 if m.name == "EnergyGeneratedHc")
+    flow = EbusSensor(coord, field)
+    coord.engine = EbusEngine(AsyncMock(), AsyncMock(), MessageRegistry([]))
+    coord.engine.cache[flow._key] = 35.0
+    coord.engine.stats.connected = False
+    coord._link_down_since = time.monotonic() - 300
+    coord.data = await coord._async_update_data()
+    assert flow.available and not coord.bus_stale
+    coord._link_down_since = time.monotonic() - 601
+    coord.data = await coord._async_update_data()  # the update itself still succeeds
+    assert coord.bus_stale and not flow.available
+    # the link's own entities keep reporting (and refreshing) during the outage
+    assert EbusAdapterSignal(coord).available
+    assert EbusAdapterSensor(coord, "Host", lambda c: "x", None, None, None, None).available
+    coord.engine.stats.connected = True  # back: values are current again
+    coord.data = await coord._async_update_data()
+    assert coord._link_down_since is None and flow.available
+
+
+async def test_supervisor_marks_when_the_link_went_down(hass: HomeAssistant):
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    opener = AsyncMock(side_effect=lambda *a, **k: _closed_link())
+    with patch("custom_components.ebus.coordinator.asyncio.open_connection", opener), \
+         patch("custom_components.ebus.coordinator._RECONNECT_BACKOFF", 0):
+        send, recv = await coord._connect()
+        coord.engine = EbusEngine(send, recv, MessageRegistry([]))
+        task = hass.async_create_task(coord._run_forever())
+        async with asyncio.timeout(2):
+            while opener.call_count < 3:
+                await asyncio.sleep(0.01)
+        first = coord._link_down_since
+        async with asyncio.timeout(2):
+            while opener.call_count < 5:
+                await asyncio.sleep(0.01)
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    assert first is not None and coord._link_down_since == first  # the outage start
 
 
 async def test_recv_raises_on_eof(hass: HomeAssistant):
@@ -318,3 +406,23 @@ async def test_climate_zone_added_once_its_data_arrives(hass: HomeAssistant):
     assert [e.unique_id for e in added] == [f"{entry.entry_id}_15_z1_climate"]
     coord.async_set_updated_data({("15", "Z1RoomTemp", "Z1RoomTemp"): 21.0})
     assert len(added) == 1  # added once, not on every update
+
+
+async def test_stale_device_can_be_removed_while_the_entry_is_not_loaded(hass: HomeAssistant):
+    from custom_components.ebus import async_remove_config_entry_device
+    entry = _entry()
+    entry.add_to_hass(hass)  # never set up: no runtime data
+    devices = dr.async_get(hass)
+    stale = devices.async_get_or_create(config_entry_id=entry.entry_id,
+                                        identifiers={(DOMAIN, "fe")})
+    adapter = devices.async_get_or_create(config_entry_id=entry.entry_id,
+                                          identifiers={ADAPTER_IDENTIFIER})
+    assert await async_remove_config_entry_device(hass, entry, stale)
+    assert not await async_remove_config_entry_device(hass, entry, adapter)
+
+
+def test_cache_save_fires_between_the_fastest_updates():
+    # each update re-arms the delayed save: a delay above the shortest interval
+    # (10 s, options flow) would postpone it forever
+    from custom_components.ebus import coordinator
+    assert coordinator._CACHE_SAVE_DELAY < 10

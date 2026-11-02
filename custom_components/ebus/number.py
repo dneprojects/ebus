@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from aioebus.codecs import _NUMERIC, make_codec
+from aioebus.codecs import value_range
 from aioebus.engine import value_key
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.translations import translation_key
@@ -17,24 +17,20 @@ from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
 from .library import FLOAT_TYPES, NUMBER_TYPES, fields_of, icon_for, number_bounds
 
+_UNIT_DEFAULT = (0.0, 100.0, 1.0)  # never used for the integer types numbers take
+
 
 def _bounds(field: FieldDef) -> tuple[float, float, float]:
-    """Rough (min, max, step) for an integer field from its type + divisor."""
-    codec = make_codec(field.type)
-    size = codec.length
-    base_div = getattr(codec, "base_div", 1)
-    extra = field.divisor if field.divisor and field.divisor > 0 else 1
-    scale = base_div * extra
-    signed = _NUMERIC.get(field.type.upper(), (0, False))[1]
-    raw_max = (1 << (8 * size - (1 if signed else 0))) - 2
-    lo = -(raw_max + 1) / scale if signed else 0.0
-    return (lo, raw_max / scale, round(1 / scale, 4))
+    """(min, max, step) an integer field can carry, from its type + divisor."""
+    lo, hi, step = value_range(field.type, field.divisor) or _UNIT_DEFAULT
+    return (lo, hi, round(step, 4))
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
+    coordinator.remove_controls_if_read_only("number")
     entities: list[EbusNumber] = []
     for msg in coordinator.write_messages:
         fields = fields_of(msg)
@@ -78,6 +74,10 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         if field.unit:
             self._attr_native_unit_of_measurement = field.unit
         self._attr_device_info = coordinator.device_info(zz)
+
+    @property
+    def available(self) -> bool:
+        return super().available and not self.coordinator.bus_stale
 
     @property
     def native_value(self) -> float | None:

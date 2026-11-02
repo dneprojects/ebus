@@ -179,7 +179,8 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
 
     @property
     def available(self) -> bool:
-        return super().available and self._key in self.coordinator.data
+        return (super().available and not self.coordinator.bus_stale
+                and self._key in self.coordinator.data)
 
 
 class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):

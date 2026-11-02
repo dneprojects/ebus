@@ -12,6 +12,7 @@ pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.active import ReadError
 from aioebus.scan import Identification, ScanResult
+from aioebus.transport import RECEIVED, SYN, encode_symbol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -27,6 +28,11 @@ _GW = ScanResult(0xB5, "Vaillant", "NETX3", "0130", "0404", 130, 404)
 @pytest.fixture(autouse=True)
 def _enable(enable_custom_integrations):
     yield
+
+
+def _live_bus() -> AsyncMock:
+    """recv of a bus that is alive: SYN symbols (the scanner itself is mocked)."""
+    return AsyncMock(return_value=encode_symbol(RECEIVED, SYN))
 
 
 def _coord(hass: HomeAssistant, **options) -> EbusCoordinator:
@@ -75,7 +81,7 @@ async def test_normal_scan_keeps_extras_that_miss_one_start(hass: HomeAssistant)
     scanner = MagicMock()
     scanner.scan = AsyncMock(side_effect=scan)
     scanner.read_identification = AsyncMock(return_value=None)
-    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), AsyncMock()))), \
+    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), _live_bus()))), \
          patch("custom_components.ebus.coordinator.ActiveReader", return_value=scanner), \
          patch.object(coord, "_fetch_adapter_status", AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
@@ -95,9 +101,13 @@ async def test_full_setup_uses_current_registry_apis(hass: HomeAssistant, caplog
                             version=1, minor_version=4)
     entry.add_to_hass(hass)
     idle = asyncio.Event()
+    first = [True]
 
     async def recv() -> bytes:
-        await idle.wait()  # a bus that stays silent for the test
+        if first[0]:  # one SYN shows the bus is alive, then it stays silent
+            first[0] = False
+            return encode_symbol(RECEIVED, SYN)
+        await idle.wait()
         return b""
 
     scanner = MagicMock()
@@ -180,9 +190,9 @@ async def test_partial_cdn_fetch_is_not_remembered(hass: HomeAssistant, tdir):
     with patch.object(translate, "_fetch", fetch), \
          patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
         first = len(calls)
-        await translate.async_update_translations(hass, {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
     assert (tdir / "en.json").exists()
     assert len(calls) == 2 * first  # fetched again: the gap is not kept
 
@@ -199,9 +209,9 @@ async def test_language_the_cdn_lacks_is_not_refetched(hass: HomeAssistant, tdir
     with patch.object(translate, "_fetch", fetch), \
          patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
         first = len(calls)
-        await translate.async_update_translations(hass, {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
     assert first and len(calls) == first  # remembered: no fetch on the second start
 
 
@@ -224,7 +234,7 @@ async def test_deep_scan_drops_addresses_nothing_answers_on(hass: HomeAssistant)
     scanner.scan = AsyncMock(side_effect=lambda zz, timeout: _HMU if zz == 0x08
                              else (_ for _ in ()).throw(ReadError("no answer")))
     scanner.read_identification = AsyncMock(return_value=None)
-    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), AsyncMock()))), \
+    with patch.object(coord, "_connect", AsyncMock(return_value=(AsyncMock(), _live_bus()))), \
          patch("custom_components.ebus.coordinator.ActiveReader", return_value=scanner), \
          patch.object(coord, "_fetch_adapter_status", AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
@@ -324,8 +334,11 @@ async def test_slow_cdn_does_not_hold_up_setup(hass: HomeAssistant, tdir, monkey
          patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
         async with asyncio.timeout(1):
-            await translate.async_update_translations(hass, {0x08: _HMU}, None)
-    assert not (tdir / "en.json").exists()
+            await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
+    # names from the definitions meanwhile, without a signature: the next start
+    # fetches the CDN again
+    assert (tdir / "en.json").exists()
+    assert (tdir / ".ebus_gen").read_text(encoding="utf-8").startswith("\n")
 
 
 async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
@@ -336,3 +349,15 @@ async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
     translate._clear_cache(hass)
     assert cache.cache_data.loaded["en"] == {"other"}
     assert cache.cache_data.cache["en"]["entity"] == {"other": {"b": "2"}}
+
+
+async def test_broken_user_file_costs_only_its_device(tmp_path, caplog):
+    from custom_components.ebus import library
+    dev = {0x26: ScanResult(0xB5, "Vaillant", "VR71X", "0000", "0000", 0, 0)}
+    (tmp_path / "26.vr71x.json").write_text('[{"name": "NoDirection"}]', encoding="utf-8")
+    library.preload(dev, tmp_path)
+    assert library.all_messages(dev, tmp_path) == []
+    assert "26.vr71x.json" in caplog.text
+    (tmp_path / "26.vr71x.json").write_text("{not json", encoding="utf-8")
+    library.preload(dev, tmp_path)
+    assert library.all_messages(dev, tmp_path) == []

@@ -15,6 +15,7 @@ import asyncio
 import hashlib
 import json
 import logging
+from dataclasses import replace
 from pathlib import Path
 
 import aiohttp
@@ -24,6 +25,7 @@ from aioebus.scan import ScanResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
+from homeassistant.util.file import WriteError, write_utf8_file_atomic
 
 from . import strings_gen
 from .const import DOMAIN
@@ -80,12 +82,46 @@ def _marker_matches(sig: str, languages: list[str]) -> bool:
         return False
 
 
-def _write_files(files: dict[str, dict], sig: str) -> None:
-    _TDIR.mkdir(exist_ok=True)
+def _write_files(files: dict[str, dict], sig: str) -> bool:
+    # atomic: Home Assistant may read a translation file at any moment
+    try:
+        _TDIR.mkdir(exist_ok=True)
+        for lang, data in files.items():
+            write_utf8_file_atomic(
+                str(_TDIR / f"{lang}.json"), json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        write_utf8_file_atomic(str(_MARKER), f"{sig}\n{_files_digest(sorted(files))}\n")
+    except (OSError, WriteError) as err:  # e.g. a read-only install: names stay as shipped
+        _LOGGER.debug("eBUS: translation files not written: %s", err)
+        return False
+    return True
+
+
+def _with_missing_names(files: dict[str, dict]) -> dict[str, dict] | None:
+    """The current translation files plus the entity names they lack (e.g. for a
+    device from a user definition, which no shipped file covers); names already
+    there, such as CDN text, are kept. None when nothing is missing."""
+    merged: dict[str, dict] = {}
+    changed = False
     for lang, data in files.items():
-        (_TDIR / f"{lang}.json").write_text(
-            json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    _MARKER.write_text(f"{sig}\n{_files_digest(sorted(files))}\n", encoding="utf-8")
+        try:
+            current = json.loads((_TDIR / f"{lang}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            merged[lang], changed = data, True
+            continue
+        have = current.setdefault("entity", {})
+        for platform, keys in data.get("entity", {}).items():
+            names = have.setdefault(platform, {})
+            for key, value in keys.items():
+                if key not in names:
+                    names[key], changed = value, True
+        merged[lang] = current
+    return merged if changed else None
+
+
+def _write_base_if_needed(files: dict[str, dict]) -> bool:
+    merged = _with_missing_names(files)
+    # no signature: the next start fetches the CDN again
+    return merged is not None and _write_files(merged, "")
 
 
 def _clear_cache(hass: HomeAssistant) -> None:
@@ -108,17 +144,45 @@ def _clear_cache(hass: HomeAssistant) -> None:
         _LOGGER.debug("eBUS: could not clear translation cache: %s", err)
 
 
+_DATA_KEY = f"{DOMAIN}_translation_sources"
+
+type _Sources = dict[str, tuple[dict[int, ScanResult], Path | None]]
+
+
+def _sources(hass: HomeAssistant) -> _Sources:
+    """The scanned devices of every loaded entry (the files are shared by all)."""
+    sources: _Sources = hass.data.setdefault(_DATA_KEY, {})
+    return sources
+
+
+def _all_defs(hass: HomeAssistant) -> list:
+    return [m for devices, user_dir in _sources(hass).values()
+            for m in all_messages(devices, user_dir)]
+
+
 async def async_update_translations(
-    hass: HomeAssistant, devices: dict[int, ScanResult], user_dir: Path | None
+    hass: HomeAssistant, entry_id: str, devices: dict[int, ScanResult], user_dir: Path | None
 ) -> None:
-    """Fetch upstream display text for the scanned devices and write local
-    translation files. Best-effort: a device with no CDN mapping, or an
-    unreachable CDN, simply leaves names in English."""
-    paths = _cdn_paths(devices)
-    if not paths:
-        return
+    """Fetch upstream display text for the scanned devices of every adapter and
+    write local translation files (they are shared by all entries). Best-effort:
+    without CDN text the names come from the definitions themselves."""
+    _sources(hass)[entry_id] = (devices, user_dir)
+    lock: asyncio.Lock = hass.data.setdefault(f"{_DATA_KEY}_lock", asyncio.Lock())
+    async with lock:  # one writer at a time; each run covers every entry
+        await _async_update(hass)
+
+
+def forget_entry(hass: HomeAssistant, entry_id: str) -> None:
+    _sources(hass).pop(entry_id, None)
+
+
+async def _async_update(hass: HomeAssistant) -> None:
     languages = sorted({hass.config.language or "en", "en"})
-    defs = all_messages(devices, user_dir)
+    paths = sorted({p for devices, _ in _sources(hass).values() for p in _cdn_paths(devices)})
+    if not paths:
+        await _async_write_base(hass, languages)
+        return
+    defs = _all_defs(hass)
     version = (await async_get_integration(hass, DOMAIN)).version
     # Cache key (not security): regenerate when the schema, the integration
     # version (the name rules in strings_gen change with it), languages, CDN
@@ -137,22 +201,40 @@ async def async_update_translations(
             texts = await asyncio.gather(*(_fetch(session, lang, path) for lang, path in jobs))
     except TimeoutError:
         _LOGGER.debug("eBUS: CDN too slow, names stay as they are for now")
+        await _async_write_base(hass, languages)
         return
     by_lang: dict[str, list] = {}
     for (lang, _path), text in zip(jobs, texts, strict=True):
         if text:
             by_lang.setdefault(lang, []).extend(parse_csv(text))
     if "en" not in by_lang:  # the English base must be present
+        await _async_write_base(hass, languages)
         return
 
-    defs = all_messages(devices, user_dir)
+    # fresh copies: attaching texts must not touch the cached definitions
+    defs = [_copy(m) for m in _all_defs(hass)]
     attach_translations(defs, by_lang)
     files = {lang: strings_gen.build_strings(defs, lang) for lang in languages}
     # only a complete fetch is remembered: after one the CDN could not fully
     # serve (unreachable, timed out) the next start tries again instead of
     # keeping the gap; a file it does not have at all is final
     complete = all(text is not None for text in texts)
-    await hass.async_add_executor_job(_write_files, files, sig if complete else "")
+    if not await hass.async_add_executor_job(_write_files, files, sig if complete else ""):
+        return
     _clear_cache(hass)
     _LOGGER.info("eBUS: generated %s translations from %d CDN file(s)",
                  "/".join(languages), len(paths))
+
+
+def _copy(msg):
+    return replace(msg, fields=[replace(f) for f in msg.fields])
+
+
+async def _async_write_base(hass: HomeAssistant, languages: list[str]) -> None:
+    """Without CDN text, make sure every entity still has a name: write the names
+    the definitions themselves give, but only where a current file lacks one."""
+    defs = _all_defs(hass)
+    files = {lang: strings_gen.build_strings(defs, lang) for lang in languages}
+    if await hass.async_add_executor_job(_write_base_if_needed, files):
+        _clear_cache(hass)
+        _LOGGER.info("eBUS: wrote %s names from the definitions", "/".join(languages))

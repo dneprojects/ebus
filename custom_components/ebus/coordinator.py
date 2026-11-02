@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from pathlib import Path
@@ -22,6 +23,7 @@ from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
 from aioebus.scan import Identification, ScanResult, decode_identification
+from aioebus.transport import RECEIVED, EnhDecoder
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -70,8 +72,10 @@ _RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into on
 # pauses (s) before each runtime attempt at an identification missed at setup
 _IDENT_RETRY_DELAYS: Final = (60, 240, 600, 900, 1800)
 _CACHE_STORAGE_VERSION: Final = 1
-_CACHE_SAVE_DELAY: Final = 20  # s; throttle persisting the cache (below the
-# poll interval so the delayed write actually fires between updates)
+_CACHE_SAVE_DELAY: Final = 5  # s; throttle persisting the cache (below the
+# shortest update interval: each update re-arms the delay, a longer one never fires)
+_BUS_WAIT: Final = 10  # s for the first bus symbol before scanning
+_STALE_AFTER: Final = 600  # s without the link before values count as unavailable
 _JSON_SCALARS: Final = (str, int, float, bool, type(None))
 
 type SendFn = Callable[[bytes], Awaitable[None]]
@@ -111,6 +115,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # on the same bus addresses) never collide
         self.uid_prefix = entry.entry_id
         self._link_lost_logged = False
+        self._link_down_since: float | None = None  # monotonic; None while up
         self._has_web = False
         self._writer: asyncio.StreamWriter | None = None
         self._supervisor: asyncio.Task[None] | None = None
@@ -149,6 +154,23 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         if entity_id := registry.async_get_entity_id(domain, DOMAIN, uid):
             registry.async_remove(entity_id)
 
+    @property
+    def bus_stale(self) -> bool:
+        """The link has been down too long for the last bus values to count as
+        current: entities showing them are unavailable (the adapter's own are not)."""
+        down = self._link_down_since
+        return down is not None and time.monotonic() - down > _STALE_AFTER
+
+    def remove_controls_if_read_only(self, domain: str) -> None:
+        """With writing switched off no control is provided: drop their registry
+        entries instead of leaving them as 'no longer provided' orphans."""
+        if self.allow_write:
+            return
+        registry = er.async_get(self.hass)
+        for ent in er.async_entries_for_config_entry(registry, self.config_entry.entry_id):
+            if ent.domain == domain and ent.unique_id.endswith("_set"):
+                registry.async_remove(ent.entity_id)
+
     def device_info(self, zz: int) -> DeviceInfo:
         """DeviceInfo for a scanned device (hanging off the adapter hub)."""
         return device_info(zz, self.devices.get(zz), self.adapter_device_id)
@@ -180,13 +202,42 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         try:
             await self._discover()
         except (OSError, TimeoutError) as err:
-            if self._writer is not None:
-                self._writer.close()
+            self._close()
             raise ConfigEntryNotReady(
                 f"eBUS adapter {self.host}:{self.port} not reachable: {err}") from err
+        except BaseException:
+            self._close()
+            raise
+
+    def _close(self) -> None:
+        if self._writer is not None:
+            self._writer.close()
+
+    @staticmethod
+    async def _await_bus(recv: RecvFn) -> None:
+        """Return once the adapter delivers an eBUS symbol. A silent bus (heating
+        off, half-open link) would make every probe fail slowly and the setup end
+        without devices; it retries later instead."""
+        decoder = EnhDecoder()
+        try:
+            async with asyncio.timeout(_BUS_WAIT):
+                while True:
+                    if any(code == RECEIVED for code, _ in decoder.feed(await recv())):
+                        return
+        except TimeoutError as err:
+            raise ConfigEntryNotReady("no eBUS traffic yet (is the heating on?)") from err
+
+    def _known_devices(self) -> bool:
+        """Whether this entry already has bus devices (from an earlier start)."""
+        registry = dr.async_get(self.hass)
+        return any(
+            domain == DOMAIN and ident != ADAPTER_IDENTIFIER[1]
+            for dev in dr.async_entries_for_config_entry(registry, self.config_entry.entry_id)
+            for domain, ident in dev.identifiers)
 
     async def _discover(self) -> None:
         send, recv = await self._connect()
+        await self._await_bus(recv)
         scanner = ActiveReader(send, recv, qq=SOURCE_ADDRESS)
         # probe the base addresses (plus any previously discovered) quickly; a deep
         # scan instead sweeps the whole address space once, with a short per-probe
@@ -205,6 +256,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 raise  # the link dropped: retry the whole setup, not the next address
             except Exception as err:  # noqa: BLE001 - a missing device is normal
                 _LOGGER.debug("scan %#04x failed: %s", zz, err)
+        if not self.devices and self._known_devices():
+            # the bus is alive but nobody answered (devices still booting): try
+            # again later rather than dropping every device until a reload
+            raise ConfigEntryNotReady("no eBUS device answered the scan")
         await self._identify(scanner)
         dropped = self._drop_duplicates()
         # remember devices found beyond the base (after dedup), so later setups keep
@@ -244,7 +299,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # generate localized entity names on the user's machine from the upstream
         # CDN (never bundled): best-effort, so a CDN hiccup just leaves names English
         try:
-            await async_update_translations(self.hass, self.devices, self.user_dir)
+            await async_update_translations(
+                self.hass, self.config_entry.entry_id, self.devices, self.user_dir)
         except Exception as err:  # noqa: BLE001 - names are cosmetic, never block setup
             _LOGGER.debug("eBUS: translation generation skipped: %s", err)
         self.read_messages = device_messages(self.devices, "r", self.user_dir)
@@ -467,6 +523,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 raise
             except Exception as err:  # noqa: BLE001 - keep the supervisor alive
                 _LOGGER.debug("engine stopped: %s", err)
+            if self._link_down_since is None:
+                self._link_down_since = time.monotonic()
             # once per outage (a bus without SYN generator, e.g. heating off, would
             # otherwise log every ~40 s); _async_update_data logs the recovery
             self._log_once("eBUS: link to %s:%s lost, reconnecting", self.host, self.port)
@@ -529,6 +587,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         if self._link_lost_logged and self.engine.stats.connected:
             _LOGGER.info("eBUS: link to %s:%s restored", self.host, self.port)
             self._link_lost_logged = False
+        if self.engine.stats.connected:
+            self._link_down_since = None
         # refresh the adapter's web status for its diagnostic entities (only when
         # the adapter actually has a web UI, so a plain adapter isn't probed)
         if self._has_web:

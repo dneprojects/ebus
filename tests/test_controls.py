@@ -224,3 +224,34 @@ async def test_identification_read_later_adds_its_sensors_once(hass: HomeAssista
     assert len(added) == once  # not added again on later updates
     uids = {e.unique_id for e in added[before:]}
     assert {coord.uid("15", "artikelnummer"), coord.uid("15", "seriennummer")} <= uids
+
+
+async def test_switching_writes_off_drops_the_controls(hass: HomeAssistant):
+    coord, entry = _coordinator(hass)
+    coord.allow_write = False
+    coord.write_messages = []
+    reg = er.async_get(hass)
+    ctl = reg.async_get_or_create("number", DOMAIN, f"{entry.entry_id}_15_HwcLockTime_HwcLockTime_set",
+                                  config_entry=entry).entity_id
+    sel = reg.async_get_or_create("select", DOMAIN, f"{entry.entry_id}_15_HwcOpMode_HwcOpMode_set",
+                                  config_entry=entry).entity_id
+    reading = reg.async_get_or_create("sensor", DOMAIN, f"{entry.entry_id}_15_HwcOpMode_HwcOpMode",
+                                      config_entry=entry).entity_id
+    await number.async_setup_entry(hass, entry, lambda ents: None)
+    await select.async_setup_entry(hass, entry, lambda ents: None)
+    assert reg.async_get(ctl) is None and reg.async_get(sel) is None
+    assert reg.async_get(reading) is not None
+
+
+def test_integer_ranges_follow_the_type():
+    from aioebus.messages import FieldDef
+
+    from custom_components.ebus.number import _bounds
+
+    def field(type_, divisor=None):
+        return FieldDef("value", "", type_, divisor, None, "", "")
+
+    assert _bounds(field("SCH")) == (-127, 127, 1)
+    assert _bounds(field("SIN")) == (-32767, 32767, 1)
+    assert _bounds(field("UCH", -10)) == (0, 2540, 10)  # a negative divisor multiplies
+    assert _bounds(field("D1C")) == (0, 100.0, 0.5)

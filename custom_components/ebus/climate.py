@@ -108,6 +108,10 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
                 feature |= ClimateEntityFeature.PRESET_MODE
         self._attr_supported_features = feature
 
+    @property
+    def available(self) -> bool:
+        return super().available and not self.coordinator.bus_stale
+
     def _data(self) -> EbusCache:
         return self.coordinator.data
 

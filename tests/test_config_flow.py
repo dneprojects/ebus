@@ -156,3 +156,15 @@ async def test_zeroconf_aborts_when_not_an_adapter(hass: HomeAssistant):
             DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=_discovery())
     assert init["type"] is FlowResultType.ABORT
     assert init["reason"] == "no_ebus_data"
+
+
+async def test_user_flow_rejects_a_port_out_of_range(hass: HomeAssistant):
+    from homeassistant.data_entry_flow import InvalidData
+    probe = AsyncMock(return_value=None)
+    with patch("custom_components.ebus.config_flow._probe_adapter", probe):
+        init = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER})
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                init["flow_id"], {"host": "1.2.3.4", "port": 70000, "allow_write": False})
+    probe.assert_not_called()
