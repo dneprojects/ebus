@@ -15,7 +15,9 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Final
 
+import aiohttp
 from aioebus.active import ReadError, WriteUncertain
+from aioebus.catalog import BROADCAST_SCAN, Catalog
 from aioebus.discovery import BusSilent, Device, discover, identify_later, remember
 from aioebus.engine import EbusEngine, value_key
 from aioebus.messages import MessageDef
@@ -27,6 +29,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.storage import Store
@@ -36,7 +39,6 @@ from .adapter import fetch_status
 from .const import (
     ADDRESS_STORE,
     BROADCAST_ADDRESS,
-    BROADCAST_IDENT,
     CACHE_STORE,
     CONF_ALLOW_WRITE,
     CONF_CONFIG_DIR,
@@ -45,20 +47,20 @@ from .const import (
     DEFAULT_ALLOW_WRITE,
     DEFAULT_DEEP_SCAN,
     DEFAULT_SCAN_INTERVAL,
+    DEFS_CACHE,
     DOMAIN,
     IDENT_STORE,
     PLAIN_READ_PRIORITY,
     SOURCE_ADDRESS,
     STORE_VERSION,
 )
-from .definitions import all_messages, device_messages, preload
 from .device import ADAPTER_IDENTIFIER, adapter_registry_info, device_info
 from .entities import (
     Field,
-    climate_zones,
     control_class,
     control_of,
     fields_of,
+    presentation,
     select_polled,
 )
 from .ids import CONTROL_SUFFIX, control_uid, uid
@@ -73,6 +75,7 @@ _RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into on
 _IDENT_RETRY_DELAYS: Final = (60, 240, 600, 900, 1800)
 _CACHE_SAVE_DELAY: Final = 5  # s; throttle persisting the cache (below the
 # shortest update interval: each update re-arms the delay, a longer one never fires)
+_FETCH_TIMEOUT: Final = 15  # s per definition file from the CDN
 _STALE_AFTER: Final = 600  # s without the link before values count as unavailable
 _JSON_SCALARS: Final = (str, int, float, bool, type(None))
 
@@ -119,6 +122,11 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._supervisor: asyncio.Task[None] | None = None
         self._link_task: asyncio.Task[None] | None = None  # the first engine run
         self._found: dict[int, Device] = {}  # discovered devices (for late idents)
+        # the devices' definitions: bundled, user files, or ebusd CSVs from the CDN
+        # (downloaded on this machine only, cached under .storage)
+        self.catalog = Catalog(
+            user_dir=self.user_dir, cache_dir=Path(hass.config.path(".storage", DEFS_CACHE)),
+            fetch=self._fetch_text)
         self._base_interval = interval
         # collapses a burst of registry changes (a platform registering its
         # entities) into one poll-set rebuild
@@ -144,7 +152,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
 
     def control_class(self, msg: MessageDef) -> str:
         """"user", "installer" or "none" for a writable register (see entities)."""
-        return control_class(self.devices.get(int(msg.zz, 16)), msg.name)
+        return control_class(self.catalog.definition(int(msg.zz, 16)), msg.name)
 
     def remove_control(self, domain: str, msg: MessageDef, label: str) -> None:
         """Drop the registry entry of a control this register no longer gets
@@ -184,9 +192,29 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 out.append((msg, field, cls))
         return out
 
+    async def async_load_definitions(self) -> None:
+        """Read (or download) every device's definition; from here on the catalog
+        answers from memory and the message lists are set."""
+        await self.hass.async_add_executor_job(presentation)
+        await self.catalog.load(self.devices, self.idents)
+        self.read_messages = self.catalog.device_messages("r")
+        self.write_messages = self.catalog.device_messages("w") if self.allow_write else []
+
+    async def _fetch_text(self, url: str) -> str | None:
+        """A definition file from the CDN for the catalog; None when it is not
+        there or not reachable (the catalog then keeps its cached copy)."""
+        try:
+            async with (asyncio.timeout(_FETCH_TIMEOUT),
+                        async_get_clientsession(self.hass).get(url) as resp):
+                return await resp.text() if resp.status == 200 else None
+        except (TimeoutError, aiohttp.ClientError, ValueError) as err:  # ValueError: not UTF-8
+            _LOGGER.debug("eBUS: %s not fetched: %s", url, err)
+            return None
+
     def device_info(self, zz: int) -> DeviceInfo:
         """DeviceInfo for a scanned device (hanging off the adapter hub)."""
-        return device_info(zz, self.devices.get(zz), self.adapter_device_id)
+        return device_info(zz, self.devices.get(zz), self.catalog.definition(zz),
+                           self.adapter_device_id)
 
     async def _connect(self) -> tuple[SendFn, RecvFn]:
         async with asyncio.timeout(_CONNECT_TIMEOUT):
@@ -277,9 +305,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 self.config_entry, options={**self.config_entry.options, CONF_DEEP_SCAN: False})
         # the broadcast circuit is not a scanned device: inject it so bus
         # broadcasts (outside temperature, date/time) become entities too
-        self.devices[BROADCAST_ADDRESS] = ScanResult(
-            mf=0, manufacturer="", ident=BROADCAST_IDENT,
-            sw="", hw="", sw_num=None, hw_num=None)
+        self.devices[BROADCAST_ADDRESS] = BROADCAST_SCAN
         # register the adapter as the hub device: scanned devices hang off it
         # (via_device_id) and the broadcast entities belong to it. Enrich it from
         # the adapter shield's own web API when present (real firmware/hardware +
@@ -296,20 +322,14 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             (DOMAIN, f"{BROADCAST_ADDRESS:02x}"), self.config_entry.entry_id)
         if stale is not None:
             registry.async_remove_device(stale.id)
-        # every definition file is read now, off the event loop; from here on the
-        # definitions come from memory
-        await self.hass.async_add_executor_job(preload, self.devices, self.user_dir)
+        await self.async_load_definitions()
         # generate localized entity names on the user's machine from the upstream
         # CDN (never bundled): best-effort, so a CDN hiccup just leaves names English
         try:
-            await async_update_translations(
-                self.hass, self.config_entry.entry_id, self.devices, self.user_dir)
+            await async_update_translations(self.hass, self.config_entry.entry_id, self.catalog)
         except Exception as err:  # noqa: BLE001 - names are cosmetic, never block setup
             _LOGGER.debug("eBUS: translation generation skipped: %s", err)
-        self.read_messages = device_messages(self.devices, "r", self.user_dir)
-        self.write_messages = (
-            device_messages(self.devices, "w", self.user_dir) if self.allow_write else [])
-        self.engine.registry = MessageRegistry(all_messages(self.devices, self.user_dir))
+        self.engine.registry = MessageRegistry(self.catalog.all_messages())
         self.engine.scheduler = self._build_scheduler()
         await self._warm_start_cache()
         # re-scope polling when one of our entities is created, enabled or disabled
@@ -363,7 +383,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             enabled = {e.unique_id for e in entries if e.disabled_by is None}
             polled = select_polled(
                 self.read_messages, enabled,
-                climate_zones(self.devices, self.user_dir), self.uid_prefix)
+                self.catalog.zones(), self.uid_prefix)
         return PollScheduler(polled, base_interval=self._base_interval,
                              default_priority=PLAIN_READ_PRIORITY)
 

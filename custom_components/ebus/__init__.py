@@ -3,6 +3,8 @@ library (talks to an enhanced eBUS adapter directly, no ebusd, no MQTT)."""
 from __future__ import annotations
 
 import logging
+import shutil
+from functools import partial
 from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 
-from .const import BROADCAST_ADDRESS, DOMAIN, STORE_PREFIXES, STORE_VERSION
+from .const import BROADCAST_ADDRESS, DEFS_CACHE, DOMAIN, STORE_PREFIXES, STORE_VERSION
 from .coordinator import EbusCoordinator
 from .device import ADAPTER_IDENTIFIER
 from .migrations import async_migrate_entry
@@ -59,9 +61,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> boo
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> None:
-    """Delete the entry's stored files (value cache, addresses, identifications)."""
+    """Delete the entry's stored files (value cache, addresses, identifications);
+    with the last entry also the shared cache of downloaded definitions."""
     for prefix in STORE_PREFIXES:
         await Store(hass, STORE_VERSION, f"{prefix}{entry.entry_id}").async_remove()
+    if not [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]:
+        await hass.async_add_executor_job(
+            partial(shutil.rmtree, hass.config.path(".storage", DEFS_CACHE), ignore_errors=True))
 
 
 def _remove_orphaned_stores(storage_dir: str, entry_ids: set[str]) -> list[str]:

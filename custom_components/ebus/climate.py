@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from aioebus.catalog import ClimateZone
 from aioebus.engine import value_key
 from aioebus.messages import MessageDef
 from homeassistant.components.climate import (
@@ -22,7 +23,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
-from .entities import ClimateZone, climate_zones
 from .ids import zone_uid
 
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
-    pending = climate_zones(coordinator.devices, coordinator.user_dir)
+    pending = coordinator.catalog.zones()
 
     # a zone is in use once one of its registers has a value; on a fresh install
     # nothing is cached yet, so keep checking as data arrives

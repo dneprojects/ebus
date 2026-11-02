@@ -54,7 +54,7 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         if cls == "installer":  # a configuration setting: shown only once enabled
             self._attr_entity_category = EntityCategory.CONFIG
             self._attr_entity_registry_enabled_default = False
-        bounds = number_bounds(coordinator.devices.get(zz), msg.name, field)
+        bounds = number_bounds(coordinator.catalog.bounds(zz, msg.name), field)
         lo, hi, step = bounds or _bounds(field)
         self._attr_native_min_value = lo
         self._attr_native_max_value = hi

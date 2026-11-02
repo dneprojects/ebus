@@ -6,6 +6,7 @@ import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
+from aioebus.catalog import Catalog
 from aioebus.scan import ScanResult
 from homeassistant.core import HomeAssistant
 
@@ -14,6 +15,12 @@ from custom_components.ebus import translate
 _CSV = ("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment\n"
         "r,,,FlowTemp,flow temperature,,,b509,0d1800,value,,D2C,,°C,\n")
 _HMU = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
+
+
+async def _catalog(devices, user_dir=None) -> Catalog:
+    catalog = Catalog(user_dir=user_dir)  # no download in tests
+    await catalog.load(devices)
+    return catalog
 
 
 @pytest.fixture
@@ -41,7 +48,7 @@ async def test_new_version_regenerates(hass: HomeAssistant, tdir):
         with patch.object(translate, "_fetch", fetch), \
              patch.object(translate, "async_get_integration",
                           AsyncMock(return_value=integration)):
-            await translate.async_update_translations(hass, "e1", _HMU, None)
+            await translate.async_update_translations(hass, "e1", await _catalog(_HMU))
 
     await run("0.3.1")
     first = fetch.await_count
@@ -69,18 +76,20 @@ async def test_two_adapters_share_the_files(hass: HomeAssistant, tdir):
     with patch.object(translate, "_fetch", fetch), \
          patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.6.4"))):
-        await translate.async_update_translations(hass, "a", _HMU, None)
+        await translate.async_update_translations(hass, "a", await _catalog(_HMU))
         hmu_keys = _keys(tdir / "en.json")
-        await translate.async_update_translations(hass, "b", _CTL, None)
+        await translate.async_update_translations(hass, "b", await _catalog(_CTL))
     keys = _keys(tdir / "en.json")
     assert hmu_keys <= keys and len(keys) > len(hmu_keys)
     translate.forget_entry(hass, "b")
     assert set(translate._sources(hass)) == {"a"}
 
 
-async def test_user_definitions_get_names_without_the_cdn(hass: HomeAssistant, tdir, tmp_path):
-    # a device only a user definition covers has no CDN mapping: its names come
-    # from the definition, so its entities never get nameless ids
+@pytest.mark.parametrize("cdn", [_CSV, None])
+async def test_user_definitions_get_names(hass: HomeAssistant, tdir, tmp_path, cdn):
+    # a device only a user definition covers has no CDN text of its own: its names
+    # come from the definition -- with the CDN reachable (for the other devices)
+    # or not -- so its entities never get nameless ids
     import json
     (tdir / "en.json").write_text(json.dumps({"entity": {"sensor": {}}}), encoding="utf-8")
     user = tmp_path / "user"
@@ -89,12 +98,11 @@ async def test_user_definitions_get_names_without_the_cdn(hass: HomeAssistant, t
         "direction": "r", "name": "MixerTemp", "pbsb": "b509", "id": "0d0100",
         "fields": [{"name": "value", "type": "D2C", "unit": "°C"}]}]), encoding="utf-8")
     vr70 = {0x26: ScanResult(0xB5, "Vaillant", "VR70", "0100", "0200", 100, 200)}
-    from custom_components.ebus import definitions
-    definitions.preload(vr70, user)
-    fetch = AsyncMock(return_value=_CSV)
-    with patch.object(translate, "_fetch", fetch):
-        await translate.async_update_translations(hass, "e1", vr70, user)
-    fetch.assert_not_called()
+    catalog = await _catalog(vr70, user)
+    with patch.object(translate, "_fetch", AsyncMock(return_value=cdn)), \
+         patch.object(translate, "async_get_integration",
+                      AsyncMock(return_value=MagicMock(version="0.8.0"))):
+        await translate.async_update_translations(hass, "e1", catalog)
     assert any("mixertemp" in k for k in _keys(tdir / "en.json"))
 
 

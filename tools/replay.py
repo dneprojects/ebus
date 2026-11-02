@@ -24,11 +24,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pure_loader import pure  # first: it finds aioebus (a sibling checkout if not installed)
 
+import asyncio
+
+from aioebus.catalog import Catalog
 from aioebus.discovery import BASE_ADDRESSES, BROADCAST_ADDRESS
 from aioebus.passive import MessageRegistry, decode_raw
 from aioebus.scan import ScanResult, decode_scan
 
-definitions = pure("definitions")
 entities = pure("entities")
 
 def _scan_devices(db: sqlite3.Connection, addrs: tuple[int, ...]) -> dict[int, ScanResult]:
@@ -55,10 +57,12 @@ def main(argv: list[str]) -> int:
     db = sqlite3.connect(args.db)
 
     devices = _scan_devices(db, addrs)
-    msgs = definitions.all_messages(devices)
+    catalog = Catalog()  # bundled definitions only: no download
+    asyncio.run(catalog.load(devices))
+    msgs = catalog.all_messages()
     registry = MessageRegistry(msgs)
-    reads = definitions.device_messages(devices, "r")
-    writes = [m for m in definitions.device_messages(devices, "w") if entities.control_of(m)]
+    reads = catalog.device_messages("r")
+    writes = [m for m in catalog.device_messages("w") if entities.control_of(m)]
 
     cache: dict[tuple[str, str, str], object] = {}
     hits = 0

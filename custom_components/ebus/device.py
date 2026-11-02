@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aioebus import __version__ as AIOEBUS_VERSION
+from aioebus.catalog import Definition
 from aioebus.scan import ScanResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -53,16 +54,18 @@ def adapter_registry_info(entry_id: str, host: str, status: dict[str, Any]) -> d
     return info
 
 
-def device_info(zz: int, scan: ScanResult | None, adapter_device_id: str | None) -> DeviceInfo:
+def device_info(zz: int, scan: ScanResult | None, definition: Definition | None,
+                adapter_device_id: str | None) -> DeviceInfo:
     # the broadcast pseudo-address is not a real device -- its entities belong to
     # the adapter (the bus itself); everything else hangs off the adapter
     if zz == BROADCAST_ADDRESS:
         return adapter_device_info()
     info = DeviceInfo(
         identifiers={(DOMAIN, f"{zz:02x}")},
-        name=device_name(scan) if scan else f"eBUS {zz:#04x}",
+        name=device_name(scan, definition) if scan else f"eBUS {zz:#04x}",
         manufacturer=scan.manufacturer if scan else None,
-        model=device_model(scan) if scan else None,  # appliance, not the coupler ident
+        # the appliance, not the coupler ident
+        model=device_model(scan, definition) if scan else None,
         sw_version=scan.sw if scan else None,
         hw_version=scan.hw if scan else None,
     )

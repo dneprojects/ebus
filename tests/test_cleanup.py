@@ -12,6 +12,7 @@ import pytest
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.active import ReadError
+from aioebus.catalog import Catalog
 from aioebus.discovery import Device, Discovery
 from aioebus.scan import Identification, ScanResult
 from homeassistant.core import HomeAssistant
@@ -41,6 +42,12 @@ async def _idle() -> bytes:
 def _found(devices, extra=(), remembered=None, dropped=()):
     return Discovery({zz: Device(zz, scan, ident) for zz, (scan, ident) in devices.items()},
                      list(extra), dict(remembered or {}), set(dropped))
+
+
+async def _catalog(devices) -> Catalog:
+    catalog = Catalog()  # bundled definitions only
+    await catalog.load(devices)
+    return catalog
 
 
 def _coord(hass: HomeAssistant, **options) -> EbusCoordinator:
@@ -186,9 +193,9 @@ async def test_partial_cdn_fetch_is_not_remembered(hass: HomeAssistant, tdir):
     with patch.object(translate, "_fetch", fetch), \
          patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
         first = len(calls)
-        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
     assert (tdir / "en.json").exists()
     assert len(calls) == 2 * first  # fetched again: the gap is not kept
 
@@ -205,22 +212,10 @@ async def test_language_the_cdn_lacks_is_not_refetched(hass: HomeAssistant, tdir
     with patch.object(translate, "_fetch", fetch), \
          patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
         first = len(calls)
-        await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
+        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
     assert first and len(calls) == first  # remembered: no fetch on the second start
-
-
-async def test_user_files_are_reread_on_setup(tmp_path):
-    from custom_components.ebus import definitions as library
-    dev = {0x26: ScanResult(0xB5, "Vaillant", "VR71X", "0000", "0000", 0, 0)}
-    library.preload(dev, tmp_path)
-    assert library.all_messages(dev, tmp_path) == []
-    (tmp_path / "26.vr71x.json").write_text(
-        '[{"direction": "r", "name": "Foo", "pbsb": "b509", "id": "0d0100",'
-        ' "fields": [{"name": "value", "type": "UCH"}]}]', encoding="utf-8")
-    library.preload(dev, tmp_path)  # the next setup (e.g. after a reload)
-    assert [m.name for m in library.all_messages(dev, tmp_path)] == ["Foo"]
 
 
 async def test_identification_missed_at_setup_is_read_at_runtime(hass: HomeAssistant):
@@ -289,7 +284,7 @@ async def test_slow_cdn_does_not_hold_up_setup(hass: HomeAssistant, tdir, monkey
          patch.object(translate, "async_get_integration",
                       AsyncMock(return_value=MagicMock(version="0.5.0"))):
         async with asyncio.timeout(1):
-            await translate.async_update_translations(hass, "e1", {0x08: _HMU}, None)
+            await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}))
     # names from the definitions meanwhile, without a signature: the next start
     # fetches the CDN again
     assert (tdir / "en.json").exists()
@@ -304,15 +299,3 @@ async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
     translate._clear_cache(hass)
     assert cache.cache_data.loaded["en"] == {"other"}
     assert cache.cache_data.cache["en"]["entity"] == {"other": {"b": "2"}}
-
-
-async def test_broken_user_file_costs_only_its_device(tmp_path, caplog):
-    from custom_components.ebus import definitions as library
-    dev = {0x26: ScanResult(0xB5, "Vaillant", "VR71X", "0000", "0000", 0, 0)}
-    (tmp_path / "26.vr71x.json").write_text('[{"name": "NoDirection"}]', encoding="utf-8")
-    library.preload(dev, tmp_path)
-    assert library.all_messages(dev, tmp_path) == []
-    assert "26.vr71x.json" in caplog.text
-    (tmp_path / "26.vr71x.json").write_text("{not json", encoding="utf-8")
-    library.preload(dev, tmp_path)
-    assert library.all_messages(dev, tmp_path) == []

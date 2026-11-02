@@ -16,7 +16,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.ebus import number, select, sensor
 from custom_components.ebus.const import CONF_ALLOW_WRITE, DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
-from custom_components.ebus.definitions import device_messages
 from custom_components.ebus.entities import bundled_control_class
 
 _CTL = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004)}
@@ -27,22 +26,21 @@ def _enable(enable_custom_integrations):
     yield
 
 
-def _coordinator(hass: HomeAssistant) -> tuple[EbusCoordinator, MockConfigEntry]:
+async def _coordinator(hass: HomeAssistant) -> tuple[EbusCoordinator, MockConfigEntry]:
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
                             options={CONF_ALLOW_WRITE: True}, version=1, minor_version=7)
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     coord.update_interval = None
     coord.devices = dict(_CTL)
-    coord.read_messages = device_messages(coord.devices, "r")
-    coord.write_messages = device_messages(coord.devices, "w")
+    await coord.async_load_definitions()
     coord.data = {}
     entry.runtime_data = coord
     return coord, entry
 
 
 async def _entities(hass, platform):
-    coord, entry = _coordinator(hass)
+    coord, entry = await _coordinator(hass)
     added: list = []
     await platform.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
     return {e._msg.name: e for e in added}
@@ -175,7 +173,7 @@ async def test_migration_1_7_switches_off_the_cooling_limit_only(hass: HomeAssis
 
 
 async def test_setup_drops_controls_a_register_no_longer_gets(hass: HomeAssistant):
-    coord, entry = _coordinator(hass)
+    coord, entry = await _coordinator(hass)
     reg = er.async_get(hass)
     stale = reg.async_get_or_create(
         "number", DOMAIN, f"{entry.entry_id}_15_PrEnergySumHc_PrEnergySumHc_set",
@@ -191,7 +189,7 @@ async def test_setup_drops_controls_a_register_no_longer_gets(hass: HomeAssistan
 async def test_setup_drops_a_select_a_register_no_longer_gets(hass: HomeAssistant):
     # every bundled select is classified today; a future reclassification to
     # "none" must clean up the same way
-    coord, entry = _coordinator(hass)
+    coord, entry = await _coordinator(hass)
     reg = er.async_get(hass)
     stale = reg.async_get_or_create(
         "select", DOMAIN, f"{entry.entry_id}_15_HwcOpMode_HwcOpMode_set",
@@ -203,7 +201,7 @@ async def test_setup_drops_a_select_a_register_no_longer_gets(hass: HomeAssistan
 
 async def test_setup_keeps_controls_of_a_user_definition(hass: HomeAssistant):
     # a device without a reviewed class list (a user definition) keeps every control
-    coord, entry = _coordinator(hass)
+    coord, entry = await _coordinator(hass)
     reg = er.async_get(hass)
     uid = f"{entry.entry_id}_15_PrEnergySumHc_PrEnergySumHc_set"
     kept = reg.async_get_or_create("number", DOMAIN, uid, config_entry=entry).entity_id
@@ -214,7 +212,7 @@ async def test_setup_keeps_controls_of_a_user_definition(hass: HomeAssistant):
 
 
 async def test_identification_read_later_adds_its_sensors_once(hass: HomeAssistant):
-    coord, entry = _coordinator(hass)
+    coord, entry = await _coordinator(hass)
     added: list = []
     await sensor.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
     before = len(added)
@@ -228,7 +226,7 @@ async def test_identification_read_later_adds_its_sensors_once(hass: HomeAssista
 
 
 async def test_switching_writes_off_drops_the_controls(hass: HomeAssistant):
-    coord, entry = _coordinator(hass)
+    coord, entry = await _coordinator(hass)
     coord.allow_write = False
     coord.write_messages = []
     reg = er.async_get(hass)

@@ -3,8 +3,9 @@
 A **local** Home Assistant integration for Vaillant/eBUS heating systems. It talks
 to an enhanced eBUS adapter directly through the [aioebus](https://github.com/dneprojects/aioebus)
 library — **no ebusd daemon and no MQTT**. The integration is deliberately thin:
-all protocol work (framing, CRC, datatypes, scan, conditions, reads/writes) lives
-in aioebus.
+all protocol and device knowledge (framing, CRC, datatypes, discovery, device
+definitions, conditions, reads/writes) lives in aioebus; the integration decides
+how it appears in Home Assistant.
 
 ## Status
 
@@ -33,17 +34,20 @@ integration and enter the adapter host and port (default 9999).
 Delete the **eBUS** integration from *Settings → Devices & services* (this
 removes its entries, devices and entities). To uninstall completely, also remove
 the `custom_components/ebus` folder from your Home Assistant configuration (or
-remove the repository in HACS). If you enabled the optional definition download,
-delete the generated `ebus_defs` folder in your config directory as well.
+remove the repository in HACS). Definitions downloaded for devices outside the
+bundled set are cached in `.storage/ebus_defs` of your configuration; delete that
+folder as well.
 
 ## How it works
 
-1. On setup it scans known eBUS addresses and creates a device per responder
-   (manufacturer, id, software/hardware version from the 0704 answer).
-2. Each device is matched to a definition **by its scan ident (+ HW variant)**,
-   not by address (`configs/vaillant/index.json`). The bus address is stamped on
-   at runtime, so two identical devices behind different bus couplers share one
-   definition file -- adding a second heat pump needs no second file.
+1. On setup aioebus discovers the devices on the bus (scan, Vaillant identification)
+   and the integration creates a device per responder.
+2. Each device gets its definition from the aioebus catalog: our own bundled
+   definitions (by scan ident + HW variant; two identical devices behind different
+   bus couplers share one file), else a file from the optional definition directory
+   (native JSON or an ebusd CSV), else the matching ebusd-configuration CSV, which
+   is downloaded from ebus.github.io on your own machine and cached locally (see
+   `docs/licensing.md`).
 3. The engine decodes passive bus traffic for free and actively polls the rest,
    publishing decoded values as sensors (and, when writing is enabled, numbers
    and selects), localised through Home Assistant translations.

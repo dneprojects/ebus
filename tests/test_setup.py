@@ -4,6 +4,7 @@ installed)."""
 import asyncio
 import contextlib
 import time
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -28,7 +29,6 @@ from custom_components.ebus import climate
 from custom_components.ebus.binary_sensor import EbusAdapterSignal
 from custom_components.ebus.const import DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
-from custom_components.ebus.definitions import all_messages, device_messages
 from custom_components.ebus.device import ADAPTER_IDENTIFIER
 from custom_components.ebus.entities import fields_of
 from custom_components.ebus.sensor import EbusAdapterSensor, EbusSensor
@@ -240,7 +240,8 @@ async def test_values_become_unavailable_after_a_long_outage(hass: HomeAssistant
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     coord.devices = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
-    field = next(f for m in device_messages(coord.devices, "r") for f in fields_of(m)
+    await coord.async_load_definitions()
+    field = next(f for m in coord.read_messages for f in fields_of(m)
                  if m.name == "EnergyGeneratedHc")
     flow = EbusSensor(coord, field)
     coord.engine = EbusEngine(AsyncMock(), AsyncMock(), MessageRegistry([]))
@@ -362,8 +363,9 @@ async def test_past_period_energy_is_a_total(hass: HomeAssistant):
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
     coord.devices = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004)}
     coord.data = {}
+    await coord.async_load_definitions()
     sensors = {f.msg.name: EbusSensor(coord, f)
-               for m in device_messages(coord.devices, "r") for f in fields_of(m)}
+               for m in coord.read_messages for f in fields_of(m)}
     last = sensors["PrEnergySumHcLastMonth"]
     # a total without reset: a lower next month is no new consumption cycle
     assert last.state_class is SensorStateClass.TOTAL and last.last_reset is None
@@ -374,7 +376,8 @@ async def test_past_period_energy_is_a_total(hass: HomeAssistant):
     assert (new.mean_type, new.types) == (old.mean_type, old.types)
     hmu = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
     coord.devices = hmu
-    gen = next(f for m in device_messages(hmu, "r") for f in fields_of(m)
+    await coord.async_load_definitions()
+    gen = next(f for m in coord.read_messages for f in fields_of(m)
                if m.name == "EnergyGeneratedHc")
     assert EbusSensor(coord, gen).state_class is SensorStateClass.TOTAL_INCREASING
 
@@ -383,8 +386,10 @@ async def test_warm_start_drops_values_of_unknown_registers(hass: HomeAssistant)
     entry = _entry()
     entry.add_to_hass(hass)
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
-    msgs = all_messages({0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)})
-    coord.engine = EbusEngine(AsyncMock(), AsyncMock(), MessageRegistry(msgs))
+    coord.devices = {0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
+    await coord.async_load_definitions()
+    coord.engine = EbusEngine(AsyncMock(), AsyncMock(),
+                              MessageRegistry(coord.catalog.all_messages()))
     stored = {"values": [[["08", "FlowTemp", "FlowTemp"], 40.5],
                          [["08", "SupplyTempWeighted", "SupplyTempWeighted"], 31.0],
                          [["18", "FlowTemp", "FlowTemp"], 38.0]]}
@@ -404,6 +409,7 @@ async def test_climate_zone_added_once_its_data_arrives(hass: HomeAssistant):
     coord.update_interval = None  # no refresh timer in this test
     coord.devices = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004)}
     coord.data = {}
+    await coord.async_load_definitions()
     entry.runtime_data = coord
     added: list = []
     await climate.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
@@ -432,3 +438,54 @@ def test_cache_save_fires_between_the_fastest_updates():
     # (10 s, options flow) would postpone it forever
     from custom_components.ebus import coordinator
     assert coordinator._CACHE_SAVE_DELAY < 10
+
+
+async def test_catalog_downloads_through_home_assistant(hass: HomeAssistant, aioclient_mock):
+    # definitions the CDN serves come through HA's own HTTP session and are cached
+    # under .storage (kept across updates and restarts, never in the integration)
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    assert str(coord.catalog.cache_dir) == hass.config.path(".storage", "ebus_defs")
+    aioclient_mock.get("https://ebus.github.io/en/vaillant/52.vr_70.csv", text="r,,,X")
+    aioclient_mock.get("https://ebus.github.io/en/vaillant/missing.csv", status=404)
+    aioclient_mock.get("https://ebus.github.io/en/vaillant/down.csv", exc=TimeoutError())
+    assert await coord._fetch_text("https://ebus.github.io/en/vaillant/52.vr_70.csv") == "r,,,X"
+    assert await coord._fetch_text("https://ebus.github.io/en/vaillant/missing.csv") is None
+    assert await coord._fetch_text("https://ebus.github.io/en/vaillant/down.csv") is None
+
+
+async def test_unreviewed_definitions_leave_on_demand_reads_off(hass: HomeAssistant):
+    # a CDN/user definition brings every register: plain 'r' reads (read on demand)
+    # start disabled, polled ('r1'..) and passive ('u') ones enabled
+    from aioebus.catalog import Definition
+    from aioebus.messages import parse_csv
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    msgs = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                     "r,,,OnDemand,,,52,b509,0d0100,value,,UCH,,,\n"
+                     "r2,,,Polled,,,52,b509,0d0200,value,,UCH,,,\n"
+                     "u,,,Passive,,,52,b509,0d0300,value,,UCH,,,\n")
+    coord.catalog._defs[0x52] = Definition("cdn", "vaillant/52.vr_70.csv")
+    enabled = {m.name: EbusSensor(coord, fields_of(m)[0]).entity_registry_enabled_default
+               for m in msgs}
+    assert enabled == {"OnDemand": False, "Polled": True, "Passive": True}
+    coord.catalog._defs[0x52] = Definition("bundled", "vr_71.json")
+    assert EbusSensor(coord, fields_of(msgs[0])[0]).entity_registry_enabled_default
+
+
+async def test_removing_the_last_entry_drops_the_definition_cache(hass: HomeAssistant, tmp_path):
+    from custom_components.ebus import async_remove_entry
+    hass.config.config_dir = str(tmp_path)
+    cache = Path(hass.config.path(".storage", "ebus_defs"))
+    (cache / "en" / "vaillant").mkdir(parents=True)
+    (cache / "en" / "vaillant" / "52.vr_70.csv").write_text("x", encoding="utf-8")
+    first, second = _entry(), _entry()
+    first.add_to_hass(hass)
+    second.add_to_hass(hass)
+    await async_remove_entry(hass, first)
+    assert cache.exists()  # still used by the other entry
+    await hass.config_entries.async_remove(first.entry_id)
+    await async_remove_entry(hass, second)
+    assert not cache.exists()

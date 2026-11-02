@@ -1,0 +1,132 @@
+{
+  "_comment": "How the integration presents bundled devices, keyed by definition file or by a profile 'IDENT/HW' (which wins over its file): 'names' the device name in Home Assistant, 'controls' which writable registers become controls ('user' enabled, 'installer' configuration created disabled; anything else of a listed file gets none), 'disabled_fields' entity labels created disabled (unconnected channels; a profile's add to its file's).",
+  "names": {
+    "eloblock.json": "eloBlock",
+    "hmu.json": "Wärmepumpe",
+    "vr_71.json": "VR 71",
+    "ctlv3.json": "sensoCOMFORT",
+    "f6.netx3.json": "VR 940f",
+    "vwzio.json": "VWZ AI",
+    "V32/6004": "Wärmepumpe 2"
+  },
+  "controls": {
+    "_comment": "Which writable registers become controls: 'user' (enabled), 'installer' (configuration, created disabled); anything a listed file defines but does not list gets no control (counters, live states). Reviewed register by register.",
+    "ctlv3.json": {
+      "user": [
+        "AdaptHeatCurve",
+        "CylinderChargeOffset",
+        "Hc1AutoOffMode",
+        "Hc1ExcessTemp",
+        "Hc1HeatCurve",
+        "Hc2AutoOffMode",
+        "Hc2ExcessTemp",
+        "Hc2HeatCurve",
+        "Hc3AutoOffMode",
+        "Hc3ExcessTemp",
+        "Hc3HeatCurve",
+        "HwcLockTime",
+        "HwcMaxFlowTempDesired",
+        "HwcOpMode",
+        "HwcSFMode",
+        "HwcTempDesired",
+        "MaxCylinderChargeTime",
+        "Z1ActualRoomTempDesired",
+        "Z1CoolingTemp",
+        "Z1DayTemp",
+        "Z1HolidayTemp",
+        "Z1NightTemp",
+        "Z1OpMode",
+        "Z1QuickVetoDuration",
+        "Z1QuickVetoTemp",
+        "Z1SFMode",
+        "Z2ActualRoomTempDesired",
+        "Z2CoolingTemp",
+        "Z2DayTemp",
+        "Z2HolidayTemp",
+        "Z2NightTemp",
+        "Z2OpMode",
+        "Z2QuickVetoDuration",
+        "Z2QuickVetoTemp",
+        "Z2SFMode",
+        "Z3ActualRoomTempDesired",
+        "Z3DayTemp",
+        "Z3HolidayTemp",
+        "Z3NightTemp",
+        "Z3OpMode",
+        "Z3QuickVetoDuration",
+        "Z3QuickVetoTemp",
+        "Z3SFMode"
+      ],
+      "installer": [
+        "ContinuousHeating",
+        "CylinderChargeHyst",
+        "FrostOverRideTime",
+        "Hc1MaxFlowTempDesired",
+        "Hc1MinCoolingTempDesired",
+        "Hc1MinFlowTempDesired",
+        "Hc1RoomTempSwitchOn",
+        "Hc1SummerTempLimit",
+        "Hc2MaxFlowTempDesired",
+        "Hc2MinCoolingTempDesired",
+        "Hc2MinFlowTempDesired",
+        "Hc2RoomTempSwitchOn",
+        "Hc2SummerTempLimit",
+        "Hc3MaxFlowTempDesired",
+        "Hc3MinCoolingTempDesired",
+        "Hc3MinFlowTempDesired",
+        "Hc3RoomTempSwitchOn",
+        "Hc3SummerTempLimit",
+        "HwcParallelLoading",
+        "HydraulicScheme",
+        "KeyCodeforConfigMenu",
+        "MaxRoomHumidity",
+        "MultiRelaySetting",
+        "PumpAdditionalTime",
+        "Z1RoomZoneMapping",
+        "Z2RoomZoneMapping",
+        "Z3RoomZoneMapping"
+      ]
+    },
+    "hmu.json": {
+      "user": [],
+      "installer": []
+    },
+    "pmw.json": {
+      "user": [
+        "Load",
+        "ManualTappingTempDesired",
+        "OperatingMode",
+        "Party",
+        "SetMode",
+        "SetTempDesired"
+      ],
+      "installer": []
+    }
+  },
+  "disabled_fields": {
+    "_comment": "Entity labels ('<message> <field>') that never carried a value in the reference capture -- unconnected channels (e.g. a sensor input with nothing wired). Their sensors are created disabled by default; the user can enable them. Only affects a sensor's enabled_default at first registration.",
+    "pmw.json": [
+      "Status temp_1"
+    ],
+    "vr_71.json": [
+      "SensorData1 s4",
+      "SensorData1 s5",
+      "SensorData1 s6",
+      "SensorData1 s7",
+      "SensorData2 s8",
+      "SensorData2 s10",
+      "SensorData2 s11"
+    ],
+    "hmu.json": [
+      "DateTime btime",
+      "DateTime bdate",
+      "DateTime temp",
+      "Status01 temp_2",
+      "Status01 temp_3",
+      "Status01 temp_4"
+    ],
+    "V32/6004": [
+      "SetMode hwctempdesired"
+    ]
+  }
+}

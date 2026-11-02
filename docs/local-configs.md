@@ -1,34 +1,30 @@
-# Covering more devices locally
+# Own device definitions
 
-The integration ships only **our own** Apache-2.0 device definitions. Broad
-coverage for every Vaillant device lives in
-[ebusd-configuration](https://github.com/john30/ebusd-configuration), which is
-**GPL-3.0** — we cannot redistribute a derivative of it under Apache-2.0 (see
-`licensing.md`). You can, however, generate definitions **on your own machine**
-from **your own copy** of that data: the GPL-3.0 derivative then stays local and
-is never distributed by this project.
+Every device needs a definition. aioebus looks for it in this order:
+
+1. its own bundled definitions (matched by scan ident and HW variant);
+2. the optional **definition directory** of this integration;
+3. the matching ebusd-configuration CSV, downloaded automatically from
+   ebus.github.io and cached in `.storage/ebus_defs` (see `licensing.md`).
+
+So a device the CDN covers needs nothing from you. Use the definition directory
+to override the CDN for a device, to work fully offline, or for a device with
+your own definition.
 
 ## Steps
 
-1. Get the eBUS CSV definitions (e.g. clone ebusd-configuration, or use the ones
-   your ebusd already has under `.../ebusd-configuration/en/vaillant`).
-2. Convert them to the native JSON format with aioebus:
+1. Put the definition files into a folder of your configuration, e.g.
+   `/config/ebus_defs_own`. A file is named like ebusd's:
+   `ZZ.ident[.variant].csv` (an ebusd CSV as is) or `ZZ.ident[.variant].json`
+   (aioebus' native format; convert a CSV with
+   `python -m aioebus.convert <csv> <json>`). The ident is matched as a prefix of
+   the device's scan ident, a variant `HWnnnn` is preferred for that hardware.
+2. In Home Assistant: **Settings → Devices & Services → eBUS → Configure**, set
+   **"Extra device-definition directory"** to that folder and reload.
 
-   ```bash
-   python -m aioebus.convert /path/to/ebusd-configuration/en/vaillant /config/ebus_defs
-   ```
+The bus address is stamped on at runtime, so identical devices behind different
+couplers share one file.
 
-   This writes one `*.json` per device file (same base name) into
-   `/config/ebus_defs`.
-3. In Home Assistant: **Settings → Devices & Services → eBUS → Configure**, set
-   **"Extra device-definition directory"** to that folder (e.g.
-   `/config/ebus_defs`), and reload.
-
-The integration matches each scanned device to a file by its scan ident (and HW
-variant) and stamps the bus address at runtime — so identical devices behind
-different couplers share one file. Our own bundled definitions always take
-precedence over the local ones.
-
-> Only *you* hold the generated files; keep them out of any Apache-2.0
-> repository. If you improve a definition, consider contributing it back to
-> ebusd-configuration.
+> A file converted from ebusd-configuration is GPL-3.0 data: keep it on your own
+> machine, out of any Apache-2.0 repository. If you improve a definition,
+> consider contributing it back to ebusd-configuration.

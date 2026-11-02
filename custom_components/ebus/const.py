@@ -10,7 +10,7 @@ DOMAIN: Final = "ebus"
 
 CONF_SCAN_INTERVAL: Final = "scan_interval"
 CONF_ALLOW_WRITE: Final = "allow_write"
-CONF_CONFIG_DIR: Final = "config_dir"  # optional dir of user-generated device JSONs
+CONF_CONFIG_DIR: Final = "config_dir"  # optional dir of user definitions (JSON or ebusd CSV)
 
 DEFAULT_PORT: Final = 9999  # enhanced-adapter TCP port (enh:host:port)
 DEFAULT_SCAN_INTERVAL: Final = 60  # base poll interval (seconds); priority scales it
@@ -26,12 +26,10 @@ DEFAULT_DEEP_SCAN: Final = False
 # this integration replaces ebusd rather than running alongside it)
 SOURCE_ADDRESS: Final = 0x31
 
-# the broadcast circuit (telegrams to 0xfe) is no scanned device; the coordinator
-# injects it so bus broadcasts become entities (on the adapter device)
-BROADCAST_IDENT: Final = "Broadcast"
-
 # per-entry stored files (value cache, extra addresses, identifications), each
 # named <prefix><entry_id> under .storage
 STORE_PREFIXES: Final[tuple[str, ...]] = ("ebus_cache_", "ebus_addrs_", "ebus_idents_")
 CACHE_STORE, ADDRESS_STORE, IDENT_STORE = STORE_PREFIXES
 STORE_VERSION: Final = 1
+# shared cache of definitions downloaded from the CDN, under .storage
+DEFS_CACHE: Final = "ebus_defs"

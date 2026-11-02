@@ -1,46 +1,32 @@
 # Licensing
 
-## This integration
+## This integration and aioebus
 
 The eBUS integration (`ebus`) is **Apache-2.0**. It depends on **aioebus**
-(Apache-2.0), a pure
-Python eBUS library that contains no device data.
+(Apache-2.0), a pure Python eBUS library.
 
 ## Device definitions
 
-The definitions shipped in `custom_components/ebus/configs/` are **our own,
-independently created** work (currently the eloBlock and the NETX3), built from
-our own bus captures and device identification — not copied from a third party.
-They are Apache-2.0.
+aioebus ships a small set of device definitions that are **our own,
+independently created** work (Apache-2.0): the eloBlock and the NETX3 gateway
+are authored by hand; the HMU heat pump, the sensoCOMFORT controller, the PMW
+hot-water unit and the VR 71 are re-engineered from a bus capture of the
+reference installation, keeping only facts (ids, datatypes, divisors, units,
+value tables) of the registers that carried a value there. Their provenance is
+documented in aioebus (`defs/vaillant/PROVENANCE.md`).
 
-## Why not the full ebusd-configuration set
+## Devices outside that set
 
-The obvious source for broad device coverage,
-[ebusd-configuration](https://github.com/john30/ebusd-configuration), is
-**GPL-3.0**. Converting those definitions to our format yields a GPL-3.0
-*derivative* (both the expression — names, comments, selection/arrangement — and,
-in the EU, the *sui generis database right* on the maker's substantial
-investment apply). A GPL-3.0 derivative cannot be shipped under Apache-2.0, and
-**Home Assistant Core requires Apache-2.0** for bundled code and data. So we do
-**not** ship anything derived from ebusd-configuration.
+Broad device coverage lives in
+[ebusd-configuration](https://github.com/john30/ebusd-configuration), which is
+**GPL-3.0**. We do **not** ship anything derived from it. Instead, for a device
+our own definitions do not cover, aioebus downloads the matching CSV from its
+public CDN (ebus.github.io) **on the user's own machine** at runtime -- the
+same way ebusd itself loads its configuration -- and keeps it in a local cache
+(`.storage/ebus_defs` of the Home Assistant configuration). The GPL-3.0 data is
+used there, never redistributed by this project. The CDN's display texts are
+used the same way to name the entities in the user's language.
 
-## Plan
-
-1. **Requested** a permissive / dual-license grant (Apache-2.0 or MIT) for the
-   configuration data from the author (John Baier), with attribution and
-   upstream contribution back, and an offer to co-maintain. *(email sent)*
-2. **If granted:** convert the full set into our format and ship it under
-   Apache-2.0 with a `NOTICE` crediting ebusd-configuration / John Baier.
-3. **If declined / meanwhile:** two Apache-clean options —
-   - **local conversion:** users run `python -m aioebus.convert` against *their
-     own* copy of ebusd-configuration; the derivative stays on their machine and
-     is never distributed by us (GPL triggers on distribution, not private use);
-   - **clean-room:** grow our own definitions from independent sources (own
-     captures, Vaillant service documentation, the eBUS specification).
-
-## Note on git history
-
-Earlier commits in these (private) repositories contained definitions converted
-from ebusd-configuration. They have been removed from the working tree. Before
-any public release without a license grant, the history should be rewritten to
-drop them (or the grant makes this moot).
+A user can also put definitions into the optional definition directory (native
+JSON or an ebusd CSV, see `local-configs.md`); our own bundled definitions take
+precedence, then those, then the CDN.

@@ -141,9 +141,15 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
         self._attr_icon = icon_for(field.field)
         # channels known to be unconnected on this device type (from the def
         # metadata, so the decision is static at registration) are off by default
-        scan = coordinator.devices.get(zz)
-        dead = disabled_field_labels(scan) if scan is not None else set()
-        self._attr_entity_registry_enabled_default = field.label not in dead
+        definition = coordinator.catalog.definition(zz)
+        dead = disabled_field_labels(definition)
+        # an unreviewed definition (user file, CDN) brings every register: its
+        # read-on-demand ones (plain 'r', which ebusd does not poll either) start
+        # disabled, so a new device does not flood the bus; polled and passive
+        # ones show up at once
+        on_demand = (definition is not None and definition.source != "bundled"
+                     and field.msg.direction == "r")
+        self._attr_entity_registry_enabled_default = field.label not in dead and not on_demand
 
         if field.field.values:  # value table -> enum sensor with its labels
             self._attr_device_class = SensorDeviceClass.ENUM

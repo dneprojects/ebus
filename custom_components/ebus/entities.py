@@ -2,32 +2,28 @@
 
 One home for the decisions the platforms, the polling scope and the translation
 generator share: which field is a sensor, a number or a select, a writable
-register's control class and range, a device's name, icons, climate zones.
-Imports only aioebus, the standard library and other pure modules of this
-package, so tools and pure tests can load it without Home Assistant.
+register's control class, a device's name, icons. The device facts (definition,
+model, ranges, heating zones) come from the aioebus catalog; how this
+integration presents them is ``presentation.json``. Imports only aioebus, the
+standard library and other pure modules of this package, so tools and pure
+tests can load it without Home Assistant.
 """
 from __future__ import annotations
 
-import re
+import json
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
+from aioebus.catalog import ClimateZone, Definition, bundled_file
 from aioebus.codecs import is_numeric
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
 
-from .definitions import (
-    addressed_messages,
-    file_section,
-    index,
-    load_file,
-    profile,
-    profile_value,
-    resolve_file,
-)
 from .ids import control_uid, entity_uid, zone_uid
 
+PRESENTATION: Final = Path(__file__).parent / "presentation.json"
 FLOAT_TYPES: Final[frozenset[str]] = frozenset({"EXP", "EXR"})  # numbers need explicit bounds
 
 # mdi icon by unit, else by a keyword in the field name (mirrors the eBUS Bridge)
@@ -43,6 +39,13 @@ _KEYWORD_ICON: Final[tuple[tuple[str, str], ...]] = (
 # number range by unit for float registers (they have no natural raw range)
 _UNIT_BOUNDS: Final[dict[str, tuple[float, float, float]]] = {
     "°C": (0.0, 90.0, 0.5), "K": (0.0, 30.0, 0.5), "h": (0.0, 24.0, 0.5), "": (0.0, 10.0, 0.05)}
+
+
+@cache
+def presentation() -> dict[str, Any]:
+    """presentation.json (blocking read: load it in an executor first)."""
+    data: dict[str, Any] = json.loads(PRESENTATION.read_text(encoding="utf-8"))
+    return data
 
 
 @dataclass
@@ -91,14 +94,22 @@ def control_of(msg: MessageDef) -> tuple[Literal["number", "select"], Field] | N
     return None
 
 
-def control_class(scan: ScanResult | None, message: str) -> str:
+def _keys(definition: Definition | None) -> list[str]:
+    """presentation.json keys of a bundled definition: its profile, then its file."""
+    if definition is None or definition.source != "bundled":
+        return []
+    return [k for k in (definition.profile, definition.file) if k]
+
+
+def control_class(definition: Definition | None, message: str) -> str:
     """What a writable register becomes: "user" (a control, enabled), "installer"
     (a configuration control, created disabled) or "none" (no control, the
-    sensor only), from the 'controls' section of index.json. A bundled file
-    lists its user and installer registers, so anything unlisted (a counter, a
-    live state) gets no control; a device without a section (a user-generated
+    sensor only), from the 'controls' section of presentation.json. A reviewed
+    file lists its user and installer registers, so anything unlisted (a counter,
+    a live state) gets no control; a device without a section (a user or CDN
     definition) gets configuration controls the user enables deliberately."""
-    section = file_section(scan, "controls")
+    sections = presentation()["controls"]
+    section = next((sections[k] for k in _keys(definition) if k in sections), None)
     if not isinstance(section, dict):
         return "installer"
     for cls in ("user", "installer"):
@@ -108,15 +119,15 @@ def control_class(scan: ScanResult | None, message: str) -> str:
 
 
 def bundled_control_class(message: str) -> str | None:
-    """The class of a register name across the bundled files with a 'controls'
-    section (for migrating entities registered before the classes existed):
-    the most permissive class it has anywhere, "none" if those files define it
-    without listing it, None if no such file defines it (a user definition)."""
+    """The class of a register name across the reviewed bundled files (for
+    migrating entities registered before the classes existed): the most
+    permissive class it has anywhere, "none" if those files define it without
+    listing it, None if none of them defines it (a user definition)."""
     classes: set[str] = set()
-    for file, section in index().get("controls", {}).items():
+    for file, section in presentation()["controls"].items():
         if file.startswith("_") or not isinstance(section, dict):
             continue
-        if message not in {m.name for m in load_file(file)}:
+        if message not in {m.name for m in bundled_file(file)}:
             continue
         classes.add(next((c for c in ("user", "installer") if message in section.get(c, ())),
                          "none"))
@@ -126,57 +137,39 @@ def bundled_control_class(message: str) -> str | None:
     return None
 
 
-def number_bounds(scan: ScanResult | None, message: str, field: FieldDef
+def number_bounds(listed: tuple[float, float, float] | None, field: FieldDef
                   ) -> tuple[float, float, float] | None:
-    """(min, max, step) for a number from index.json 'number_bounds', else a
-    unit default for a float register; None leaves an integer type's range."""
-    if (bounds := listed_bounds(scan, message)) is not None:
-        return bounds
+    """(min, max, step) for a number: the catalog's listed range, else a unit
+    default for a float register; None leaves an integer type's own range."""
+    if listed is not None:
+        return listed
     if _base(field.type) in FLOAT_TYPES:
         return _UNIT_BOUNDS.get(field.unit or "", _UNIT_BOUNDS[""])
     return None
 
 
-def listed_bounds(scan: ScanResult | None, message: str) -> tuple[float, float, float] | None:
-    """(min, max, step) of a register as index.json 'number_bounds' lists it."""
-    table = file_section(scan, "number_bounds")
-    bounds = table.get(message) if isinstance(table, dict) else None
-    if isinstance(bounds, list) and len(bounds) == 3:
-        return (float(bounds[0]), float(bounds[1]), float(bounds[2]))
-    return None
-
-
-def disabled_field_labels(scan: ScanResult) -> set[str]:
-    """Entity labels that should be created disabled by default for this device
-    (unconnected channels, from 'disabled_fields' in index.json)."""
-    # unlike name/model this adds up: the file's own unconnected channels plus the
-    # ones a profile disables for its installation
-    found = profile(scan.ident, scan.hw)
-    if not found:
-        return set()
+def disabled_field_labels(definition: Definition | None) -> set[str]:
+    """Entity labels created disabled for this device (unconnected channels):
+    the file's own plus those its profile adds."""
+    table = presentation()["disabled_fields"]
     out: set[str] = set()
-    for labels in (index().get("disabled_fields", {}).get(found["file"]),
-                   found.get("disabled_fields")):
-        if isinstance(labels, list):
+    for key in _keys(definition):
+        if isinstance(labels := table.get(key), list):
             out.update(labels)
     return out
 
 
-def device_name(scan: ScanResult) -> str:
-    """Friendly device name for Home Assistant. Two devices can share a scan
-    ident (e.g. an eloBlock and a heat pump both scan as 'V32') or a definition
-    file (two heat pumps), so the profile/file name wins; else the scan ident."""
-    name = profile_value(scan, "name", "names")
-    return name if isinstance(name, str) else scan.ident
+def device_name(scan: ScanResult, definition: Definition | None) -> str:
+    """Friendly device name: a profile's or a file's name from presentation.json
+    (two devices can share a scan ident or a file), else the scan ident."""
+    names = presentation()["names"]
+    return next((names[k] for k in _keys(definition) if k in names), scan.ident)
 
 
-def device_model(scan: ScanResult) -> str:
-    """Model shown in HA. When a device sits behind a bus coupler the scan ident
-    is the coupler (e.g. 'V32' for both the heat pump and the eloBlock); the
-    profile or the file-keyed 'models' map names the actual appliance. Falls back
-    to the scan ident."""
-    model = profile_value(scan, "model", "models")
-    return model if isinstance(model, str) else scan.ident
+def device_model(scan: ScanResult, definition: Definition | None) -> str:
+    """Model shown in HA: the appliance the catalog knows (a device behind a bus
+    coupler scans as the coupler), else the scan ident."""
+    return definition.model if definition is not None and definition.model else scan.ident
 
 
 def icon_for(field: FieldDef) -> str | None:
@@ -187,69 +180,6 @@ def icon_for(field: FieldDef) -> str | None:
         if keyword in name:
             return icon
     return None
-
-
-@dataclass
-class ClimateZone:
-    """A heating zone to expose as one climate entity, with the addressed
-    messages for its target setpoint (read/write), current temperature (read)
-    and operating mode (read/write). Missing roles are None."""
-    zz: str
-    n: int
-    name: str  # fallback name; the entity prefers the zone's own short name
-    target_read: MessageDef | None
-    target_write: MessageDef | None
-    current: MessageDef | None
-    mode_read: MessageDef | None
-    mode_write: MessageDef | None
-    shortname: MessageDef | None  # <prefix><n>Shortname, the user's zone label
-    # (min, max, step) of the setpoint, from the target register's number bounds
-    target_bounds: tuple[float, float, float] | None = None
-
-
-def _find_msg(msgs: list[MessageDef], name: str, *, write: bool) -> MessageDef | None:
-    for m in msgs:
-        if m.name == name and (m.is_write if write else m.is_read):
-            return m
-    return None
-
-
-def climate_zones(
-    devices: dict[int, ScanResult], user_dir: Path | None = None
-) -> list[ClimateZone]:
-    """Bundle per-zone registers into climate zones, driven by the 'climate'
-    section of index.json (keyed by the resolved definition file). For each zone
-    N present, it gathers '<prefix>N<target/current/mode>' as the setpoint, room
-    temperature and operating mode. Whether a zone is 'active' (has data) is left
-    to the caller, which has the value cache."""
-    out: list[ClimateZone] = []
-    for address, scan in devices.items():
-        decl = file_section(scan, "climate") if resolve_file(scan.ident, scan.hw) else None
-        if not isinstance(decl, dict):
-            continue
-        prefix = str(decl.get("zone_prefix", ""))
-        target, current, mode = decl["target"], decl["current"], decl["mode"]
-        msgs = addressed_messages(address, scan, user_dir)
-        rx = re.compile(rf"^{re.escape(prefix)}(\d+){re.escape(target)}$")
-        nums = sorted({int(mt.group(1)) for m in msgs
-                       if (mt := rx.match(m.name)) and m.is_write})
-        for n in nums:
-            target_write = _find_msg(msgs, f"{prefix}{n}{target}", write=True)
-            # only a listed range: a unit default (0..90 for any temperature) would
-            # be no better than the thermostat's own 5..30
-            bounds = listed_bounds(scan, target_write.name) if target_write else None
-            out.append(ClimateZone(
-                zz=f"{address:02x}", n=n,
-                name=str(decl.get("name", "Zone {n}")).format(n=n),
-                target_read=_find_msg(msgs, f"{prefix}{n}{target}", write=False),
-                target_write=target_write,
-                current=_find_msg(msgs, f"{prefix}{n}{current}", write=False),
-                mode_read=_find_msg(msgs, f"{prefix}{n}{mode}", write=False),
-                mode_write=_find_msg(msgs, f"{prefix}{n}{mode}", write=True),
-                shortname=_find_msg(msgs, f"{prefix}{n}Shortname", write=False),
-                target_bounds=bounds,
-            ))
-    return out
 
 
 def select_polled(

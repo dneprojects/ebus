@@ -19,9 +19,9 @@ from dataclasses import replace
 from pathlib import Path
 
 import aiohttp
+from aioebus.catalog import Catalog
 from aioebus.convert import attach_translations
 from aioebus.messages import parse_csv
-from aioebus.scan import ScanResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
@@ -29,7 +29,6 @@ from homeassistant.util.file import WriteError, write_utf8_file_atomic
 
 from . import strings_gen
 from .const import DOMAIN
-from .definitions import all_messages, cdn_paths
 
 _LOGGER = logging.getLogger(__name__)
 _CDN = "https://ebus.github.io"
@@ -136,7 +135,7 @@ def _clear_cache(hass: HomeAssistant) -> None:
 
 _DATA_KEY = f"{DOMAIN}_translation_sources"
 
-type _Sources = dict[str, tuple[dict[int, ScanResult], Path | None]]
+type _Sources = dict[str, Catalog]
 
 
 def _sources(hass: HomeAssistant) -> _Sources:
@@ -146,17 +145,16 @@ def _sources(hass: HomeAssistant) -> _Sources:
 
 
 def _all_defs(hass: HomeAssistant) -> list:
-    return [m for devices, user_dir in _sources(hass).values()
-            for m in all_messages(devices, user_dir)]
+    return [m for catalog in _sources(hass).values() for m in catalog.all_messages()]
 
 
 async def async_update_translations(
-    hass: HomeAssistant, entry_id: str, devices: dict[int, ScanResult], user_dir: Path | None
+    hass: HomeAssistant, entry_id: str, catalog: Catalog
 ) -> None:
     """Fetch upstream display text for the scanned devices of every adapter and
     write local translation files (they are shared by all entries). Best-effort:
     without CDN text the names come from the definitions themselves."""
-    _sources(hass)[entry_id] = (devices, user_dir)
+    _sources(hass)[entry_id] = catalog
     lock: asyncio.Lock = hass.data.setdefault(f"{_DATA_KEY}_lock", asyncio.Lock())
     async with lock:  # one writer at a time; each run covers every entry
         await _async_update(hass)
@@ -168,7 +166,8 @@ def forget_entry(hass: HomeAssistant, entry_id: str) -> None:
 
 async def _async_update(hass: HomeAssistant) -> None:
     languages = sorted({hass.config.language or "en", "en"})
-    paths = sorted({p for devices, _ in _sources(hass).values() for p in cdn_paths(devices)})
+    paths = sorted({p for catalog in _sources(hass).values() for zz in catalog.addresses
+                    if (d := catalog.definition(zz)) is not None for p in d.text_paths})
     if not paths:
         await _async_write_base(hass, languages)
         return
