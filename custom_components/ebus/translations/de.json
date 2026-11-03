@@ -25,6 +25,7 @@
     },
     "abort": {
       "already_configured": "Dieser Adapter ist bereits eingerichtet.",
+      "already_in_progress": "Dieser Adapter wird gerade schon eingerichtet.",
       "no_ebus_data": "Das gefundene Gerät ist kein nutzbarer eBUS-Adapter (keine eBUS-Daten) oder wird von einem anderen Client belegt."
     }
   },

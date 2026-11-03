@@ -12,8 +12,12 @@ from aioebus.catalog import ClimateZone
 from aioebus.messages import MessageDef
 from aioebus.values import value_key, values_of
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
-from homeassistant.const import UnitOfTemperature
+from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -158,7 +162,9 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         return value if isinstance(value, str) and value in self._presets else None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        temp = kwargs.get("temperature")
+        if (mode := kwargs.get(ATTR_HVAC_MODE)) is not None:  # set_temperature may switch too
+            await self.async_set_hvac_mode(mode)
+        temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None and self._zone.target_write is not None:
             await self._write(self._zone.target_write, temp)
 

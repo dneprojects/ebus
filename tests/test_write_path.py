@@ -167,3 +167,15 @@ async def test_zone_name_is_translated_unless_the_user_named_it(hass: HomeAssist
     assert plain.translation_key == "zone" and plain.translation_placeholders == {"n": "2"}
     coord.data = {value_key(zone.shortname, zone.shortname.name): "Bad"}
     assert EbusZoneClimate(coord, zone).name == "Bad"
+
+
+async def test_set_temperature_with_a_mode_switches_the_zone_too(hass: HomeAssistant):
+    # climate.set_temperature may carry hvac_mode: an off zone must come on
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+    await climate.async_set_temperature(temperature=21.5, hvac_mode=HVACMode.HEAT)
+    assert written == [("Z1OpMode", "day"), ("Z1DayTemp", 21.5)]

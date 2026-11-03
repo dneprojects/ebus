@@ -285,3 +285,13 @@ async def test_a_register_sent_elsewhere_stays_on_its_device(hass: HomeAssistant
     assert msg.zz == "25"
     ent = sensor.EbusSensor(coord, values_of(msg)[0])
     assert ent.device_info["identifiers"] == {(DOMAIN, "08")}
+
+
+async def test_identification_without_a_week_shows_the_year(hass: HomeAssistant):
+    coord, entry = await _coordinator(hass)
+    added: list = []
+    await sensor.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
+    coord.idents[0x15] = Identification("0020260913", "21212300202609130000000000N1", 2021, None)
+    coord.async_update_listeners()
+    year = next(e for e in added if e.unique_id == coord.uid("15", "baujahr"))
+    assert year.native_value == "2021"

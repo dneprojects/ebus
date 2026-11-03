@@ -44,6 +44,7 @@ CONFIG_EN = {
         },
         "abort": {
             "already_configured": "This adapter is already configured.",
+            "already_in_progress": "This adapter is already being set up.",
             "no_ebus_data": "The discovered device is not a usable eBUS adapter "
                             "(no eBUS data), or it is in use by another client."},
     },
@@ -75,6 +76,7 @@ CONFIG_DE = {
         },
         "abort": {
             "already_configured": "Dieser Adapter ist bereits eingerichtet.",
+            "already_in_progress": "Dieser Adapter wird gerade schon eingerichtet.",
             "no_ebus_data": "Das gefundene Gerät ist kein nutzbarer eBUS-Adapter "
                             "(keine eBUS-Daten) oder wird von einem anderen Client belegt."},
     },

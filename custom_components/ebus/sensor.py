@@ -120,9 +120,10 @@ async def async_setup_entry(
             new.append(EbusIdentSensor(
                 coordinator, zz, "seriennummer", "ident_serial", ident.serial, "mdi:identifier"))
             if ident.year:
+                week = f" KW{ident.week:02d}" if ident.week else ""
                 new.append(EbusIdentSensor(
                     coordinator, zz, "baujahr", "ident_manufactured",
-                    f"{ident.year} KW{ident.week:02d}", "mdi:calendar"))
+                    f"{ident.year}{week}", "mdi:calendar"))
         if new:
             async_add_entities(new)
 

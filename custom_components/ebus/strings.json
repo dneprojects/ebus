@@ -25,6 +25,7 @@
     },
     "abort": {
       "already_configured": "This adapter is already configured.",
+      "already_in_progress": "This adapter is already being set up.",
       "no_ebus_data": "The discovered device is not a usable eBUS adapter (no eBUS data), or it is in use by another client."
     }
   },

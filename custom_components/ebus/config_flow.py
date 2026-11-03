@@ -8,6 +8,7 @@ import voluptuous as vol
 from aioebus.link import probe
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -83,6 +84,11 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=f"eBUS ({host})", data={CONF_HOST: host, CONF_PORT: port},
                     options={CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE]})
+            if any(e.unique_id == self.unique_id and e.state is ConfigEntryState.LOADED
+                   for e in self._async_current_entries(include_ignore=False)):
+                # the running entry holds the adapter's one connection: that is
+                # why the probe saw nothing
+                return self.async_abort(reason="already_configured")
             errors["base"] = probe
 
         schema = vol.Schema({
@@ -155,9 +161,11 @@ class EbusOptionsFlow(OptionsFlow):
                 CONF_ALLOW_WRITE,
                 default=opts.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE),
             ): bool,
+            # suggested, not default: an emptied field is left out of the
+            # answer, and a default would bring the old folder back
             vol.Optional(
                 CONF_CONFIG_DIR,
-                default=opts.get(CONF_CONFIG_DIR, ""),
+                description={"suggested_value": opts.get(CONF_CONFIG_DIR, "")},
             ): str,
             vol.Required(
                 CONF_DEEP_SCAN,

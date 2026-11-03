@@ -231,3 +231,57 @@ async def test_adapter_at_a_new_ip_is_reconnected(hass: HomeAssistant):
         await hass.async_block_till_done()
     assert entry.data["host"] == "192.168.178.50"
     reload.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_the_definition_folder_can_be_cleared(hass: HomeAssistant):
+    # the frontend leaves an emptied optional field out of its answer
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            options={"allow_write": False, "config_dir": "/config/ebus"},
+                            version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    with patch("custom_components.ebus._async_reload", AsyncMock()):
+        init = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.config_entries.options.async_configure(init["flow_id"], {
+            "scan_interval": 30, "allow_write": False, "deep_scan": False})
+        await hass.async_block_till_done()
+    assert not entry.options.get("config_dir")
+
+
+async def test_adding_the_running_adapter_again_says_it_is_configured(hass: HomeAssistant):
+    # it holds the adapter's one connection, so the probe under another name fails
+    from homeassistant.config_entries import ConfigEntryState
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="58e6c5e3ba58",
+                            data={"host": "192.168.178.179", "port": 9999},
+                            version=1, minor_version=7, state=ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+    with patch("custom_components.ebus.config_flow._adapter_id",
+               AsyncMock(return_value="58e6c5e3ba58")), \
+         patch("custom_components.ebus.config_flow._probe_adapter",
+               AsyncMock(return_value="no_ebus_data")):
+        init = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"], {"host": "ebus-dne.local", "port": 9999})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "192.168.178.179"  # a failed probe changes nothing
+
+
+async def test_adding_an_adapter_being_discovered_is_explained(hass: HomeAssistant):
+    import json
+    from pathlib import Path
+    with patch("custom_components.ebus.config_flow._adapter_id",
+               AsyncMock(return_value="58e6c5e3ba58")), \
+         patch("custom_components.ebus.config_flow._probe_adapter", _OK):
+        found = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=_discovery())
+        assert found["step_id"] == "zeroconf_confirm"
+        init = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"], {"host": "192.168.178.179", "port": 9999})
+    assert result["type"] is FlowResultType.ABORT
+    root = Path(__file__).parents[1] / "custom_components" / "ebus"
+    for path in (root / "strings.json", root / "translations" / "de.json"):
+        texts = json.loads(path.read_text(encoding="utf-8"))["config"]["abort"]
+        assert result["reason"] in texts
