@@ -175,7 +175,29 @@ async def test_set_temperature_with_a_mode_switches_the_zone_too(hass: HomeAssis
     zone = next(z for z in coord.catalog.zones() if z.n == 1)
     climate = EbusZoneClimate(coord, zone)
     climate.hass = hass
+    coord.data = {value_key(zone.mode_read, zone.mode_read.name): "off"}
     written = []
     coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
     await climate.async_set_temperature(temperature=21.5, hvac_mode=HVACMode.HEAT)
     assert written == [("Z1OpMode", "day"), ("Z1DayTemp", 21.5)]
+
+
+async def test_a_write_with_an_answer_field_writes_its_request_field(hass: HomeAssistant):
+    from aioebus.messages import parse_csv
+    coord = await _coordinator(hass)
+    msg = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                    "w,,,SetX,,,15,b509,0e0100,value,m,UCH,,,,status,s,UCH,0=ok;1=err,,\n")[0]
+    await coord.async_write(msg, 3)
+    coord.engine.write.assert_awaited_once_with(msg, {"value": 3})
+
+
+async def test_set_temperature_keeps_a_mode_already_on(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = {value_key(zone.mode_read, zone.mode_read.name): "night"}  # heating, night preset
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+    await climate.async_set_temperature(temperature=21.5, hvac_mode=HVACMode.HEAT)
+    assert written == [("Z1DayTemp", 21.5)]

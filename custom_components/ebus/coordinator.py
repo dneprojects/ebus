@@ -1,4 +1,4 @@
-"""Coordinator: owns the adapter connection and runs the aioebus engine.
+﻿"""Coordinator: owns the adapter connection and runs the aioebus engine.
 
 The engine does passive-first work on one connection -- it decodes the telegrams
 other participants broadcast (free) and actively polls only the registers that
@@ -25,7 +25,7 @@ from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
 from aioebus.scan import Identification, ScanResult
-from aioebus.values import Value, control_of, value_key, values_of
+from aioebus.values import Value, control_of, value_key
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -421,10 +421,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         """Write one value to a single-field register, then read it back so the
         entity shows what the device actually holds (if it cannot be read back,
         the written value is shown). Errors surface as HomeAssistantError."""
-        fields = values_of(msg)
-        if self.engine is None or not self.allow_write or len(fields) != 1:
+        control = control_of(msg)
+        if self.engine is None or not self.allow_write or control is None:
             raise HomeAssistantError(f"eBUS: {msg.name} is not writable")
-        field = fields[0]
+        field = control[1]
         if isinstance(value, float) and value.is_integer():
             value = int(value)
         uncertain: WriteUncertain | None = None

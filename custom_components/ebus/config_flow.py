@@ -84,7 +84,7 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=f"eBUS ({host})", data={CONF_HOST: host, CONF_PORT: port},
                     options={CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE]})
-            if any(e.unique_id == self.unique_id and e.state is ConfigEntryState.LOADED
+            if any(e.unique_id == self.unique_id and _holds_adapter(e)
                    for e in self._async_current_entries(include_ignore=False)):
                 # the running entry holds the adapter's one connection: that is
                 # why the probe saw nothing
@@ -141,6 +141,13 @@ class EbusConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         return EbusOptionsFlow()
+
+
+def _holds_adapter(entry: ConfigEntry) -> bool:
+    """Whether the entry runs and is connected to its adapter right now."""
+    engine = getattr(getattr(entry, "runtime_data", None), "engine", None)
+    return entry.state is ConfigEntryState.LOADED and bool(
+        engine is not None and engine.stats.connected)
 
 
 class EbusOptionsFlow(OptionsFlow):

@@ -1,7 +1,7 @@
 """Config-flow tests (run under pytest-homeassistant-custom-component in CI;
 skipped where Home Assistant is not installed)."""
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -254,6 +254,7 @@ async def test_adding_the_running_adapter_again_says_it_is_configured(hass: Home
                             data={"host": "192.168.178.179", "port": 9999},
                             version=1, minor_version=7, state=ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+    entry.runtime_data = MagicMock(engine=MagicMock(stats=MagicMock(connected=True)))
     with patch("custom_components.ebus.config_flow._adapter_id",
                AsyncMock(return_value="58e6c5e3ba58")), \
          patch("custom_components.ebus.config_flow._probe_adapter",
@@ -265,6 +266,25 @@ async def test_adding_the_running_adapter_again_says_it_is_configured(hass: Home
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "192.168.178.179"  # a failed probe changes nothing
+
+
+async def test_a_disconnected_entry_does_not_hide_the_probe_error(hass: HomeAssistant):
+    # the adapter moved and the old entry keeps reconnecting: show what is wrong
+    from homeassistant.config_entries import ConfigEntryState
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="58e6c5e3ba58",
+                            data={"host": "192.168.178.179", "port": 9999},
+                            version=1, minor_version=7, state=ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+    entry.runtime_data = MagicMock(engine=MagicMock(stats=MagicMock(connected=False)))
+    with patch("custom_components.ebus.config_flow._adapter_id",
+               AsyncMock(return_value="58e6c5e3ba58")),          patch("custom_components.ebus.config_flow._probe_adapter",
+               AsyncMock(return_value="cannot_connect")):
+        init = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"], {"host": "192.168.178.50", "port": 9998})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_adding_an_adapter_being_discovered_is_explained(hass: HomeAssistant):

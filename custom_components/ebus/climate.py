@@ -162,7 +162,8 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
         return value if isinstance(value, str) and value in self._presets else None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        if (mode := kwargs.get(ATTR_HVAC_MODE)) is not None:  # set_temperature may switch too
+        mode = kwargs.get(ATTR_HVAC_MODE)  # set_temperature may switch too
+        if mode is not None and mode != self.hvac_mode:
             await self.async_set_hvac_mode(mode)
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None and self._zone.target_write is not None:
