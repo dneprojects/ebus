@@ -1,5 +1,6 @@
 """Runtime translation cache (run under pytest-homeassistant-custom-component;
 skipped where Home Assistant is not installed)."""
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,6 +12,7 @@ from aioebus.scan import ScanResult
 from homeassistant.core import HomeAssistant
 
 from custom_components.ebus import translate
+from custom_components.ebus.const import DOMAIN
 
 _CSV = ("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment\n"
         "r,,,FlowTemp,flow temperature,,,b509,0d1800,value,,D2C,,°C,\n")
@@ -172,3 +174,63 @@ def test_unwritable_translation_dir_is_quiet(tdir, monkeypatch):
 
     monkeypatch.setattr(translate, "write_utf8_file_atomic", fail)
     assert translate._write_files({"en": {}}, {"e1": "sig"}) is False
+
+
+async def test_partial_cdn_fetch_is_not_remembered(hass: HomeAssistant, tdir):
+    hass.config.language = "de"
+    calls = []
+
+    async def fetch(_session, lang, path):
+        calls.append(lang)
+        return None if lang == "de" else _CSV  # the German file is unreachable this time
+
+    with patch.object(translate, "async_get_integration",
+                      AsyncMock(return_value=MagicMock(version="0.5.0"))):
+        await translate.async_update_translations(hass, "e1", await _catalog(_HMU, fetch=fetch))
+        first = len(calls)
+        await translate.async_update_translations(hass, "e1", await _catalog(_HMU, fetch=fetch))
+    assert (tdir / "en.json").exists()
+    assert len(calls) == 2 * first  # fetched again: the gap is not kept
+
+
+async def test_language_the_cdn_lacks_is_not_refetched(hass: HomeAssistant, tdir):
+    # upstream has no French files (404 -> ""): that is final, not a gap to retry
+    hass.config.language = "fr"
+    calls = []
+
+    async def fetch(_session, lang, path):
+        calls.append(lang)
+        return "" if lang == "fr" else _CSV
+
+    with patch.object(translate, "async_get_integration",
+                      AsyncMock(return_value=MagicMock(version="0.5.0"))):
+        await translate.async_update_translations(hass, "e1", await _catalog(_HMU, fetch=fetch))
+        first = len(calls)
+        await translate.async_update_translations(hass, "e1", await _catalog(_HMU, fetch=fetch))
+    assert first and len(calls) == first  # remembered: no fetch on the second start
+
+
+async def test_slow_cdn_does_not_hold_up_setup(hass: HomeAssistant, tdir, monkeypatch):
+    monkeypatch.setattr(translate, "_FETCH_BUDGET", 0.05)
+
+    async def fetch(_session, _lang, _path):
+        await asyncio.sleep(5)
+
+    with patch.object(translate, "async_get_integration",
+                      AsyncMock(return_value=MagicMock(version="0.5.0"))):
+        async with asyncio.timeout(1):
+            await translate.async_update_translations(hass, "e1", await _catalog(_HMU, fetch=fetch))
+    # names from the definitions meanwhile, without a signature: the next start
+    # fetches the CDN again
+    assert (tdir / "en.json").exists()
+    assert (tdir / ".ebus_gen").read_text(encoding="utf-8").startswith("{}\n")
+
+
+async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
+    from homeassistant.helpers.translation import _async_get_translations_cache
+    cache = _async_get_translations_cache(hass)
+    cache.cache_data.loaded["en"] = {DOMAIN, "other"}
+    cache.cache_data.cache["en"] = {"entity": {DOMAIN: {"a": "1"}, "other": {"b": "2"}}}
+    translate._clear_cache(hass)
+    assert cache.cache_data.loaded["en"] == {"other"}
+    assert cache.cache_data.cache["en"]["entity"] == {"other": {"b": "2"}}

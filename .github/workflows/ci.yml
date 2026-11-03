@@ -21,3 +21,21 @@ jobs:
       - run: ruff check .
       - run: mypy custom_components/ebus
       - run: python -m pytest -q
+
+  # Home Assistant's own checks: manifest, translations, quality scale, config flow
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  # what HACS checks before it installs the repository
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # the icons ship in the integration (brand/), not in home-assistant/brands;
+          # the repository has no GitHub topics
+          ignore: brands topics

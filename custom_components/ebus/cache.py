@@ -6,6 +6,7 @@ import logging
 from typing import Final
 
 from aioebus.engine import EbusEngine
+from aioebus.values import CacheKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
@@ -18,7 +19,7 @@ SAVE_DELAY: Final = 5
 _JSON_SCALARS: Final = (str, int, float, bool, type(None))
 
 
-def serialize(cache: dict[tuple[str, str, str], object]) -> dict[str, object]:
+def serialize(cache: dict[CacheKey, object]) -> dict[str, object]:
     """The value cache as JSON: [[["zz","name","label"], value], ...]. Only
     scalar values are kept, so the store always stays serialisable."""
     return {"values": [[list(key), value] for key, value in cache.items()
@@ -36,10 +37,8 @@ class CacheStore:
         self.restored = False
 
     async def async_restore(self, engine: EbusEngine) -> None:
-        """Seed the engine cache from the last saved values. Values of registers
-        a scanned device no longer defines (retired, renamed) are dropped, else
-        they are carried along forever; a device that missed this scan keeps its
-        values for the next start."""
+        """Seed the engine cache from the last saved values (the engine drops
+        those of registers a scanned device no longer defines)."""
         self.restored = True
         try:
             stored = await self._store.async_load()
@@ -49,14 +48,11 @@ class CacheStore:
         values = stored.get("values") if stored else None
         if not isinstance(values, list):
             return
-        known = {(m.zz or m.circuit, m.name) for m in engine.registry.messages}
-        scanned = {zz for zz, _name in known}
-        for item in values:
+        engine.restore(
+            ((str(item[0][0]), str(item[0][1]), str(item[0][2])), item[1])
+            for item in values
             if (isinstance(item, list) and len(item) == 2
-                    and isinstance(item[0], list) and len(item[0]) == 3):
-                k = [str(part) for part in item[0]]
-                if k[0] not in scanned or (k[0], k[1]) in known:
-                    engine.cache[(k[0], k[1], k[2])] = item[1]
+                and isinstance(item[0], list) and len(item[0]) == 3))
         _LOGGER.debug("eBUS: warm-started %d cached value(s)", len(engine.cache))
 
     def schedule_save(self, engine: EbusEngine) -> None:

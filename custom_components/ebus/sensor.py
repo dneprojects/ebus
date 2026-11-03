@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Final, cast
 
-from aioebus.values import Value, closes_period, has_numeric_value, values_of
+from aioebus.codecs import has_numeric_value
+from aioebus.values import Value, closes_period, values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
@@ -16,7 +17,8 @@ from . import EbusConfigEntry
 from .adapter import wifi
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
-from .entities import disabled_field_labels, icon_for
+from .entities import disabled_field_labels, icon_for, options_of
+from .entity import EbusBusEntity
 from .ids import entity_uid
 
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
@@ -77,6 +79,9 @@ _ADAPTER_WEB_SENSORS: Final[list[_AdapterSpec]] = [
 ]
 
 
+PARALLEL_UPDATES = 0  # the coordinator updates; the engine queues writes
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -131,10 +136,8 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_add_ident_sensors))
 
 
-class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
+class EbusSensor(EbusBusEntity, SensorEntity):
     """A single decoded eBUS register value."""
-
-    _attr_has_entity_name = True
 
     def __init__(self, coordinator: EbusCoordinator, field: Value) -> None:
         super().__init__(coordinator)
@@ -158,7 +161,7 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
 
         if field.field.values:  # value table -> enum sensor with its labels
             self._attr_device_class = SensorDeviceClass.ENUM
-            self._attr_options = list(dict.fromkeys(field.field.values.values()))
+            self._attr_options = options_of(field.field)
         else:
             unit = field.field.unit
             if unit:
@@ -193,8 +196,7 @@ class EbusSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
 
     @property
     def available(self) -> bool:
-        return (super().available and not self.coordinator.bus_stale
-                and self._key in self.coordinator.data)
+        return super().available and self._key in self.coordinator.data
 
 
 class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):

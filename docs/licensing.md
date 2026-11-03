@@ -10,10 +10,11 @@ The eBUS integration (`ebus`) is **Apache-2.0**. It depends on **aioebus**
 aioebus ships a small set of device definitions that are **our own,
 independently created** work (Apache-2.0): the eloBlock and the NETX3 gateway
 are authored by hand; the HMU heat pump, the sensoCOMFORT controller, the PMW
-hot-water unit and the VR 71 are re-engineered from a bus capture of the
-reference installation, keeping only facts (ids, datatypes, divisors, units,
-value tables) of the registers that carried a value there. Their provenance is
-documented in aioebus (`defs/vaillant/PROVENANCE.md`).
+hot-water unit, the VR 71 and the broadcast messages are re-engineered from a
+bus capture of the reference installation, keeping only facts (ids, datatypes,
+divisors, units, value tables) of the registers that carried a value there. The
+VWZ IO ventilation unit is recognised and named but has no registers on
+purpose. Their provenance is documented in aioebus (`defs/vaillant/PROVENANCE.md`).
 
 ## Devices outside that set
 

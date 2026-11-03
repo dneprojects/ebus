@@ -154,13 +154,16 @@ def _name(m: MessageDef, f: FieldDef, lang: str) -> str | None:
 
 
 def _states(f: FieldDef, lang: str) -> dict[str, str] | None:
+    """State names of an enum, keyed by the state itself: Home Assistant looks a
+    state up by its value, so a label that is no valid key (e.g. Mo_Fr) cannot
+    be translated and is shown as it is."""
     if not f.values:
         return None
+    labels = [v for v in dict.fromkeys(f.values.values()) if slug(v) == v]
     if lang == "en":
-        return {slug(v): v for v in f.values.values()}
+        return {v: v for v in labels} or None
     table = CURATED_STATES.get(lang, {})
-    out = {slug(v): table[slug(v)] for v in f.values.values() if slug(v) in table}
-    return out or None
+    return {v: table[v] for v in labels if v in table} or None
 
 
 def build_entities(msgs: list[MessageDef], lang: str) -> dict[str, dict[str, Any]]:
@@ -177,9 +180,7 @@ def build_entities(msgs: list[MessageDef], lang: str) -> dict[str, dict[str, Any
         if base or entry:  # English always has an entry; others only when non-empty
             target[key] = entry
 
-    for m in msgs:
-        if not (m.zz and len(m.zz) == 2):
-            continue
+    for m in msgs:  # the catalog gives every message its device address
         if (control := control_of(m)) is not None:
             kind, value = control
             put(platforms[kind], value.key, _name(m, value.field, lang),

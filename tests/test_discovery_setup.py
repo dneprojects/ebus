@@ -1,6 +1,6 @@
 """Setup behaviour around discovery (stored addresses and identifications, the
-one-shot deep scan, late identification), stored-file clean-up, translation
-fetch, link-loss logging (run under pytest-homeassistant-custom-component;
+one-shot deep scan, late identification), stored-file clean-up, link-loss
+logging, the adapter's web status and diagnostics (run under pytest-homeassistant-custom-component;
 skipped where Home Assistant is not installed). The discovery itself (scan,
 identification, duplicates) is aioebus's and tested there."""
 import asyncio
@@ -12,14 +12,13 @@ import pytest
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.active import ReadError
-from aioebus.catalog import Catalog
 from aioebus.discovery import Device, Discovery
 from aioebus.scan import Identification, ScanResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.ebus import _remove_orphaned_stores, async_remove_entry, translate
+from custom_components.ebus import _remove_orphaned_stores, async_remove_entry
 from custom_components.ebus.const import CONF_DEEP_SCAN, DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
 
@@ -42,24 +41,6 @@ async def _idle() -> bytes:
 def _found(devices, extra=(), remembered=None, dropped=()):
     return Discovery({zz: Device(zz, scan, ident) for zz, (scan, ident) in devices.items()},
                      list(extra), dict(remembered or {}), set(dropped))
-
-
-def _url_fetch(fetch):
-    """A catalog fetch from a (session, lang, path) stand-in of the CDN."""
-    if fetch is None:
-        return None
-
-    async def by_url(url):
-        lang, path = url.removeprefix("https://ebus.github.io/").split("/", 1)
-        return await fetch(None, lang, path.removesuffix(".csv"))
-
-    return by_url
-
-
-async def _catalog(devices, fetch=None) -> Catalog:
-    catalog = Catalog(fetch=_url_fetch(fetch))  # bundled definitions, texts via fetch
-    await catalog.load(devices)
-    return catalog
 
 
 def _coord(hass: HomeAssistant, **options) -> EbusCoordinator:
@@ -85,7 +66,6 @@ async def _discover_with(coord: EbusCoordinator, found: Discovery) -> AsyncMock:
          patch("custom_components.ebus.coordinator.discover", discover), \
          patch("custom_components.ebus.coordinator.fetch_status", AsyncMock(return_value={})), \
          patch("custom_components.ebus.coordinator.async_update_translations", AsyncMock()), \
-         patch.object(coord, "_run_forever", AsyncMock()), \
          patch.object(coord, "_late_identify", AsyncMock()):
         await coord._discover()
     return discover
@@ -191,51 +171,6 @@ def test_link_loss_is_logged_once_per_outage(hass: HomeAssistant, caplog):
     assert len([r for r in caplog.records if r.levelno == logging.WARNING]) == 1
 
 
-_CSV = ("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment\n"
-        "r,,,FlowTemp,flow temperature,,,b509,0d1800,value,,D2C,,°C,\n")
-
-
-@pytest.fixture
-def tdir(tmp_path, monkeypatch):
-    monkeypatch.setattr(translate, "_TDIR", tmp_path)
-    monkeypatch.setattr(translate, "_MARKER", tmp_path / ".ebus_gen")
-    return tmp_path
-
-
-async def test_partial_cdn_fetch_is_not_remembered(hass: HomeAssistant, tdir):
-    hass.config.language = "de"
-    calls = []
-
-    async def fetch(_session, lang, path):
-        calls.append(lang)
-        return None if lang == "de" else _CSV  # the German file is unreachable this time
-
-    with patch.object(translate, "async_get_integration",
-                      AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
-        first = len(calls)
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
-    assert (tdir / "en.json").exists()
-    assert len(calls) == 2 * first  # fetched again: the gap is not kept
-
-
-async def test_language_the_cdn_lacks_is_not_refetched(hass: HomeAssistant, tdir):
-    # upstream has no French files (404 -> ""): that is final, not a gap to retry
-    hass.config.language = "fr"
-    calls = []
-
-    async def fetch(_session, lang, path):
-        calls.append(lang)
-        return "" if lang == "fr" else _CSV
-
-    with patch.object(translate, "async_get_integration",
-                      AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
-        first = len(calls)
-        await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
-    assert first and len(calls) == first  # remembered: no fetch on the second start
-
-
 async def test_identification_missed_at_setup_is_read_at_runtime(hass: HomeAssistant):
     # a heat pump behind the coupler skipped the identification at setup: the
     # running engine reads it later, stores it and tells the platforms
@@ -290,32 +225,6 @@ async def test_link_restored_is_logged_and_rearms(hass: HomeAssistant, caplog):
     with caplog.at_level(logging.INFO):
         await coord._async_update_data()
     assert "restored" in caplog.text and coord._link_lost_logged is False
-
-
-async def test_slow_cdn_does_not_hold_up_setup(hass: HomeAssistant, tdir, monkeypatch):
-    monkeypatch.setattr(translate, "_FETCH_BUDGET", 0.05)
-
-    async def fetch(_session, _lang, _path):
-        await asyncio.sleep(5)
-
-    with patch.object(translate, "async_get_integration",
-                      AsyncMock(return_value=MagicMock(version="0.5.0"))):
-        async with asyncio.timeout(1):
-            await translate.async_update_translations(hass, "e1", await _catalog({0x08: _HMU}, fetch=fetch))
-    # names from the definitions meanwhile, without a signature: the next start
-    # fetches the CDN again
-    assert (tdir / "en.json").exists()
-    assert (tdir / ".ebus_gen").read_text(encoding="utf-8").startswith("{}\n")
-
-
-async def test_cache_clear_only_touches_this_integration(hass: HomeAssistant):
-    from homeassistant.helpers.translation import _async_get_translations_cache
-    cache = _async_get_translations_cache(hass)
-    cache.cache_data.loaded["en"] = {DOMAIN, "other"}
-    cache.cache_data.cache["en"] = {"entity": {DOMAIN: {"a": "1"}, "other": {"b": "2"}}}
-    translate._clear_cache(hass)
-    assert cache.cache_data.loaded["en"] == {"other"}
-    assert cache.cache_data.cache["en"]["entity"] == {"other": {"b": "2"}}
 
 
 def _setup_patches(link, found, status):

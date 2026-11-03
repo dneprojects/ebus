@@ -51,4 +51,20 @@ definitions it downloaded (`.storage/ebus_defs`) and every entry's stored values
    `docs/licensing.md`).
 3. The engine decodes passive bus traffic for free and actively polls the rest,
    publishing decoded values as sensors (and, when writing is enabled, numbers
-   and selects), localised through Home Assistant translations.
+   and selects), localised through Home Assistant translations. A written value
+   is read back, so the entity shows what the device took.
+4. When the adapter link drops, aioebus reconnects by itself; after 10 minutes
+   without it the bus values count as unavailable.
+
+## Development
+
+```bash
+pip install -r requirements_test.txt aioebus   # or a sibling aioebus checkout
+ruff check .
+mypy custom_components/ebus
+python -m pytest -q
+python tools/gen_strings.py   # after changing names or definitions
+```
+
+Changes are listed in `CHANGELOG.md`. A captured telegram log can be replayed
+through the engine with aioebus' `tools/replay.py`.

@@ -18,6 +18,8 @@ from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
 
+PARALLEL_UPDATES = 0  # the coordinator updates; the engine queues writes
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback

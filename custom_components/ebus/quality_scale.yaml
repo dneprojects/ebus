@@ -34,29 +34,29 @@ rules:
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
   entity-unavailable:
-    status: todo
-    comment: Sensors go unavailable without a cached value; number/select still rely only on the coordinator's last-update state.
+    status: done
+    comment: A sensor without a value is unavailable; every bus entity is once the link has been down for 10 minutes (the adapter's own entities keep reporting).
   integration-owner: done
   log-when-unavailable: done
   parallel-updates:
-    status: todo
-    comment: PARALLEL_UPDATES is not yet declared on the platforms.
+    status: done
+    comment: The platforms declare PARALLEL_UPDATES = 0; the coordinator updates them, and the engine sends one telegram at a time.
   reauthentication-flow:
     status: exempt
     comment: The adapter needs no credentials, so there is nothing to re-authenticate.
   test-coverage:
     status: todo
-    comment: Library resolution, the config flow, a full setup with platforms, setup retry, link loss, the entry migrations, the write path and late climate zones are covered; per-platform entity tests are pending.
+    comment: The config flow, a full setup with platforms, setup retry, link loss, the entry migrations, the write path, controls, translations and late climate zones are covered; per-platform entity tests are pending.
 
   # --- Gold -----------------------------------------------------------------
   devices: done
   diagnostics: done
   discovery:
-    status: exempt
-    comment: The enhanced eBUS adapter exposes no standard network discovery.
+    status: done
+    comment: An adapter advertising _ebusd._tcp over mDNS is offered (zeroconf), once a probe shows it streams eBUS symbols.
   discovery-update-info:
-    status: exempt
-    comment: No discovery, so no discovery-driven connection updates.
+    status: done
+    comment: The same adapter found at a new address updates its entry's host.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations:
@@ -70,8 +70,8 @@ rules:
     status: todo
     comment: Devices are scanned once at setup; runtime add/remove is not handled yet.
   entity-category:
-    status: todo
-    comment: No diagnostic/config entity categories assigned yet.
+    status: done
+    comment: The adapter's and the identification entities are diagnostic; installer settings are configuration.
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
@@ -88,8 +88,8 @@ rules:
     status: exempt
     comment: No user-actionable repair scenarios are defined yet.
   stale-devices:
-    status: todo
-    comment: Devices that stop answering scans are not yet removed.
+    status: done
+    comment: Phantom addresses of a unit found elsewhere are removed at setup; the user can delete any device the current bus no longer backs.
 
   # --- Platinum -------------------------------------------------------------
   async-dependency: done
@@ -97,5 +97,5 @@ rules:
     status: exempt
     comment: The bus link is a raw asyncio TCP connection; the optional definition download uses Home Assistant's shared aiohttp session.
   strict-typing:
-    status: todo
-    comment: Full type hints are in place and mypy --strict passes on the HA-free module; the HA-facing modules are gated in CI once Home Assistant is installed.
+    status: done
+    comment: CI runs mypy --strict on the whole integration against Home Assistant; aioebus ships its type hints (py.typed).

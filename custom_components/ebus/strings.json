@@ -455,11 +455,7 @@
       "z1roomzonemapping": {
         "name": "Z1RoomZoneMapping",
         "state": {
-          "none": "none",
-          "vrc700": "VRC700",
-          "vr91_1": "VR91_1",
-          "vr91_2": "VR91_2",
-          "vr91_3": "VR91_3"
+          "none": "none"
         }
       },
       "z1actualroomtempdesired": {
@@ -534,11 +530,7 @@
       "z2roomzonemapping": {
         "name": "Z2RoomZoneMapping",
         "state": {
-          "none": "none",
-          "vrc700": "VRC700",
-          "vr91_1": "VR91_1",
-          "vr91_2": "VR91_2",
-          "vr91_3": "VR91_3"
+          "none": "none"
         }
       },
       "z2actualroomtempdesired": {
@@ -607,11 +599,7 @@
       "z3roomzonemapping": {
         "name": "Z3RoomZoneMapping",
         "state": {
-          "none": "none",
-          "vrc700": "VRC700",
-          "vr91_1": "VR91_1",
-          "vr91_2": "VR91_2",
-          "vr91_3": "VR91_3"
+          "none": "none"
         }
       },
       "z3actualroomtempdesired": {
@@ -951,13 +939,6 @@
         "name": "HwcLegionellaDay",
         "state": {
           "off": "off",
-          "mo": "Mo",
-          "di": "Di",
-          "mi": "Mi",
-          "do": "Do",
-          "fr": "Fr",
-          "sa": "Sa",
-          "so": "So",
           "taeglich": "taeglich"
         }
       },
@@ -2243,11 +2224,7 @@
       "z1roomzonemapping": {
         "name": "Z1RoomZoneMapping",
         "state": {
-          "none": "none",
-          "vrc700": "VRC700",
-          "vr91_1": "VR91_1",
-          "vr91_2": "VR91_2",
-          "vr91_3": "VR91_3"
+          "none": "none"
         }
       },
       "z2opmode": {
@@ -2274,11 +2251,7 @@
       "z2roomzonemapping": {
         "name": "Z2RoomZoneMapping",
         "state": {
-          "none": "none",
-          "vrc700": "VRC700",
-          "vr91_1": "VR91_1",
-          "vr91_2": "VR91_2",
-          "vr91_3": "VR91_3"
+          "none": "none"
         }
       },
       "z3opmode": {
@@ -2305,11 +2278,7 @@
       "z3roomzonemapping": {
         "name": "Z3RoomZoneMapping",
         "state": {
-          "none": "none",
-          "vrc700": "VRC700",
-          "vr91_1": "VR91_1",
-          "vr91_2": "VR91_2",
-          "vr91_3": "VR91_3"
+          "none": "none"
         }
       },
       "operatingmode": {

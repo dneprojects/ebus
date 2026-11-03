@@ -1,13 +1,14 @@
 """Write path: coordinator.async_write, platforms, climate (run under
 pytest-homeassistant-custom-component; skipped where Home Assistant is not
 installed)."""
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from aioebus.active import ReadError, WriteUncertain
+from aioebus.engine import EbusEngine
 from aioebus.scan import ScanResult
 from aioebus.values import value_key
 from homeassistant.components.climate import ClimateEntityFeature, HVACMode
@@ -35,10 +36,10 @@ async def _coordinator(hass: HomeAssistant, allow_write: bool = True) -> EbusCoo
     coord.update_interval = None
     coord.devices = dict(_CTL)
     await coord.async_load_definitions()
-    coord.engine = MagicMock()
-    coord.engine.cache = {}
-    coord.engine.write = AsyncMock()
-    coord.engine.read = AsyncMock()
+    # the real write-and-read-back rule, with the bus calls replaced
+    coord.engine = EbusEngine(allow_write=True)
+    coord.engine.write = AsyncMock()  # type: ignore[method-assign]
+    coord.engine.read = AsyncMock()  # type: ignore[method-assign]
     coord.data = {}
     return coord
 
@@ -52,14 +53,15 @@ async def test_write_reads_the_value_back(hass: HomeAssistant):
     msg = _write_msg(coord, "Z1DayTemp")
     key = value_key(msg, "Z1DayTemp")
 
-    async def read(twin):
+    async def read(twin, *_):
         assert twin.direction[:1] == "r" and twin.name == "Z1DayTemp"
         coord.engine.cache[key] = 21.0  # what the device actually took
 
     coord.engine.read.side_effect = read
     await coord.async_write(msg, 21.5)
     field = msg.fields[-1].name
-    coord.engine.write.assert_awaited_once_with(msg, {field: 21.5})
+    coord.engine.write.assert_awaited_once()
+    assert coord.engine.write.await_args.args[:2] == (msg, {field: 21.5})
     assert coord.data[key] == 21.0  # the device's value, not the requested one
 
 
@@ -79,7 +81,7 @@ async def test_unconfirmed_write_is_read_back_and_reported(hass: HomeAssistant):
     key = value_key(msg, "Z1DayTemp")
     coord.engine.write.side_effect = WriteUncertain("collision: echo mismatch")
 
-    async def read(_twin):
+    async def read(_twin, *_):
         coord.engine.cache[key] = 21.5  # the device did take it
 
     coord.engine.read.side_effect = read
@@ -188,7 +190,7 @@ async def test_a_write_with_an_answer_field_writes_its_request_field(hass: HomeA
     msg = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
                     "w,,,SetX,,,15,b509,0e0100,value,m,UCH,,,,status,s,UCH,0=ok;1=err,,\n")[0]
     await coord.async_write(msg, 3)
-    coord.engine.write.assert_awaited_once_with(msg, {"value": 3})
+    assert coord.engine.write.await_args.args[:2] == (msg, {"value": 3})
 
 
 async def test_set_temperature_keeps_a_mode_already_on(hass: HomeAssistant):

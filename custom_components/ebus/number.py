@@ -3,27 +3,19 @@ from __future__ import annotations
 
 from typing import cast
 
-from aioebus.codecs import value_range
-from aioebus.messages import FieldDef
 from aioebus.values import Value
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
 from .entities import icon_for, number_bounds
+from .entity import EbusBusEntity
 from .ids import control_uid
 
-_UNIT_DEFAULT = (0.0, 100.0, 1.0)  # never used for the integer types numbers take
-
-
-def _bounds(field: FieldDef) -> tuple[float, float, float]:
-    """(min, max, step) an integer field can carry, from its type + divisor."""
-    lo, hi, step = value_range(field.type, field.divisor) or _UNIT_DEFAULT
-    return (lo, hi, round(step, 4))
+PARALLEL_UPDATES = 0  # the coordinator updates; the engine queues writes
 
 
 async def async_setup_entry(
@@ -34,8 +26,7 @@ async def async_setup_entry(
         EbusNumber(coordinator, value, cls) for value, cls in coordinator.controls("number"))
 
 
-class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
-    _attr_has_entity_name = True
+class EbusNumber(EbusBusEntity, NumberEntity):
     _attr_mode = NumberMode.BOX
 
     def __init__(self, coordinator: EbusCoordinator, value: Value, cls: str) -> None:
@@ -50,18 +41,13 @@ class EbusNumber(CoordinatorEntity[EbusCoordinator], NumberEntity):
         if cls == "installer":  # a configuration setting: shown only once enabled
             self._attr_entity_category = EntityCategory.CONFIG
             self._attr_entity_registry_enabled_default = False
-        bounds = number_bounds(coordinator.catalog.bounds(zz, msg.name), field)
-        lo, hi, step = bounds or _bounds(field)
+        lo, hi, step = number_bounds(coordinator.catalog.bounds(zz, msg.name), field)
         self._attr_native_min_value = lo
         self._attr_native_max_value = hi
         self._attr_native_step = step
         if field.unit:
             self._attr_native_unit_of_measurement = field.unit
         self._attr_device_info = coordinator.device_info(zz)
-
-    @property
-    def available(self) -> bool:
-        return super().available and not self.coordinator.bus_stale
 
     @property
     def native_value(self) -> float | None:

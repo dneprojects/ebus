@@ -97,81 +97,6 @@ def test_bundled_class_lookup():
     assert bundled_control_class("SomethingUserDefined") is None
 
 
-async def test_migration_disables_installer_controls_only(hass: HomeAssistant):
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
-                            version=1, minor_version=4)
-    entry.add_to_hass(hass)
-    other = MockConfigEntry(domain=DOMAIN, data={"host": "5.6.7.8", "port": 9999},
-                            version=1, minor_version=7)
-    other.add_to_hass(hass)
-    reg = er.async_get(hass)
-
-    def add(domain, name, owner=entry, **kw):
-        return reg.async_get_or_create(domain, DOMAIN, f"{owner.entry_id}_15_{name}_{name}_set",
-                                       config_entry=owner, **kw).entity_id
-
-    counter = add("number", "PrEnergySumHc")
-    scheme = add("number", "HydraulicScheme")
-    mapping = add("select", "Z1RoomZoneMapping",
-                  disabled_by=er.RegistryEntryDisabler.USER)
-    opmode = add("select", "HwcOpMode")
-    own = add("number", "MyOwnRegister")  # only in a user definition
-    foreign = add("number", "HydraulicScheme", owner=other)
-    with patch("custom_components.ebus.async_setup_entry", return_value=True):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.minor_version == 7
-    assert reg.async_get(scheme).disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    assert reg.async_get(mapping).disabled_by is er.RegistryEntryDisabler.USER
-    for kept in (counter, opmode, own, foreign):  # counters go at setup, by device
-        assert reg.async_get(kept).disabled_by is None, kept
-
-
-async def test_migration_1_6_switches_off_the_heating_circuit_limits_only(
-        hass: HomeAssistant):
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
-                            version=1, minor_version=5)
-    entry.add_to_hass(hass)
-    reg = er.async_get(hass)
-
-    def add(name, **kw):
-        return reg.async_get_or_create("number", DOMAIN,
-                                       f"{entry.entry_id}_15_{name}_{name}_set",
-                                       config_entry=entry, **kw).entity_id
-
-    limits = [add(f"Hc{n}{x}") for n in "13"
-              for x in ("SummerTempLimit", "MinFlowTempDesired", "MaxFlowTempDesired")]
-    scheme = add("HydraulicScheme")  # configuration the user switched on since 1.5
-    curve = add("Hc1HeatCurve")
-    with patch("custom_components.ebus.async_setup_entry", return_value=True):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.minor_version == 7
-    for eid in limits:
-        assert reg.async_get(eid).disabled_by is er.RegistryEntryDisabler.INTEGRATION, eid
-    assert reg.async_get(scheme).disabled_by is None
-    assert reg.async_get(curve).disabled_by is None
-
-
-async def test_migration_1_7_switches_off_the_cooling_limit_only(hass: HomeAssistant):
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
-                            version=1, minor_version=6)
-    entry.add_to_hass(hass)
-    reg = er.async_get(hass)
-
-    def add(name):
-        return reg.async_get_or_create("number", DOMAIN,
-                                       f"{entry.entry_id}_15_{name}_{name}_set",
-                                       config_entry=entry).entity_id
-
-    cooling = [add(f"Hc{n}MinCoolingTempDesired") for n in "12"]
-    limit = add("Hc1SummerTempLimit")  # switched on again by the user after 1.6
-    with patch("custom_components.ebus.async_setup_entry", return_value=True):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.minor_version == 7
-    for eid in cooling:
-        assert reg.async_get(eid).disabled_by is er.RegistryEntryDisabler.INTEGRATION, eid
-    assert reg.async_get(limit).disabled_by is None
-
-
 async def test_setup_drops_controls_a_register_no_longer_gets(hass: HomeAssistant):
     coord, entry = await _coordinator(hass)
     reg = er.async_get(hass)
@@ -242,18 +167,22 @@ async def test_switching_writes_off_drops_the_controls(hass: HomeAssistant):
     assert reg.async_get(reading) is not None
 
 
-def test_integer_ranges_follow_the_type():
+def test_number_bounds_listed_else_unit_else_type():
     from aioebus.messages import FieldDef
 
-    from custom_components.ebus.number import _bounds
+    from custom_components.ebus.entities import number_bounds
 
-    def field(type_, divisor=None):
-        return FieldDef("value", "", type_, divisor, None, "", "")
+    def field(type_, divisor=None, unit=""):
+        return FieldDef("value", "", type_, divisor, None, unit, "")
 
-    assert _bounds(field("SCH")) == (-127, 127, 1)
-    assert _bounds(field("SIN")) == (-32767, 32767, 1)
-    assert _bounds(field("UCH", -10)) == (0, 2540, 10)  # a negative divisor multiplies
-    assert _bounds(field("D1C")) == (0, 100.0, 0.5)
+    assert number_bounds(None, field("SCH")) == (-127, 127, 1)
+    assert number_bounds(None, field("SIN")) == (-32767, 32767, 1)
+    assert number_bounds(None, field("UCH", -10)) == (0, 2540, 10)  # negative multiplies
+    assert number_bounds(None, field("D1C")) == (0, 100.0, 0.5)
+    assert number_bounds(None, field("UIN", 3))[2] == 0.3333  # the step is rounded
+    assert number_bounds(None, field("EXP", unit="°C")) == (0.0, 90.0, 0.5)  # a float: by unit
+    assert number_bounds(None, field("EXP", unit="xyz")) == (0.0, 10.0, 0.05)
+    assert number_bounds((5.0, 30.0, 0.5), field("SCH")) == (5.0, 30.0, 0.5)  # listed wins
 
 
 def test_bundled_class_lookup_takes_profile_keys():

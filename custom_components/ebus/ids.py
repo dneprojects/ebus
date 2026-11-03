@@ -33,6 +33,18 @@ def zone_uid(prefix: str, zz: str, n: int) -> str:
 
 
 def message_of(unique_id: str) -> str | None:
-    """The message name inside a register entity's id, else None."""
-    parts = unique_id.split("_", 3)  # <prefix>_<zz>_<message>_<label>[_set]
-    return parts[2] if len(parts) == 4 else None
+    """The message name inside a register entity's id, else None. A message
+    name may contain '_' (e.g. Z1Timer_Monday0), so it is found by the label,
+    which starts with it (see aioebus.messages.label_of)."""
+    parts = unique_id.split("_", 2)  # <prefix>_<zz>_<message>_<label>[_set]
+    if len(parts) != 3:
+        return None
+    rest = parts[2]
+    start = 0
+    while (cut := rest.find("_", start)) > 0:
+        message, label = rest[:cut], rest[cut + 1:]
+        if any(text == message or text.startswith(f"{message} ")
+               for text in (label, label.removesuffix(CONTROL_SUFFIX))):
+            return message
+        start = cut + 1
+    return None

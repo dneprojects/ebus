@@ -15,7 +15,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .device import ADAPTER_IDENTIFIER
-from .entities import bundled_control_class
+from .entities import bundled_control_class, preload_controls
 from .ids import CONTROL_SUFFIX, message_of
 
 # Registry clean-up of minor version 2. Retired: another register carries the same
@@ -59,24 +59,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.minor_version < 4:
         _migrate_scoped_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=4)
+    if entry.minor_version < 7:  # the control-class steps read the bundled files
+        await hass.async_add_executor_job(preload_controls)
     if entry.minor_version < 5:
-        await hass.async_add_executor_job(_load_definitions)
         _migrate_control_classes(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=5)
     if entry.minor_version < 6:
-        await hass.async_add_executor_job(_load_definitions)
         _migrate_control_classes(hass, entry, _BECAME_INSTALLER_1_6)
         hass.config_entries.async_update_entry(entry, minor_version=6)
     if entry.minor_version < 7:
-        await hass.async_add_executor_job(_load_definitions)
         _migrate_control_classes(hass, entry, _BECAME_INSTALLER_1_7)
         hass.config_entries.async_update_entry(entry, minor_version=7)
     return True
-
-
-def _load_definitions() -> None:
-    """Read the bundled definition files (blocking; run in an executor)."""
-    bundled_control_class("")
 
 
 def _migrate_control_classes(hass: HomeAssistant, entry: ConfigEntry,

@@ -1,8 +1,8 @@
-﻿"""Coordinator: owns the adapter connection and runs the aioebus engine.
+"""Coordinator: owns the adapter connection and runs the aioebus engine.
 
 The engine does passive-first work on one connection -- it decodes the telegrams
 other participants broadcast (free) and actively polls only the registers that
-are due. A supervisor task keeps that connection alive across drops, and the
+are due. The aioebus runner keeps that connection alive across drops, and the
 coordinator publishes snapshots of the engine's value cache to the entities.
 """
 from __future__ import annotations
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Final
 
 import aiohttp
-from aioebus.active import DEFAULT_SOURCE, ReadError, WriteUncertain
+from aioebus.active import ReadError
 from aioebus.catalog import Catalog
 from aioebus.discovery import BusSilent, Device, discover, identify_later, remember
 from aioebus.engine import EbusEngine
@@ -24,8 +24,9 @@ from aioebus.link import Link, connect
 from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
+from aioebus.runner import EngineRunner
 from aioebus.scan import Identification, ScanResult
-from aioebus.values import Value, control_of, value_key
+from aioebus.values import CacheKey, Value, control_of
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -66,7 +67,6 @@ from .ids import CONTROL_SUFFIX, control_uid, uid
 from .translate import async_update_translations
 
 _LOGGER = logging.getLogger(__name__)
-_RECONNECT_BACKOFF: Final = 10  # seconds between reconnect attempts
 _RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into one rebuild
 # pauses (s) before each runtime attempt at an identification missed at setup
 _IDENT_RETRY_DELAYS: Final = (60, 240, 600, 900, 1800)
@@ -75,7 +75,7 @@ _STALE_AFTER: Final = 600  # s without the link before values count as unavailab
 _WEB_RETRY: Final = 600  # s between asks of an adapter whose web API did not answer
 
 # the engine's value cache: (zz/circuit, message name, label) -> decoded value
-type EbusCache = dict[tuple[str, str, str], object]
+type EbusCache = dict[CacheKey, object]
 
 
 class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
@@ -117,9 +117,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._has_web = False
         # monotonic time the web API was last asked in vain (setup asks first)
         self._web_asked = time.monotonic()
-        self._link: Link | None = None
-        self._supervisor: asyncio.Task[None] | None = None
-        self._link_task: asyncio.Task[None] | None = None  # the first engine run
+        self._runner: EngineRunner | None = None
         self._found: dict[int, Device] = {}  # discovered devices (for late idents)
         # the devices' definitions: bundled, user files, or ebusd CSVs from the CDN
         # (downloaded on this machine only, cached under .storage)
@@ -230,12 +228,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             raise
 
     def _close(self) -> None:
-        if self.engine is not None:
-            self.engine.stop()
-        if self._link_task is not None:
-            self._link_task.cancel()
-        if self._link is not None:
-            self._link.close()
+        if self._runner is not None:
+            self._runner.close()
 
     def _known_devices(self) -> bool:
         """Whether this entry already has bus devices (from an earlier start)."""
@@ -245,13 +239,15 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             for dev in dr.async_entries_for_config_entry(registry, self._entry.entry_id)
             for domain, ident in dev.identifiers)
 
+    async def _open_link(self) -> Link:
+        return await connect(self.host, self.port)
+
     async def _discover(self) -> None:
-        self._link = link = await connect(self.host, self.port)
         # the engine runs from the start: discovery goes through it (one transaction
         # policy), and it decodes the bus passively once the definitions are known
-        self.engine = EbusEngine(link.send, link.recv, MessageRegistry([]),
-                                 qq=DEFAULT_SOURCE, allow_write=self.allow_write)
-        self._link_task = asyncio.create_task(self.engine.run(), name="ebus-link")
+        self.engine = EbusEngine(allow_write=self.allow_write)
+        self._runner = EngineRunner(self.engine, self._open_link, on_lost=self._on_link_lost)
+        await self._runner.start()
         cached = await self._addr_store.async_load() or []
         stored = await self._ident_store.async_load() or {}
         if self.deep_scan:
@@ -302,8 +298,6 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._entry.async_on_unload(self._rescope.async_cancel)
         self._entry.async_on_unload(self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED, self._on_registry_update))
-        self._supervisor = self._entry.async_create_background_task(
-            self.hass, self._run_forever(), name="ebus-supervisor")
         self._entry.async_create_background_task(
             self.hass, self._late_identify(), name="ebus-identify")
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
@@ -344,8 +338,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         reg = er.async_get(self.hass)
         entries = er.async_entries_for_config_entry(reg, self._entry.entry_id)
         if not entries:
-            polled: list[MessageDef] = [
-                m for m in self.read_messages if m.is_polled_read]
+            polled = self.read_messages  # the scheduler takes the true reads
         else:
             enabled = {e.unique_id for e in entries if e.disabled_by is None}
             polled = select_polled(
@@ -380,35 +373,13 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             return  # another integration's entity
         self._rescope.async_schedule_call()
 
-    async def _run_forever(self) -> None:
-        """Run the engine, reconnecting with backoff if the link drops."""
-        assert self.engine is not None
-        first = self._link_task  # started for discovery
-        while True:
-            try:
-                if first is not None:
-                    run, first = first, None
-                    await run
-                else:
-                    await self.engine.run()
-            except asyncio.CancelledError:
-                raise
-            except Exception as err:  # noqa: BLE001 - keep the supervisor alive
-                _LOGGER.debug("engine stopped: %s", err)
-            if self._link_down_since is None:
-                self._link_down_since = time.monotonic()
-            # once per outage (a bus without SYN generator, e.g. heating off, would
-            # otherwise log every ~40 s); _async_update_data logs the recovery
-            self._log_once("eBUS: link to %s:%s lost, reconnecting", self.host, self.port)
-            if self._link is not None:
-                self._link.close()
-            await asyncio.sleep(_RECONNECT_BACKOFF)
-            try:
-                self._link = link = await connect(self.host, self.port)
-                self.engine.attach(link.send, link.recv)
-                _LOGGER.debug("eBUS: reconnected to %s:%s", self.host, self.port)
-            except (OSError, TimeoutError) as err:
-                _LOGGER.debug("eBUS: reconnect failed: %s", err)
+    def _on_link_lost(self) -> None:
+        """The runner lost the link (it reconnects by itself): mark the outage."""
+        if self._link_down_since is None:
+            self._link_down_since = time.monotonic()
+        # once per outage (a bus without SYN generator, e.g. heating off, would
+        # otherwise log every ~40 s); _async_update_data logs the recovery
+        self._log_once("eBUS: link to %s:%s lost, reconnecting", self.host, self.port)
 
     def _log_once(self, msg: str, *args: object) -> None:
         if self._link_lost_logged:
@@ -418,39 +389,26 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             self._link_lost_logged = True
 
     async def async_write(self, msg: MessageDef, value: object) -> None:
-        """Write one value to a single-field register, then read it back so the
-        entity shows what the device actually holds (if it cannot be read back,
-        the written value is shown). Errors surface as HomeAssistantError."""
+        """Write one value to a single-field register; the entity then shows what
+        the device holds (read back, else the written value). Errors surface as
+        HomeAssistantError."""
         control = control_of(msg)
         if self.engine is None or not self.allow_write or control is None:
             raise HomeAssistantError(f"eBUS: {msg.name} is not writable")
-        field = control[1]
         if isinstance(value, float) and value.is_integer():
-            value = int(value)
-        uncertain: WriteUncertain | None = None
+            value = int(value)  # a number entity gives floats
         try:
-            await self.engine.write(msg, {field.field.name: value})
-        except WriteUncertain as err:  # sent, but unconfirmed: may have been applied
-            uncertain = err
+            outcome = await self.engine.write_confirmed(
+                msg, {control[1].field.name: value}, read_back=self.catalog.read_twin(msg))
         except (TimeoutError, ReadError, ValueError, OSError, NotImplementedError) as err:
             raise HomeAssistantError(f"eBUS write to {msg.name} failed: {err}") from err
-        twin = self.catalog.read_twin(msg)
-        read_back = False
-        try:
-            if twin is None:
-                raise ReadError("no readable twin")
-            await self.engine.read(twin)  # stores the read value in the cache
-            read_back = True
-        except (TimeoutError, ReadError, ValueError, OSError) as err:
-            _LOGGER.debug("eBUS: read-back of %s skipped: %s", msg.name, err)
-            if uncertain is None:  # confirmed: show what was written
-                self.engine.cache[value_key(msg, field.label)] = value
         self.async_set_updated_data(dict(self.engine.cache))
-        if uncertain is not None:
-            shown = "the shown value was read back" if read_back else "it could not be read back"
+        if outcome.uncertain is not None:
+            shown = ("the shown value was read back" if outcome.read_back
+                     else "it could not be read back")
             raise HomeAssistantError(
-                f"eBUS write to {msg.name} not confirmed ({uncertain}); it may have "
-                f"been applied -- {shown}") from uncertain
+                f"eBUS write to {msg.name} not confirmed ({outcome.uncertain}); it may "
+                f"have been applied -- {shown}") from outcome.uncertain
 
     async def _async_update_data(self) -> EbusCache:
         if self.engine is None:
@@ -475,10 +433,4 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         await super().async_shutdown()
         if self.engine is not None:
             await self._cache.async_save(self.engine)  # final flush
-            self.engine.stop()
-        if self._supervisor is not None:
-            self._supervisor.cancel()
-        if self._link_task is not None:
-            self._link_task.cancel()
-        if self._link is not None:
-            self._link.close()
+        self._close()

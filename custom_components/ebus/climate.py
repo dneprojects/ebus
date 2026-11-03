@@ -10,7 +10,7 @@ from typing import Any
 
 from aioebus.catalog import ClimateZone
 from aioebus.messages import MessageDef
-from aioebus.values import value_key, values_of
+from aioebus.values import CacheKey, value_key, values_of
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -20,14 +20,15 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
+from .entities import options_of
+from .entity import EbusBusEntity
 from .ids import zone_uid
 
 
-def _key(msg: MessageDef) -> tuple[str, str, str]:
+def _key(msg: MessageDef) -> CacheKey:
     # zone registers are single-value: the cache key of that one value
     values = values_of(msg)
     return values[0].cache_key if values else value_key(msg, msg.name)
@@ -37,8 +38,11 @@ def _enum_labels(msg: MessageDef | None) -> list[str]:
     if msg is not None:
         for field in msg.fields:
             if field.values:
-                return list(dict.fromkeys(field.values.values()))
+                return options_of(field)
     return []
+
+
+PARALLEL_UPDATES = 0  # the coordinator updates; the engine queues writes
 
 
 async def async_setup_entry(
@@ -64,10 +68,9 @@ async def async_setup_entry(
         entry.async_on_unload(coordinator.async_add_listener(_add_active_zones))
 
 
-class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
+class EbusZoneClimate(EbusBusEntity, ClimateEntity):
     """One heating zone as a thermostat."""
 
-    _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     # defaults; a zone takes its setpoint register's range (from the aioebus catalog)
     _attr_min_temp = 5.0
@@ -117,10 +120,6 @@ class EbusZoneClimate(CoordinatorEntity[EbusCoordinator], ClimateEntity):
                 self._attr_preset_modes = self._presets
                 feature |= ClimateEntityFeature.PRESET_MODE
         self._attr_supported_features = feature
-
-    @property
-    def available(self) -> bool:
-        return super().available and not self.coordinator.bus_stale
 
     def _data(self) -> EbusCache:
         return self.coordinator.data

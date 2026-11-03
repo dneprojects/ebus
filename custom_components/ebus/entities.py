@@ -16,10 +16,11 @@ from functools import cache
 from pathlib import Path
 from typing import Any, Final
 
-from aioebus.catalog import ClimateZone, Definition, bundled_file, resolve_bundled
+from aioebus.catalog import ClimateZone, Definition, bundled_file, bundled_file_of
+from aioebus.codecs import value_range
 from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
-from aioebus.values import is_float_type, values_of
+from aioebus.values import values_of
 
 from .ids import control_uid, entity_uid, zone_uid
 
@@ -71,6 +72,14 @@ def control_class(definition: Definition | None, message: str) -> str:
     return "none"
 
 
+def preload_controls() -> None:
+    """Read presentation.json and the bundled files its controls name (blocking:
+    run it in an executor before bundled_control_class is used in the loop)."""
+    for key in presentation()["controls"]:
+        if not key.startswith("_") and (file := bundled_file_of(key)) is not None:
+            bundled_file(file)
+
+
 def bundled_control_class(message: str) -> str | None:
     """The class of a register name across the reviewed bundled files (for
     migrating entities registered before the classes existed): the most
@@ -80,7 +89,10 @@ def bundled_control_class(message: str) -> str | None:
     for key, section in presentation()["controls"].items():
         if key.startswith("_") or not isinstance(section, dict):
             continue
-        if message not in {m.name for m in bundled_file(_file_of(key))}:
+        file = bundled_file_of(key)
+        if file is None:
+            raise ValueError(f"presentation.json: no bundled file or profile {key!r}")
+        if message not in {m.name for m in bundled_file(file)}:
             continue
         classes.add(next((c for c in ("user", "installer") if message in section.get(c, ())),
                          "none"))
@@ -90,27 +102,21 @@ def bundled_control_class(message: str) -> str | None:
     return None
 
 
-def _file_of(key: str) -> str:
-    """The bundled file a presentation key stands for: the file itself, or the
-    one an ``IDENT/HW`` profile uses."""
-    if "/" not in key:
-        return key
-    ident, hw = key.split("/", 1)
-    definition = resolve_bundled(ScanResult(0, "", ident, "", hw, None, None))
-    if definition is None:
-        raise ValueError(f"presentation.json: no bundled profile {key!r}")
-    return definition.file
-
-
 def number_bounds(listed: tuple[float, float, float] | None, field: FieldDef
-                  ) -> tuple[float, float, float] | None:
-    """(min, max, step) for a number: the catalog's listed range, else a unit
-    default for a float register; None leaves an integer type's own range."""
+                  ) -> tuple[float, float, float]:
+    """(min, max, step) of a number: the catalog's listed range, else a unit
+    default for a float register, else the range its integer type can carry."""
     if listed is not None:
         return listed
-    if is_float_type(field.type):
-        return _UNIT_BOUNDS.get(field.unit or "", _UNIT_BOUNDS[""])
-    return None
+    if (own := value_range(field.type, field.divisor)) is not None:  # integer types
+        lo, hi, step = own
+        return (lo, hi, round(step, 4))
+    return _UNIT_BOUNDS.get(field.unit or "", _UNIT_BOUNDS[""])
+
+
+def options_of(field: FieldDef) -> list[str]:
+    """The labels of a value-table field, each once (two numbers may share one)."""
+    return list(dict.fromkeys((field.values or {}).values()))
 
 
 def disabled_field_labels(definition: Definition | None) -> set[str]:
@@ -165,9 +171,7 @@ def select_polled(
             seen.add(id(msg))
             polled.append(msg)
 
-    for m in read_messages:
-        if not m.is_polled_read:
-            continue
+    for m in read_messages:  # the scheduler drops what cannot be polled
         for field in values_of(m):
             if ({entity_uid(prefix, m, field.label), control_uid(prefix, m, field.label)}
                     & enabled_uids):
