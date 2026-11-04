@@ -13,7 +13,7 @@ from aioebus.scan import ScanResult
 from aioebus.values import value_key
 from homeassistant.components.climate import ClimateEntityFeature, HVACMode
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ebus.climate import EbusZoneClimate
@@ -505,3 +505,26 @@ def test_presets_are_named():
     names = FIXED_ATTRIBUTE_STATES["climate"]["zone"]["preset_mode"]
     assert names["de"] == {"none": "Keine", "away": "Abwesenheit", "ventilation": "Stoßlüften"}
     assert set(names["en"]) == set(names["de"])
+
+
+async def test_while_airing_the_setpoint_is_shown_but_not_adjustable(hass: HomeAssistant,
+                                                                    _wednesday):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 2)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    lo, hi = climate.min_temp, climate.max_temp
+    past = _away(zone, "01.01.2019", "01.01.2019")
+    coord.data = {**_zone_data(zone, "manual", setpoint=0.0), **past,
+                  **_special(zone, "ventilation")}
+    assert climate.target_temperature == 0.0  # heating off, as the controller says
+    assert climate.min_temp == climate.max_temp == 0.0  # nothing to step to
+    coord.async_write = AsyncMock()
+    with pytest.raises(ServiceValidationError):
+        await climate.async_set_temperature(temperature=22.0, hvac_mode=HVACMode.AUTO)
+    coord.async_write.assert_not_awaited()  # not even the mode
+    # the preset ends it; afterwards the range is the register's again
+    coord.data = {**_zone_data(zone, "manual", setpoint=20.5), **past, **_special(zone, "auto")}
+    assert (climate.min_temp, climate.max_temp) == (lo, hi) and lo < hi
+    await climate.async_set_temperature(temperature=22.0)
+    coord.async_write.assert_awaited()

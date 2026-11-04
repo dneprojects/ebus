@@ -26,6 +26,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -162,6 +163,21 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
                 continue
         return None
 
+    def _fixed_setpoint(self) -> float | None:
+        """While airing the controller holds its setpoint (heating off): shown,
+        but not adjustable."""
+        return self.target_temperature if self._state() == AIRING else None
+
+    @property
+    def min_temp(self) -> float:
+        fixed = self._fixed_setpoint()
+        return fixed if fixed is not None else self._attr_min_temp
+
+    @property
+    def max_temp(self) -> float:
+        fixed = self._fixed_setpoint()
+        return fixed if fixed is not None else self._attr_max_temp
+
     @property
     def hvac_modes(self) -> list[HVACMode]:
         # read-only: only the current mode, so the UI offers nothing to switch to
@@ -192,10 +208,13 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
         return zone_state(self._data(), self._zone, dt_util.now())
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        if temp is not None and self._state() == AIRING:  # before anything is switched
+            raise ServiceValidationError(
+                f"eBUS zone {self._zone.n}: no setpoint while airing; end it first (preset)")
         mode = kwargs.get(ATTR_HVAC_MODE)  # set_temperature may switch too
         if mode is not None and mode != self.hvac_mode:
             await self.async_set_hvac_mode(mode)
-        temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
         zone = self._zone

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- While airing the thermostat shows the controller's setpoint (0 °C) but it cannot be changed
+
 ## 0.7.7
 
 - Sensors and number fields show at most two decimals (heat curve 0.45, not 0.4499999); a number's step is at least 0.01
