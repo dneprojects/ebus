@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.7
 
 - Sensors and number fields show at most two decimals (heat curve 0.45, not 0.4499999); a number's step is at least 0.01
 - Energy (kWh, Wh) shows as a whole number
