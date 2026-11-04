@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "climate": {
+      "zone": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "ventilation": "mdi:window-open"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -500,6 +500,52 @@ async def test_presets_need_their_registers(hass: HomeAssistant):
     assert ClimateEntityFeature.PRESET_MODE not in ro.supported_features
 
 
+async def test_the_setpoint_is_read_again_once_the_controller_recalculated(
+        hass: HomeAssistant, _wednesday):
+    from datetime import timedelta
+
+    from homeassistant.util import dt as dt_util
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 2)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = {**_zone_data(zone, "manual"), **_away(zone, "01.01.2019", "01.01.2019"),
+                  **_special(zone, "auto")}
+    coord.async_write = AsyncMock()
+
+    def setpoint_reads() -> int:
+        return sum(c.args[0] is zone.setpoint for c in coord.engine.read.await_args_list)
+
+    async def later(seconds: float) -> None:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
+        await hass.async_block_till_done()
+
+    await climate.async_set_preset_mode("ventilation")
+    assert setpoint_reads() == 1  # at once
+    await later(2)
+    assert setpoint_reads() == 1  # not yet recalculated
+    await climate.async_set_hvac_mode(HVACMode.AUTO)  # a further change starts it anew
+    assert setpoint_reads() == 2
+    await later(6)
+    assert setpoint_reads() == 3  # once, after the last change
+    await later(20)
+    assert setpoint_reads() == 3
+    await climate.async_set_hvac_mode(HVACMode.OFF)
+    await climate.async_will_remove_from_hass()  # removed: nothing left to read
+    await later(20)
+    assert setpoint_reads() == 4
+
+
+def test_airing_has_its_icon():
+    import json
+    from pathlib import Path
+    icons = json.loads((Path(__file__).parents[1] / "custom_components/ebus/icons.json")
+                       .read_text(encoding="utf-8"))
+    states = icons["entity"]["climate"]["zone"]["state_attributes"]["preset_mode"]["state"]
+    assert states == {"ventilation": "mdi:window-open"}
+
+
 def test_presets_are_named():
     from custom_components.ebus.strings_gen import FIXED_ATTRIBUTE_STATES
     names = FIXED_ATTRIBUTE_STATES["climate"]["zone"]["preset_mode"]
