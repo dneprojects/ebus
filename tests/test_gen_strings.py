@@ -77,8 +77,10 @@ def test_passive_update_is_a_sensor_without_a_control():
 
 
 def test_zone_name_is_translated():
-    assert sg.build_entities([], "de")["climate"]["zone"]["name"] == "Heizkreis {n}"
-    assert sg.build_entities([], "en")["climate"]["zone"]["name"] == "Heating circuit {n}"
+    assert sg.build_entities([], "de")["climate"]["zone"]["name"] == "Zone {n}"
+    assert sg.build_entities([], "en")["climate"]["zone"]["name"] == "Zone {n}"
+    state = sg.build_entities([], "de")["sensor"]["zone_state"]
+    assert state["name"] == "Zone {n} Zustand" and state["state"]["setback"] == "Absenkung"
 
 
 def test_de_omitted_without_translation_so_ha_falls_back():
@@ -113,7 +115,7 @@ def test_reviewed_names_cover_every_bundled_key():
     keys = {k for platform in strings["entity"].values() for k in platform}
     sample = {"z1daytemp", "sensordata1_s1", "hwctimer_monday0_htm", "status01_temp_1"}
     assert sample <= keys
-    assert sg.CURATED_NAMES["de"]["z1daytemp"] == "Zone 1 Tag-Sollwert"
+    assert sg.CURATED_NAMES["de"]["z1daytemp"] == "Zone 1 Sollwert manuell"
     assert sg.CURATED_NAMES["de"]["sensordata1_s1"] == "Temperatursensor S1"
     assert not [k for k in sg.CURATED_NAMES["de"].values() if "Fühler" in k]
 

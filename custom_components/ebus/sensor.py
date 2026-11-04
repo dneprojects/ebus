@@ -1,9 +1,11 @@
-"""Sensor platform: one entity per decodable read field of every scanned device."""
+"""Sensor platform: one entity per decodable read field of every scanned device,
+and per heating zone what applies in it now."""
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Final, cast
 
+from aioebus.catalog import ClimateZone
 from aioebus.codecs import has_numeric_value
 from aioebus.values import Value, closes_period, values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
@@ -12,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import EbusConfigEntry
 from .adapter import wifi
@@ -19,7 +22,8 @@ from .coordinator import EbusCoordinator
 from .device import adapter_device_info
 from .entities import disabled_field_labels, icon_for, options_of
 from .entity import EbusBusEntity
-from .ids import entity_uid
+from .ids import entity_uid, zone_state_uid
+from .zone_state import STATES, in_use, zone_state
 
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
     "°C": (SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT),
@@ -135,6 +139,22 @@ async def async_setup_entry(
     _add_ident_sensors()
     entry.async_on_unload(coordinator.async_add_listener(_add_ident_sensors))
 
+    # what applies in a heating zone now; added with the zone's thermostat, once
+    # one of its registers has a value
+    pending = coordinator.catalog.zones()
+
+    @callback
+    def _add_zone_states() -> None:
+        active = [z for z in pending if in_use(coordinator.data, z)]
+        if active:
+            for zone in active:
+                pending.remove(zone)
+            async_add_entities(EbusZoneStateSensor(coordinator, z) for z in active)
+
+    _add_zone_states()
+    if pending:
+        entry.async_on_unload(coordinator.async_add_listener(_add_zone_states))
+
 
 class EbusSensor(EbusBusEntity, SensorEntity):
     """A single decoded eBUS register value."""
@@ -197,6 +217,27 @@ class EbusSensor(EbusBusEntity, SensorEntity):
     @property
     def available(self) -> bool:
         return super().available and self._key in self.coordinator.data
+
+
+class EbusZoneStateSensor(EbusBusEntity, SensorEntity):
+    """What applies in a heating zone now: off, manual, a time slot, setback,
+    Eco, quick veto, away (see zone_state)."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = STATES
+    _attr_translation_key = "zone_state"
+    _attr_icon = "mdi:home-thermometer-outline"
+
+    def __init__(self, coordinator: EbusCoordinator, zone: ClimateZone) -> None:
+        super().__init__(coordinator)
+        self._zone = zone
+        self._attr_translation_placeholders = {"n": str(zone.n)}
+        self._attr_unique_id = zone_state_uid(coordinator.uid_prefix, zone.zz, zone.n)
+        self._attr_device_info = coordinator.device_info(int(zone.zz, 16))
+
+    @property
+    def native_value(self) -> StateType:
+        return zone_state(self.coordinator.data, self._zone, dt_util.now())
 
 
 class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):

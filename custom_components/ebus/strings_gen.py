@@ -111,13 +111,33 @@ FIXED_NAMES = {
         "ident_article": {"en": "Article number", "de": "Artikelnummer"},
         "ident_serial": {"en": "Serial number", "de": "Seriennummer"},
         "ident_manufactured": {"en": "Manufactured", "de": "Baujahr"},
+        # what applies in heating zone {n} now (zone_state.py)
+        "zone_state": {"en": "Zone {n} state", "de": "Zone {n} Zustand"},
     },
     "binary_sensor": {
         "adapter_signal": {"en": "Signal", "de": "Signal"},
     },
     # a heating zone without its own short name; {n} is the zone number
     "climate": {
-        "zone": {"en": "Heating circuit {n}", "de": "Heizkreis {n}"},
+        "zone": {"en": "Zone {n}", "de": "Zone {n}"},
+    },
+}
+
+# state labels of those entities: translation key -> language -> state -> label
+FIXED_STATES = {
+    "sensor": {
+        "zone_state": {
+            "en": {"off": "Off", "manual": "Manual", "time_slot": "Time slot",
+                   "setback": "Setback", "eco": "Eco (off, frost protection)",
+                   "time_controlled": "Time-controlled", "quick_veto": "Quick veto",
+                   "away": "Away", "airing": "Airing (heating off)",
+                   "special": "Special function"},
+            "de": {"off": "Aus", "manual": "Manuell", "time_slot": "Zeitfenster",
+                   "setback": "Absenkung", "eco": "Eco (aus, Frostschutz)",
+                   "time_controlled": "Zeitgesteuert", "quick_veto": "Quick-Veto",
+                   "away": "Abwesenheit", "airing": "Stoßlüften (Heizung aus)",
+                   "special": "Sonderfunktion"},
+        },
     },
 }
 
@@ -192,7 +212,8 @@ def build_entities(msgs: list[MessageDef], lang: str) -> dict[str, dict[str, Any
                     _states(value.field, lang))
     for platform, names in FIXED_NAMES.items():
         for key, by_lang in names.items():
-            put(platforms[platform], key, by_lang.get(lang), None)
+            put(platforms[platform], key, by_lang.get(lang),
+                FIXED_STATES.get(platform, {}).get(key, {}).get(lang))
     return platforms
 
 

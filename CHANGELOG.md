@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.6
+
+- Thermostat as the sensoCOMFORT has it: Auto (time-controlled), Heat (manual), Off; the day/night presets are gone
+- The thermostat shows the setpoint in effect now (room setpoint), none while off
+- A new temperature in Auto starts a quick veto (setpoint, the controller's duration else 3 h, special function); while heating manually it sets the manual setpoint
+- New sensor per zone "Zone N state": off, manual, time slot, setback, Eco, quick veto, away, airing, special function, time-controlled
+- The zone mode selects offer off/auto/manual (day/night are gone, automations using them need updating); the circuits' setback mode eco/normal (was night)
+- Mode, setpoints, room temperature and special function of a zone are read every minute and right after a change
+- Names as the app calls them: "Sollwert manuell", "Absenktemperatur", "Abwesenheitstemperatur", circuit "Absenkmodus" Eco/Normal; a zone without a name is "Zone N"
+- Requires aioebus 0.7.6 (pinned)
+
 ## 0.7.5
 
 - Writing with read-back and the reconnect loop come from aioebus (`write_confirmed`, `EngineRunner`); the integration keeps only the outage marking and its log

@@ -32,6 +32,11 @@ def zone_uid(prefix: str, zz: str, n: int) -> str:
     return uid(prefix, zz, f"z{n}", "climate")
 
 
+def zone_state_uid(prefix: str, zz: str, n: int) -> str:
+    """A heating zone's state sensor (what applies now)."""
+    return uid(prefix, zz, f"z{n}", "state")
+
+
 def message_of(unique_id: str) -> str | None:
     """The message name inside a register entity's id, else None. A message
     name may contain '_' (e.g. Z1Timer_Monday0), so it is found by the label,

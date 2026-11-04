@@ -410,6 +410,24 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
                 f"eBUS write to {msg.name} not confirmed ({outcome.uncertain}); it may "
                 f"have been applied -- {shown}") from outcome.uncertain
 
+    async def async_read_now(self, *msgs: MessageDef | None) -> None:
+        """Read registers now (e.g. a setpoint a write changed); best effort,
+        the next poll reads them anyway."""
+        if self.engine is None:
+            return
+        read = False
+        for msg in msgs:
+            if msg is None:
+                continue
+            try:
+                await self.engine.read(msg)
+            except (TimeoutError, ReadError, ValueError, OSError) as err:
+                _LOGGER.debug("eBUS: %s not read now: %s", msg.name, err)
+                continue
+            read = True
+        if read:
+            self.async_set_updated_data(dict(self.engine.cache))
+
     async def _async_update_data(self) -> EbusCache:
         if self.engine is None:
             raise UpdateFailed("engine not started")

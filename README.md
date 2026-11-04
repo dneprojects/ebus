@@ -17,6 +17,12 @@ device, numbers and selects for settings (opt-in: writing is off by default), a
 thermostat per heating zone, the adapter's own diagnostics, and entity names in
 your language.
 
+A sensoCOMFORT zone's thermostat follows the controller: Auto is its
+time-controlled mode, Heat its manual mode, Off is off. It shows the setpoint in
+effect now; a new temperature sets the manual setpoint while heating manually and
+starts a quick veto in Auto. The zone's state sensor tells what applies now (a
+time slot, setback or Eco outside the slots, quick veto, away, airing).
+
 ## Requirements
 
 - An enhanced eBUS adapter reachable over TCP (ebusd's `enh:host:port`). The

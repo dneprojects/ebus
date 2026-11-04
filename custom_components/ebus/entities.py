@@ -22,7 +22,8 @@ from aioebus.messages import FieldDef, MessageDef
 from aioebus.scan import ScanResult
 from aioebus.values import values_of
 
-from .ids import control_uid, entity_uid, zone_uid
+from .ids import control_uid, entity_uid, zone_state_uid, zone_uid
+from .zone_state import messages_of as state_messages
 
 PRESENTATION: Final = Path(__file__).parent / "presentation.json"
 
@@ -162,7 +163,7 @@ def select_polled(
     """The read messages that back at least one *enabled* entity, so only those
     are polled. A read backs a sensor, a number/select (its control id shares the
     sensor's (zz, name, label), so a writable's read twin is polled whenever its
-    control is enabled) or a climate zone."""
+    control is enabled), a climate zone or a zone's state sensor."""
     polled: list[MessageDef] = []
     seen: set[int] = set()
 
@@ -179,6 +180,10 @@ def select_polled(
                 break
     for zone in zones:
         if zone_uid(prefix, zone.zz, zone.n) in enabled_uids:
-            for msg in (zone.target_read, zone.current, zone.mode_read, zone.shortname):
+            for msg in (zone.target_read, zone.current, zone.mode_read, zone.shortname,
+                        zone.setpoint, zone.special_read):
+                add(msg)
+        if zone_state_uid(prefix, zone.zz, zone.n) in enabled_uids:
+            for msg in state_messages(zone):
                 add(msg)
     return polled

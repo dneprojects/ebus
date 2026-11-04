@@ -239,7 +239,7 @@
         "name": "Hc1AutoOffMode",
         "state": {
           "eco": "eco",
-          "night": "night"
+          "normal": "normal"
         }
       },
       "hc1heatcurve": {
@@ -301,7 +301,7 @@
         "name": "Hc2AutoOffMode",
         "state": {
           "eco": "eco",
-          "night": "night"
+          "normal": "normal"
         }
       },
       "hc2heatcurve": {
@@ -360,7 +360,7 @@
         "name": "Hc3AutoOffMode",
         "state": {
           "eco": "eco",
-          "night": "night"
+          "normal": "normal"
         }
       },
       "hc3heatcurve": {
@@ -415,8 +415,7 @@
         "state": {
           "off": "off",
           "auto": "auto",
-          "day": "day",
-          "night": "night"
+          "manual": "manual"
         }
       },
       "z1quickvetotemp": {
@@ -490,8 +489,7 @@
         "state": {
           "off": "off",
           "auto": "auto",
-          "day": "day",
-          "night": "night"
+          "manual": "manual"
         }
       },
       "z2quickvetotemp": {
@@ -562,8 +560,7 @@
         "state": {
           "off": "off",
           "auto": "auto",
-          "day": "day",
-          "night": "night"
+          "manual": "manual"
         }
       },
       "z3quickvetotemp": {
@@ -1869,6 +1866,21 @@
       },
       "ident_manufactured": {
         "name": "Manufactured"
+      },
+      "zone_state": {
+        "name": "Zone {n} state",
+        "state": {
+          "off": "Off",
+          "manual": "Manual",
+          "time_slot": "Time slot",
+          "setback": "Setback",
+          "eco": "Eco (off, frost protection)",
+          "time_controlled": "Time-controlled",
+          "quick_veto": "Quick veto",
+          "away": "Away",
+          "airing": "Airing (heating off)",
+          "special": "Special function"
+        }
       }
     },
     "number": {
@@ -2159,7 +2171,7 @@
         "name": "Hc1AutoOffMode",
         "state": {
           "eco": "eco",
-          "night": "night"
+          "normal": "normal"
         }
       },
       "hc1roomtempswitchon": {
@@ -2174,7 +2186,7 @@
         "name": "Hc2AutoOffMode",
         "state": {
           "eco": "eco",
-          "night": "night"
+          "normal": "normal"
         }
       },
       "hc2roomtempswitchon": {
@@ -2189,7 +2201,7 @@
         "name": "Hc3AutoOffMode",
         "state": {
           "eco": "eco",
-          "night": "night"
+          "normal": "normal"
         }
       },
       "hc3roomtempswitchon": {
@@ -2205,8 +2217,7 @@
         "state": {
           "off": "off",
           "auto": "auto",
-          "day": "day",
-          "night": "night"
+          "manual": "manual"
         }
       },
       "z1sfmode": {
@@ -2232,8 +2243,7 @@
         "state": {
           "off": "off",
           "auto": "auto",
-          "day": "day",
-          "night": "night"
+          "manual": "manual"
         }
       },
       "z2sfmode": {
@@ -2259,8 +2269,7 @@
         "state": {
           "off": "off",
           "auto": "auto",
-          "day": "day",
-          "night": "night"
+          "manual": "manual"
         }
       },
       "z3sfmode": {
@@ -2321,7 +2330,7 @@
     },
     "climate": {
       "zone": {
-        "name": "Heating circuit {n}"
+        "name": "Zone {n}"
       }
     }
   }

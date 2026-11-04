@@ -200,7 +200,13 @@
       "hwcsfmode": {
         "name": "Warmwasser Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "hc1circuittype_mctype": {
@@ -216,9 +222,10 @@
         "name": "Heizkreis 1 Vorlauf-Überhöhung"
       },
       "hc1autooffmode": {
-        "name": "Heizkreis 1 Verhalten außerhalb Zeitfenster",
+        "name": "Heizkreis 1 Absenkmodus",
         "state": {
-          "night": "Nacht"
+          "eco": "Eco",
+          "normal": "Normal"
         }
       },
       "hc1heatcurve": {
@@ -267,9 +274,10 @@
         "name": "Heizkreis 2 Vorlauf-Überhöhung"
       },
       "hc2autooffmode": {
-        "name": "Heizkreis 2 Verhalten außerhalb Zeitfenster",
+        "name": "Heizkreis 2 Absenkmodus",
         "state": {
-          "night": "Nacht"
+          "eco": "Eco",
+          "normal": "Normal"
         }
       },
       "hc2heatcurve": {
@@ -315,9 +323,10 @@
         "name": "Heizkreis 3 Vorlauf-Überhöhung"
       },
       "hc3autooffmode": {
-        "name": "Heizkreis 3 Verhalten außerhalb Zeitfenster",
+        "name": "Heizkreis 3 Absenkmodus",
         "state": {
-          "night": "Nacht"
+          "eco": "Eco",
+          "normal": "Normal"
         }
       },
       "hc3heatcurve": {
@@ -363,15 +372,14 @@
         "name": "Zone 1 Urlaub Ende"
       },
       "z1holidaytemp": {
-        "name": "Zone 1 Urlaubs-Sollwert"
+        "name": "Zone 1 Abwesenheitstemperatur"
       },
       "z1opmode": {
         "name": "Zone 1 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
-          "day": "Tag",
-          "night": "Nacht"
+          "manual": "Manuell"
         }
       },
       "z1quickvetotemp": {
@@ -387,12 +395,18 @@
         "name": "Zone 1 Quick-Veto Ende Datum"
       },
       "z1nighttemp": {
-        "name": "Zone 1 Absenk-Sollwert"
+        "name": "Zone 1 Absenktemperatur"
       },
       "z1sfmode": {
         "name": "Zone 1 Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "z1roomtemp": {
@@ -417,7 +431,7 @@
         "name": "Zone 1 Name Teil 2"
       },
       "z1daytemp": {
-        "name": "Zone 1 Tag-Sollwert"
+        "name": "Zone 1 Sollwert manuell"
       },
       "z2coolingtemp": {
         "name": "Zone 2 Kühl-Sollwert"
@@ -429,15 +443,14 @@
         "name": "Zone 2 Urlaub Ende"
       },
       "z2holidaytemp": {
-        "name": "Zone 2 Urlaubs-Sollwert"
+        "name": "Zone 2 Abwesenheitstemperatur"
       },
       "z2opmode": {
         "name": "Zone 2 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
-          "day": "Tag",
-          "night": "Nacht"
+          "manual": "Manuell"
         }
       },
       "z2quickvetotemp": {
@@ -453,12 +466,18 @@
         "name": "Zone 2 Quick-Veto Ende Datum"
       },
       "z2nighttemp": {
-        "name": "Zone 2 Absenk-Sollwert"
+        "name": "Zone 2 Absenktemperatur"
       },
       "z2sfmode": {
         "name": "Zone 2 Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "z2roomtemp": {
@@ -483,7 +502,7 @@
         "name": "Zone 2 Name Teil 2"
       },
       "z2daytemp": {
-        "name": "Zone 2 Tag-Sollwert"
+        "name": "Zone 2 Sollwert manuell"
       },
       "z3holidaystartperiod": {
         "name": "Zone 3 Urlaub Beginn"
@@ -492,15 +511,14 @@
         "name": "Zone 3 Urlaub Ende"
       },
       "z3holidaytemp": {
-        "name": "Zone 3 Urlaubs-Sollwert"
+        "name": "Zone 3 Abwesenheitstemperatur"
       },
       "z3opmode": {
         "name": "Zone 3 Betriebsart",
         "state": {
           "off": "Aus",
           "auto": "Auto",
-          "day": "Tag",
-          "night": "Nacht"
+          "manual": "Manuell"
         }
       },
       "z3quickvetotemp": {
@@ -516,12 +534,18 @@
         "name": "Zone 3 Quick-Veto Ende Datum"
       },
       "z3nighttemp": {
-        "name": "Zone 3 Absenk-Sollwert"
+        "name": "Zone 3 Absenktemperatur"
       },
       "z3sfmode": {
         "name": "Zone 3 Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "z3valvestatus": {
@@ -543,7 +567,7 @@
         "name": "Zone 3 Name Teil 2"
       },
       "z3daytemp": {
-        "name": "Zone 3 Tag-Sollwert"
+        "name": "Zone 3 Sollwert manuell"
       },
       "hwctimer_timeframes_slotcount": {
         "name": "Warmwasser Zeitfenster Anzahl Montag"
@@ -1000,7 +1024,8 @@
       "hcpumpmode": {
         "name": "Heizkreispumpe Betriebsart",
         "state": {
-          "winter": "Winter"
+          "winter": "Winter",
+          "eco": "Eco"
         }
       },
       "blocktimehcmax": {
@@ -1440,7 +1465,8 @@
         "state": {
           "off": "Aus",
           "on": "Ein",
-          "auto": "Auto"
+          "auto": "Auto",
+          "manual": "Manuell"
         }
       },
       "manualtappingtempdesired": {
@@ -1588,7 +1614,8 @@
         "name": "Betriebsart Tag/Nacht",
         "state": {
           "night": "Nacht",
-          "day": "Tag"
+          "day": "Tag",
+          "load": "Speicherladung"
         }
       },
       "status_temp": {
@@ -1684,6 +1711,21 @@
       },
       "ident_manufactured": {
         "name": "Baujahr"
+      },
+      "zone_state": {
+        "name": "Zone {n} Zustand",
+        "state": {
+          "off": "Aus",
+          "manual": "Manuell",
+          "time_slot": "Zeitfenster",
+          "setback": "Absenkung",
+          "eco": "Eco (aus, Frostschutz)",
+          "time_controlled": "Zeitgesteuert",
+          "quick_veto": "Quick-Veto",
+          "away": "Abwesenheit",
+          "airing": "Stoßlüften (Heizung aus)",
+          "special": "Sonderfunktion"
+        }
       }
     },
     "number": {
@@ -1844,7 +1886,7 @@
         "name": "Zone 1 Kühl-Sollwert"
       },
       "z1holidaytemp": {
-        "name": "Zone 1 Urlaubs-Sollwert"
+        "name": "Zone 1 Abwesenheitstemperatur"
       },
       "z1quickvetotemp": {
         "name": "Zone 1 Quick-Veto Sollwert"
@@ -1853,7 +1895,7 @@
         "name": "Zone 1 Quick-Veto Dauer"
       },
       "z1nighttemp": {
-        "name": "Zone 1 Absenk-Sollwert"
+        "name": "Zone 1 Absenktemperatur"
       },
       "z1valvestatus": {
         "name": "Zone 1 Ventilstatus"
@@ -1862,13 +1904,13 @@
         "name": "Zone 1 Raum-Sollwert aktuell"
       },
       "z1daytemp": {
-        "name": "Zone 1 Tag-Sollwert"
+        "name": "Zone 1 Sollwert manuell"
       },
       "z2coolingtemp": {
         "name": "Zone 2 Kühl-Sollwert"
       },
       "z2holidaytemp": {
-        "name": "Zone 2 Urlaubs-Sollwert"
+        "name": "Zone 2 Abwesenheitstemperatur"
       },
       "z2quickvetotemp": {
         "name": "Zone 2 Quick-Veto Sollwert"
@@ -1877,7 +1919,7 @@
         "name": "Zone 2 Quick-Veto Dauer"
       },
       "z2nighttemp": {
-        "name": "Zone 2 Absenk-Sollwert"
+        "name": "Zone 2 Absenktemperatur"
       },
       "z2valvestatus": {
         "name": "Zone 2 Ventilstatus"
@@ -1886,10 +1928,10 @@
         "name": "Zone 2 Raum-Sollwert aktuell"
       },
       "z2daytemp": {
-        "name": "Zone 2 Tag-Sollwert"
+        "name": "Zone 2 Sollwert manuell"
       },
       "z3holidaytemp": {
-        "name": "Zone 3 Urlaubs-Sollwert"
+        "name": "Zone 3 Abwesenheitstemperatur"
       },
       "z3quickvetotemp": {
         "name": "Zone 3 Quick-Veto Sollwert"
@@ -1898,7 +1940,7 @@
         "name": "Zone 3 Quick-Veto Dauer"
       },
       "z3nighttemp": {
-        "name": "Zone 3 Absenk-Sollwert"
+        "name": "Zone 3 Absenktemperatur"
       },
       "z3valvestatus": {
         "name": "Zone 3 Ventilstatus"
@@ -1907,7 +1949,7 @@
         "name": "Zone 3 Raum-Sollwert aktuell"
       },
       "z3daytemp": {
-        "name": "Zone 3 Tag-Sollwert"
+        "name": "Zone 3 Sollwert manuell"
       },
       "manualtappingtempdesired": {
         "name": "Zapf-Sollwert manuell"
@@ -1955,13 +1997,20 @@
       "hwcsfmode": {
         "name": "Warmwasser Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "hc1autooffmode": {
-        "name": "Heizkreis 1 Verhalten außerhalb Zeitfenster",
+        "name": "Heizkreis 1 Absenkmodus",
         "state": {
-          "night": "Nacht"
+          "eco": "Eco",
+          "normal": "Normal"
         }
       },
       "hc1roomtempswitchon": {
@@ -1971,9 +2020,10 @@
         }
       },
       "hc2autooffmode": {
-        "name": "Heizkreis 2 Verhalten außerhalb Zeitfenster",
+        "name": "Heizkreis 2 Absenkmodus",
         "state": {
-          "night": "Nacht"
+          "eco": "Eco",
+          "normal": "Normal"
         }
       },
       "hc2roomtempswitchon": {
@@ -1983,9 +2033,10 @@
         }
       },
       "hc3autooffmode": {
-        "name": "Heizkreis 3 Verhalten außerhalb Zeitfenster",
+        "name": "Heizkreis 3 Absenkmodus",
         "state": {
-          "night": "Nacht"
+          "eco": "Eco",
+          "normal": "Normal"
         }
       },
       "hc3roomtempswitchon": {
@@ -1999,14 +2050,19 @@
         "state": {
           "off": "Aus",
           "auto": "Auto",
-          "day": "Tag",
-          "night": "Nacht"
+          "manual": "Manuell"
         }
       },
       "z1sfmode": {
         "name": "Zone 1 Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "z1roomzonemapping": {
@@ -2017,14 +2073,19 @@
         "state": {
           "off": "Aus",
           "auto": "Auto",
-          "day": "Tag",
-          "night": "Nacht"
+          "manual": "Manuell"
         }
       },
       "z2sfmode": {
         "name": "Zone 2 Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "z2roomzonemapping": {
@@ -2035,14 +2096,19 @@
         "state": {
           "off": "Aus",
           "auto": "Auto",
-          "day": "Tag",
-          "night": "Nacht"
+          "manual": "Manuell"
         }
       },
       "z3sfmode": {
         "name": "Zone 3 Sonderbetrieb",
         "state": {
-          "auto": "Auto"
+          "auto": "Auto",
+          "ventilation": "Stoßlüften",
+          "party": "Party",
+          "veto": "Quick-Veto",
+          "onedayaway": "Ein Tag abwesend",
+          "onedayathome": "Ein Tag zu Hause",
+          "load": "Speicherladung"
         }
       },
       "z3roomzonemapping": {
@@ -2053,7 +2119,8 @@
         "state": {
           "off": "Aus",
           "on": "Ein",
-          "auto": "Auto"
+          "auto": "Auto",
+          "manual": "Manuell"
         }
       },
       "setmode": {
@@ -2086,7 +2153,7 @@
     },
     "climate": {
       "zone": {
-        "name": "Heizkreis {n}"
+        "name": "Zone {n}"
       }
     }
   }

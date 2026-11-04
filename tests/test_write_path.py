@@ -1,7 +1,7 @@
 """Write path: coordinator.async_write, platforms, climate (run under
 pytest-homeassistant-custom-component; skipped where Home Assistant is not
 installed)."""
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -137,29 +137,208 @@ async def test_climate_is_read_only_without_write_permission(hass: HomeAssistant
     assert HVACMode.HEAT in writable.hvac_modes
 
 
-async def test_climate_modes_write_the_zone_mode_register(hass: HomeAssistant):
+async def test_climate_modes_are_the_controllers(hass: HomeAssistant):
+    # sensoCOMFORT: time-controlled, manual, off -- no day/night presets
     coord = await _coordinator(hass)
     zone = next(z for z in coord.catalog.zones() if z.n == 1)
     climate = EbusZoneClimate(coord, zone)
     climate.hass = hass
     assert climate.hvac_modes == [HVACMode.OFF, HVACMode.HEAT, HVACMode.AUTO]
-    assert climate.preset_modes == ["day", "night"]
+    assert ClimateEntityFeature.PRESET_MODE not in climate.supported_features
     written = []
     coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg, value)))
     await climate.async_set_hvac_mode(HVACMode.OFF)
     await climate.async_set_hvac_mode(HVACMode.AUTO)
-    await climate.async_set_hvac_mode(HVACMode.HEAT)  # heating at the comfort setpoint
-    await climate.async_set_preset_mode("night")
+    await climate.async_set_hvac_mode(HVACMode.HEAT)  # manual heating
     await climate.async_turn_off()
     await climate.async_turn_on()
     assert {m.name for m, _ in written} == {"Z1OpMode"}
     assert all(m.direction == "w" for m, _ in written)  # the active write, not the read
-    assert [v for _, v in written] == ["off", "auto", "day", "night", "off", "day"]
+    assert [v for _, v in written] == ["off", "auto", "manual", "off", "manual"]
     # the shown mode follows the read register's value
-    for value, mode in (("off", HVACMode.OFF), ("auto", HVACMode.AUTO), ("night", HVACMode.HEAT)):
+    for value, mode in (("off", HVACMode.OFF), ("auto", HVACMode.AUTO), ("manual", HVACMode.HEAT)):
         coord.data = {value_key(zone.mode_read, zone.mode_read.name): value}
         assert climate.hvac_mode is mode
-    assert climate.preset_mode == "night"
+    assert climate.preset_mode is None
+
+
+def _zone_data(zone, mode=None, setpoint=None, manual=None) -> dict:
+    data = {}
+    for msg, value in ((zone.mode_read, mode), (zone.setpoint, setpoint),
+                       (zone.target_read, manual)):
+        if value is not None:
+            data[value_key(msg, msg.name)] = value
+    return data
+
+
+async def test_climate_shows_the_setpoint_in_effect(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    coord.data = _zone_data(zone, "auto", setpoint=18.0, manual=21.0)  # setback time
+    assert climate.target_temperature == 18.0
+    coord.data = _zone_data(zone, "auto", manual=21.0)  # not read yet: the manual one
+    assert climate.target_temperature == 21.0
+
+
+@pytest.mark.parametrize(("cached", "hours"), [(2.5, 2.5), (None, 3.0)])
+async def test_set_temperature_in_auto_is_a_quick_veto(hass: HomeAssistant, cached, hours):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = _zone_data(zone, "auto", setpoint=21.0)
+    if cached is not None:
+        twin = coord.catalog.read_twin(zone.veto_duration)
+        coord.data[value_key(twin, twin.name)] = cached
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+    await climate.async_set_temperature(temperature=22.5)
+    # the setpoint, the duration, then the special function that starts the veto
+    assert written == [("Z1QuickVetoTemp", 22.5), ("Z1QuickVetoDuration", hours),
+                       ("Z1SFMode", "veto")]
+    # what it set in effect is shown at once
+    assert [c.args[0] for c in coord.engine.read.await_args_list] == [
+        zone.setpoint, zone.special_read]
+
+
+@pytest.mark.parametrize(("cached", "hours"), [(20.0, 12.0), (0.2, 0.5)])
+async def test_the_veto_duration_stays_in_range(hass: HomeAssistant, cached, hours):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = _zone_data(zone, "auto", setpoint=21.0)
+    twin = coord.catalog.read_twin(zone.veto_duration)
+    coord.data[value_key(twin, twin.name)] = cached
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+    await climate.async_set_temperature(temperature=22.0)
+    assert ("Z1QuickVetoDuration", hours) in written
+
+
+async def test_without_the_special_function_auto_sets_the_manual_setpoint(hass: HomeAssistant):
+    # a declaration without the special function cannot start a veto: no half veto
+    from dataclasses import replace
+    coord = await _coordinator(hass)
+    zone = replace(next(z for z in coord.catalog.zones() if z.n == 1), special_write=None)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = _zone_data(zone, "auto", setpoint=21.0)
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+    await climate.async_set_temperature(temperature=22.0)
+    assert written == [("Z1DayTemp", 22.0)]
+
+
+async def test_read_now_without_an_engine_does_nothing(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    coord.engine = None
+    coord.async_set_updated_data = MagicMock()
+    await coord.async_read_now(zone.setpoint)
+    coord.async_set_updated_data.assert_not_called()
+
+
+async def test_set_temperature_with_auto_starts_a_quick_veto(hass: HomeAssistant):
+    # one call that switches to auto and sets a temperature: the veto, not manual
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = _zone_data(zone, "manual", setpoint=21.0)
+
+    async def write(msg, value):
+        written.append((msg.name, value))
+        if msg is zone.mode_write:  # the device took the mode (cached on write)
+            key = value_key(zone.mode_read, zone.mode_read.name)
+            coord.data[key] = coord.engine.cache[key] = value
+
+    written = []
+    coord.async_write = AsyncMock(side_effect=write)
+    await climate.async_set_temperature(temperature=22.0, hvac_mode=HVACMode.AUTO)
+    assert [n for n, _ in written] == ["Z1OpMode", "Z1QuickVetoTemp", "Z1QuickVetoDuration",
+                                       "Z1SFMode"]
+
+
+async def test_a_failed_veto_write_starts_nothing(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = _zone_data(zone, "auto", setpoint=21.0)
+    written = []
+
+    async def write(msg, value):
+        if msg is zone.veto_duration:
+            raise HomeAssistantError("no answer")
+        written.append(msg.name)
+
+    coord.async_write = AsyncMock(side_effect=write)
+    with pytest.raises(HomeAssistantError):
+        await climate.async_set_temperature(temperature=22.0)
+    assert written == ["Z1QuickVetoTemp"]  # the special function is not started
+
+
+async def test_an_off_zone_shows_no_setpoint(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = _zone_data(zone, "off", setpoint=5.0, manual=21.0)
+    assert climate.target_temperature is None
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+    await climate.async_set_temperature(temperature=20.0)
+    assert written == [("Z1DayTemp", 20.0)]  # kept for when it heats manually
+
+
+async def test_a_mode_change_reads_what_it_set_in_effect(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.async_write = AsyncMock()
+    await climate.async_set_hvac_mode(HVACMode.AUTO)
+    assert [c.args[0] for c in coord.engine.read.await_args_list] == [
+        zone.setpoint, zone.special_read]
+
+
+async def test_set_temperature_while_manual_sets_the_manual_setpoint(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = _zone_data(zone, "manual", setpoint=21.0)
+    written = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+    await climate.async_set_temperature(temperature=20.0)
+    assert written == [("Z1DayTemp", 20.0)]
+
+
+async def test_setpoint_read_failure_after_a_write_is_quiet(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    coord.engine.read.side_effect = ReadError("no answer from slave")
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    coord.async_set_updated_data = MagicMock()
+    await coord.async_read_now(zone.setpoint)  # the next poll reads it
+    await coord.async_read_now(None)
+    coord.async_set_updated_data.assert_not_called()
+
+
+async def test_read_now_shows_what_it_read(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 1)
+    key = value_key(zone.setpoint, zone.setpoint.name)
+
+    async def read(msg, *_):
+        if msg is zone.special_read:
+            raise TimeoutError  # one failing read does not stop the others
+        coord.engine.cache[key] = 18.0
+
+    coord.engine.read.side_effect = read
+    await coord.async_read_now(zone.special_read, zone.setpoint)
+    assert coord.data[key] == 18.0
 
 
 async def test_zone_name_is_translated_unless_the_user_named_it(hass: HomeAssistant):
@@ -181,7 +360,7 @@ async def test_set_temperature_with_a_mode_switches_the_zone_too(hass: HomeAssis
     written = []
     coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
     await climate.async_set_temperature(temperature=21.5, hvac_mode=HVACMode.HEAT)
-    assert written == [("Z1OpMode", "day"), ("Z1DayTemp", 21.5)]
+    assert written == [("Z1OpMode", "manual"), ("Z1DayTemp", 21.5)]
 
 
 async def test_a_write_with_an_answer_field_writes_its_request_field(hass: HomeAssistant):
@@ -198,7 +377,7 @@ async def test_set_temperature_keeps_a_mode_already_on(hass: HomeAssistant):
     zone = next(z for z in coord.catalog.zones() if z.n == 1)
     climate = EbusZoneClimate(coord, zone)
     climate.hass = hass
-    coord.data = {value_key(zone.mode_read, zone.mode_read.name): "night"}  # heating, night preset
+    coord.data = {value_key(zone.mode_read, zone.mode_read.name): "manual"}  # heating already
     written = []
     coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
     await climate.async_set_temperature(temperature=21.5, hvac_mode=HVACMode.HEAT)

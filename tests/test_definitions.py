@@ -91,6 +91,29 @@ def test_select_polled_only_enabled():
     assert entities.select_polled(reads, {ids.entity_uid("E1", target, label)}, [], "E2") == []
 
 
+def test_an_enabled_thermostat_polls_its_registers():
+    catalog = Catalog()
+    asyncio.run(catalog.load({0x15: _scan("CTLV3", "8004", "808")}))
+    zone = next(z for z in catalog.zones() if z.n == 1)
+    polled = entities.select_polled(catalog.device_messages("r"),
+                                    {ids.zone_uid("E1", zone.zz, zone.n)}, [zone], "E1")
+    assert {m.name for m in polled} == {"Z1DayTemp", "Z1RoomTemp", "Z1OpMode", "Z1Shortname",
+                                        "Z1ActualRoomTempDesired", "Z1SFMode"}
+
+
+def test_an_enabled_zone_state_polls_what_it_is_told_from():
+    catalog = Catalog()
+    asyncio.run(catalog.load({0x15: _scan("CTLV3", "8004", "808")}))
+    zone = next(z for z in catalog.zones() if z.n == 2)
+    polled = entities.select_polled(catalog.device_messages("r"),
+                                    {ids.zone_state_uid("E1", zone.zz, zone.n)}, [zone], "E1")
+    assert {m.name for m in polled} == {
+        "Z2OpMode", "Z2SFMode", "Z2HolidayStartPeriod", "Z2HolidayEndPeriod",
+        "Z2Timer_Timeframes", *(f"Z2Timer_{d}0" for d in (
+            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")),
+        "Hc2AutoOffMode"}
+
+
 def test_presentation_names_only_what_the_catalog_defines():
     # names/controls/disabled fields are keyed by bundled files or IDENT/HW profiles;
     # controls name writable registers; disabled fields are entity labels
