@@ -17,10 +17,12 @@ device, numbers and selects for settings (opt-in: writing is off by default), a
 thermostat per heating zone, the adapter's own diagnostics, and entity names in
 your language.
 
-A sensoCOMFORT zone's thermostat follows the controller: Auto is its
-time-controlled mode, Heat its manual mode, Off is off. It shows the setpoint in
+A sensoCOMFORT zone's thermostat follows the controller: its modes are named
+as there (time-controlled, manual, off). It shows the setpoint in
 effect now; a new temperature sets the manual setpoint while heating manually and
-starts a quick veto in Auto. The zone's state sensor tells what applies now (a
+starts a quick veto in time-controlled mode. Its presets set and end an away
+period (from today, open end = one year, at the zone's away temperature) and
+airing. The zone's state sensor tells what applies now (a
 time slot, setback or Eco outside the slots, quick veto, away, airing).
 
 ## Requirements

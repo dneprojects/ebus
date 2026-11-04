@@ -5,6 +5,8 @@
 - Sensors and number fields show at most two decimals (heat curve 0.45, not 0.4499999); a number's step is at least 0.01
 - Energy (kWh, Wh) shows as a whole number
 - Thermostat modes carry the controller's names: Zeitgesteuert, Manuell, Aus (also for zones with their own name)
+- Thermostat presets Abwesenheit (from today, open end = one year) and Stoßlüften: set, end and shown as the zone's state tells
+- Any single-value register can be written (an away period's dates), not only those with a control
 
 ## 0.7.6
 

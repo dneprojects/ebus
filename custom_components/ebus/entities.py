@@ -193,7 +193,8 @@ def select_polled(
     for zone in zones:
         if zone_uid(prefix, zone.zz, zone.n) in enabled_uids:
             for msg in (zone.target_read, zone.current, zone.mode_read, zone.shortname,
-                        zone.setpoint, zone.special_read):
+                        zone.setpoint, zone.special_read, zone.holiday_start,
+                        zone.holiday_end):
                 add(msg)
         if zone_state_uid(prefix, zone.zz, zone.n) in enabled_uids:
             for msg in state_messages(zone):

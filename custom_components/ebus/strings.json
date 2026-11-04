@@ -2335,6 +2335,15 @@
           "auto": "Time-controlled",
           "heat": "Manual",
           "off": "Off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "none": "None",
+              "away": "Away",
+              "ventilation": "Airing"
+            }
+          }
         }
       }
     }

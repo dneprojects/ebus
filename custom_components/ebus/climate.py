@@ -6,9 +6,12 @@ manual heating: one thermostat per zone, with the HVAC mode from the zone's
 operating mode (off -> OFF, auto -> AUTO, others -> HEAT; any further value is
 a preset). It shows the setpoint in effect now (none while off); a new one is
 the manual setpoint while heating manually, and a quick veto (a temporary
-override, as the controller's own app does) in automatic mode."""
+override, as the controller's own app does) in automatic mode. Presets set
+and end an away period (from today; ended as a period that has passed) and
+airing; the preset shows what the zone's state (zone_state.py) tells."""
 from __future__ import annotations
 
+from datetime import date, timedelta
 from typing import Any, Final
 
 from aioebus.catalog import ClimateZone
@@ -16,22 +19,29 @@ from aioebus.messages import MessageDef
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
+    PRESET_AWAY,
+    PRESET_NONE,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
 from .entities import options_of
 from .entity import EbusBusEntity
 from .ids import zone_uid
-from .zone_state import in_use, value_of
+from .zone_state import AIRING, AWAY, in_use, value_of, zone_state
 
 # hours of a quick veto when the controller has not reported its own duration
 _VETO_HOURS: Final = 3.0
+# the airing preset (special function "ventilation"), and the length of an away
+# period without an end, as the myVaillant library sets it
+PRESET_AIRING: Final = "ventilation"
+_AWAY_DAYS: Final = 365
 
 
 def _enum_labels(msg: MessageDef | None) -> list[str]:
@@ -111,12 +121,19 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
             return
         if zone.target_write is not None:
             feature |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if zone.mode_write is not None:
-            if self._off:
-                feature |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-            if self._presets:
-                self._attr_preset_modes = self._presets
-                feature |= ClimateEntityFeature.PRESET_MODE
+        if zone.mode_write is not None and self._off:
+            feature |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        # presets: the controller's further mode values, then away and airing
+        self._functions = [p for p, ok in (
+            (PRESET_AWAY, zone.holiday_start_write is not None
+             and zone.holiday_end_write is not None and zone.holiday_end is not None),
+            (PRESET_AIRING, zone.special_write is not None
+             and {"ventilation", "none"} <= set(zone.special_values)),
+        ) if ok]
+        presets = (self._presets if zone.mode_write is not None else []) + self._functions
+        if presets:
+            self._attr_preset_modes = ([PRESET_NONE] if self._functions else []) + presets
+            feature |= ClimateEntityFeature.PRESET_MODE
         self._attr_supported_features = feature
 
     def _data(self) -> EbusCache:
@@ -161,8 +178,18 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
 
     @property
     def preset_mode(self) -> str | None:
+        state = self._state()
+        if state == AWAY and PRESET_AWAY in self._functions:
+            return PRESET_AWAY
+        if state == AIRING and PRESET_AIRING in self._functions:
+            return PRESET_AIRING
         value = self._val(self._zone.mode_read)
-        return value if isinstance(value, str) and value in self._presets else None
+        if isinstance(value, str) and value in self._presets:
+            return value
+        return PRESET_NONE if self._functions else None
+
+    def _state(self) -> str | None:
+        return zone_state(self._data(), self._zone, dt_util.now())
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         mode = kwargs.get(ATTR_HVAC_MODE)  # set_temperature may switch too
@@ -211,6 +238,27 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         if preset_mode in self._presets:
             await self._write_mode(preset_mode)
+            return
+        if preset_mode != PRESET_NONE and preset_mode not in self._functions:
+            return
+        zone, state, today = self._zone, self._state(), dt_util.now().date()
+        if state == AWAY and preset_mode != PRESET_AWAY:
+            await self._set_away(today - timedelta(days=1))  # a period that has passed
+        if state == AIRING and preset_mode != PRESET_AIRING and zone.special_write:
+            await self._write(zone.special_write, zone.special_values["none"])
+        if preset_mode == PRESET_AWAY and state != AWAY:
+            await self._set_away(today, today + timedelta(days=_AWAY_DAYS))
+        if preset_mode == PRESET_AIRING and state != AIRING and zone.special_write:
+            await self._write(zone.special_write, zone.special_values["ventilation"])
+        await self._read_effect()
+
+    async def _set_away(self, start: date, end: date | None = None) -> None:
+        """Write the away period (start first: the end never lies before it)."""
+        zone = self._zone
+        if zone.holiday_start_write is None or zone.holiday_end_write is None:
+            return
+        await self._write(zone.holiday_start_write, start.strftime("%d.%m.%Y"))
+        await self._write(zone.holiday_end_write, (end or start).strftime("%d.%m.%Y"))
 
     async def async_turn_off(self) -> None:
         if self._off:
@@ -228,7 +276,9 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
     async def _read_effect(self) -> None:
         """Read what a change set in effect, so the thermostat and the zone's
         state show it at once."""
-        await self.coordinator.async_read_now(self._zone.setpoint, self._zone.special_read)
+        zone = self._zone
+        await self.coordinator.async_read_now(zone.setpoint, zone.special_read,
+                                              zone.holiday_start, zone.holiday_end)
 
     async def _write(self, msg: MessageDef, value: object) -> None:
         await self.coordinator.async_write(msg, value)

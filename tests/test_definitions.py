@@ -98,7 +98,8 @@ def test_an_enabled_thermostat_polls_its_registers():
     polled = entities.select_polled(catalog.device_messages("r"),
                                     {ids.zone_uid("E1", zone.zz, zone.n)}, [zone], "E1")
     assert {m.name for m in polled} == {"Z1DayTemp", "Z1RoomTemp", "Z1OpMode", "Z1Shortname",
-                                        "Z1ActualRoomTempDesired", "Z1SFMode"}
+                                        "Z1ActualRoomTempDesired", "Z1SFMode",
+                                        "Z1HolidayStartPeriod", "Z1HolidayEndPeriod"}
 
 
 def test_an_enabled_zone_state_polls_what_it_is_told_from():

@@ -2158,6 +2158,15 @@
           "auto": "Zeitgesteuert",
           "heat": "Manuell",
           "off": "Aus"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "none": "Keine",
+              "away": "Abwesenheit",
+              "ventilation": "Stoßlüften"
+            }
+          }
         }
       }
     }

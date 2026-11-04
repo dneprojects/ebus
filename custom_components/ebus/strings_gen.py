@@ -123,6 +123,18 @@ FIXED_NAMES = {
     },
 }
 
+# state labels of their attributes: translation key -> attribute -> language -> labels
+FIXED_ATTRIBUTE_STATES = {
+    "climate": {
+        "zone": {
+            "preset_mode": {
+                "en": {"none": "None", "away": "Away", "ventilation": "Airing"},
+                "de": {"none": "Keine", "away": "Abwesenheit", "ventilation": "Stoßlüften"},
+            },
+        },
+    },
+}
+
 # state labels of those entities: translation key -> language -> state -> label
 FIXED_STATES = {
     # the thermostat's modes as the sensoCOMFORT names them (auto = time program)
@@ -221,6 +233,11 @@ def build_entities(msgs: list[MessageDef], lang: str) -> dict[str, dict[str, Any
         for key, by_lang in names.items():
             put(platforms[platform], key, by_lang.get(lang),
                 FIXED_STATES.get(platform, {}).get(key, {}).get(lang))
+            fixed = FIXED_ATTRIBUTE_STATES.get(platform, {}).get(key, {})
+            attrs = {attr: {"state": states[lang]} for attr, states in fixed.items()
+                     if lang in states}
+            if attrs:
+                platforms[platform].setdefault(key, {})["state_attributes"] = attrs
     return platforms
 
 

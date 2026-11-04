@@ -144,7 +144,8 @@ async def test_climate_modes_are_the_controllers(hass: HomeAssistant):
     climate = EbusZoneClimate(coord, zone)
     climate.hass = hass
     assert climate.hvac_modes == [HVACMode.OFF, HVACMode.HEAT, HVACMode.AUTO]
-    assert ClimateEntityFeature.PRESET_MODE not in climate.supported_features
+    # no further mode values: the presets are away and airing only
+    assert climate.preset_modes == ["none", "away", "ventilation"]
     written = []
     coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg, value)))
     await climate.async_set_hvac_mode(HVACMode.OFF)
@@ -159,7 +160,7 @@ async def test_climate_modes_are_the_controllers(hass: HomeAssistant):
     for value, mode in (("off", HVACMode.OFF), ("auto", HVACMode.AUTO), ("manual", HVACMode.HEAT)):
         coord.data = {value_key(zone.mode_read, zone.mode_read.name): value}
         assert climate.hvac_mode is mode
-    assert climate.preset_mode is None
+    assert climate.preset_mode == "none"
 
 
 def _zone_data(zone, mode=None, setpoint=None, manual=None) -> dict:
@@ -199,7 +200,7 @@ async def test_set_temperature_in_auto_is_a_quick_veto(hass: HomeAssistant, cach
                        ("Z1SFMode", "veto")]
     # what it set in effect is shown at once
     assert [c.args[0] for c in coord.engine.read.await_args_list] == [
-        zone.setpoint, zone.special_read]
+        zone.setpoint, zone.special_read, zone.holiday_start, zone.holiday_end]
 
 
 @pytest.mark.parametrize(("cached", "hours"), [(20.0, 12.0), (0.2, 0.5)])
@@ -301,7 +302,7 @@ async def test_a_mode_change_reads_what_it_set_in_effect(hass: HomeAssistant):
     coord.async_write = AsyncMock()
     await climate.async_set_hvac_mode(HVACMode.AUTO)
     assert [c.args[0] for c in coord.engine.read.await_args_list] == [
-        zone.setpoint, zone.special_read]
+        zone.setpoint, zone.special_read, zone.holiday_start, zone.holiday_end]
 
 
 async def test_set_temperature_while_manual_sets_the_manual_setpoint(hass: HomeAssistant):
@@ -391,3 +392,116 @@ async def test_set_temperature_keeps_a_mode_already_on(hass: HomeAssistant):
     coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
     await climate.async_set_temperature(temperature=21.5, hvac_mode=HVACMode.HEAT)
     assert written == [("Z1DayTemp", 21.5)]
+
+
+def _away(zone, start, end) -> dict:
+    return {value_key(zone.holiday_start, zone.holiday_start.name): start,
+            value_key(zone.holiday_end, zone.holiday_end.name): end}
+
+
+def _special(zone, value) -> dict:
+    return {value_key(zone.special_read, zone.special_read.name): value}
+
+
+@pytest.fixture
+def _wednesday(freezer):
+    freezer.move_to("2026-11-04 12:00:00")
+
+
+async def test_away_and_airing_are_set_and_ended(hass: HomeAssistant, _wednesday):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 2)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    past = _away(zone, "01.01.2019", "01.01.2019")
+    written: list = []
+    coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
+
+    async def preset(name, data):
+        written.clear()
+        coord.data = {**_zone_data(zone, "auto", setpoint=20.0), **data}
+        await climate.async_set_preset_mode(name)
+        return list(written)
+
+    # away from today, open end (a year), the zone's own temperature kept
+    assert await preset("away", {**past, **_special(zone, "auto")}) == [
+        ("Z2HolidayStartPeriod", "04.11.2026"), ("Z2HolidayEndPeriod", "04.11.2027")]
+    away = _away(zone, "04.11.2026", "04.11.2027")
+    # ended as a period that has passed (start first: the end never before it)
+    assert await preset("none", {**away, **_special(zone, "auto")}) == [
+        ("Z2HolidayStartPeriod", "03.11.2026"), ("Z2HolidayEndPeriod", "03.11.2026")]
+    assert await preset("ventilation", {**past, **_special(zone, "auto")}) == [
+        ("Z2SFMode", "ventilation")]
+    assert await preset("none", {**past, **_special(zone, "ventilation")}) == [
+        ("Z2SFMode", "auto")]
+    # one replaces the other
+    assert await preset("ventilation", {**away, **_special(zone, "auto")}) == [
+        ("Z2HolidayStartPeriod", "03.11.2026"), ("Z2HolidayEndPeriod", "03.11.2026"),
+        ("Z2SFMode", "ventilation")]
+    assert await preset("away", {**past, **_special(zone, "ventilation")}) == [
+        ("Z2SFMode", "auto"),
+        ("Z2HolidayStartPeriod", "04.11.2026"), ("Z2HolidayEndPeriod", "04.11.2027")]
+    # what is already set is not written again; unknown presets write nothing
+    assert await preset("away", {**away, **_special(zone, "auto")}) == []
+    assert await preset("none", {**past, **_special(zone, "auto")}) == []
+    reads = coord.engine.read.await_count
+    assert await preset("boost", {**past, **_special(zone, "auto")}) == []
+    assert coord.engine.read.await_count == reads  # nor reads
+    # what it set is read at once (the away dates too)
+    assert {c.args[0].name for c in coord.engine.read.await_args_list} >= {
+        "Z2HolidayStartPeriod", "Z2HolidayEndPeriod", "Z2SFMode", "Z2ActualRoomTempDesired"}
+
+
+@pytest.mark.parametrize(("data", "preset"), [
+    ({"holiday": ("04.11.2026", "04.11.2027"), "special": "auto"}, "away"),
+    ({"holiday": ("01.11.2026", "04.11.2026"), "special": "auto"}, "away"),  # last day
+    ({"holiday": ("01.11.2026", "03.11.2026"), "special": "auto"}, "none"),  # over
+    ({"holiday": ("01.01.2019", "01.01.2019"), "special": "ventilation"}, "ventilation"),
+    ({"holiday": ("01.01.2019", "01.01.2019"), "special": "veto"}, "none"),  # quick veto
+    ({"holiday": ("04.11.2026", "04.11.2027"), "special": "ventilation"}, "away"),
+])
+async def test_the_preset_shows_what_applies(hass: HomeAssistant, _wednesday, data, preset):
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 2)
+    climate = EbusZoneClimate(coord, zone)
+    coord.data = {**_zone_data(zone, "auto", setpoint=5.0), **_away(zone, *data["holiday"]),
+                  **_special(zone, data["special"])}
+    assert climate.preset_mode == preset
+    assert climate.target_temperature == 5.0  # what the controller has in effect
+
+
+async def test_away_dates_reach_the_bus(hass: HomeAssistant, _wednesday):
+    # through the real write path: the dates are encoded (HDA:3) and sent
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 2)
+    climate = EbusZoneClimate(coord, zone)
+    climate.hass = hass
+    coord.data = {**_zone_data(zone, "auto"), **_away(zone, "01.01.2019", "01.01.2019"),
+                  **_special(zone, "auto")}
+    await climate.async_set_preset_mode("away")
+    sent = [(c.args[0].name, c.args[0].encode(c.args[1]).hex())
+            for c in coord.engine.write.await_args_list]
+    assert sent == [("Z2HolidayStartPeriod", "020103010300040b1a"),
+                    ("Z2HolidayEndPeriod", "020103010400040b1b")]
+
+
+async def test_presets_need_their_registers(hass: HomeAssistant):
+    from dataclasses import replace
+    coord = await _coordinator(hass)
+    zone = next(z for z in coord.catalog.zones() if z.n == 2)
+    assert EbusZoneClimate(coord, replace(zone, holiday_end_write=None)).preset_modes == [
+        "none", "ventilation"]
+    assert EbusZoneClimate(coord, replace(zone, special_write=None)).preset_modes == [
+        "none", "away"]
+    bare = EbusZoneClimate(coord, replace(zone, special_write=None, holiday_start_write=None))
+    assert ClimateEntityFeature.PRESET_MODE not in bare.supported_features
+    assert bare.preset_mode is None
+    ro = EbusZoneClimate(await _coordinator(hass, allow_write=False), zone)
+    assert ClimateEntityFeature.PRESET_MODE not in ro.supported_features
+
+
+def test_presets_are_named():
+    from custom_components.ebus.strings_gen import FIXED_ATTRIBUTE_STATES
+    names = FIXED_ATTRIBUTE_STATES["climate"]["zone"]["preset_mode"]
+    assert names["de"] == {"none": "Keine", "away": "Abwesenheit", "ventilation": "Stoßlüften"}
+    assert set(names["en"]) == set(names["de"])

@@ -26,7 +26,7 @@ from aioebus.passive import MessageRegistry
 from aioebus.poll import PollScheduler
 from aioebus.runner import EngineRunner
 from aioebus.scan import Identification, ScanResult
-from aioebus.values import CacheKey, Value, control_of
+from aioebus.values import CacheKey, Value, control_of, sent_value
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -392,14 +392,14 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         """Write one value to a single-field register; the entity then shows what
         the device holds (read back, else the written value). Errors surface as
         HomeAssistantError."""
-        control = control_of(msg)
-        if self.engine is None or not self.allow_write or control is None:
+        sent = sent_value(msg)
+        if self.engine is None or not self.allow_write or sent is None:
             raise HomeAssistantError(f"eBUS: {msg.name} is not writable")
         if isinstance(value, float) and value.is_integer():
             value = int(value)  # a number entity gives floats
         try:
             outcome = await self.engine.write_confirmed(
-                msg, {control[1].field.name: value}, read_back=self.catalog.read_twin(msg))
+                msg, {sent.field.name: value}, read_back=self.catalog.read_twin(msg))
         except (TimeoutError, ReadError, ValueError, OSError, NotImplementedError) as err:
             raise HomeAssistantError(f"eBUS write to {msg.name} failed: {err}") from err
         self.async_set_updated_data(dict(self.engine.cache))
