@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.7.8
 
 - While airing the thermostat shows the controller's setpoint (0 °C) but it cannot be changed
+- After a mode or preset change the setpoint is read again after 5 s, once the controller has recalculated it
+- Preset Stoßlüften shows an open window icon
 
 ## 0.7.7
 
