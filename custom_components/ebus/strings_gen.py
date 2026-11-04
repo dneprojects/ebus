@@ -125,6 +125,13 @@ FIXED_NAMES = {
 
 # state labels of those entities: translation key -> language -> state -> label
 FIXED_STATES = {
+    # the thermostat's modes as the sensoCOMFORT names them (auto = time program)
+    "climate": {
+        "zone": {
+            "en": {"auto": "Time-controlled", "heat": "Manual", "off": "Off"},
+            "de": {"auto": "Zeitgesteuert", "heat": "Manuell", "off": "Aus"},
+        },
+    },
     "sensor": {
         "zone_state": {
             "en": {"off": "Off", "manual": "Manual", "time_slot": "Time slot",

@@ -116,11 +116,15 @@ def number_bounds(listed: tuple[float, float, float] | None, field: FieldDef
 
 
 SHOWN_DECIMALS: Final = 2
+_WHOLE_UNITS: Final = frozenset({"kWh", "Wh"})  # energy needs no decimals
 
 
-def shown(value: object) -> object:
-    """A value as an entity reports it: a fraction with at most two decimals."""
-    return round(value, SHOWN_DECIMALS) if isinstance(value, float) else value
+def shown(value: object, unit: str | None = None) -> object:
+    """A value as an entity reports it: a fraction with at most two decimals,
+    an energy figure as a whole number."""
+    if not isinstance(value, float):
+        return value
+    return round(value) if unit in _WHOLE_UNITS else round(value, SHOWN_DECIMALS)
 
 
 def options_of(field: FieldDef) -> list[str]:

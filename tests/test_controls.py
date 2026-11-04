@@ -223,7 +223,8 @@ async def test_values_show_at_most_two_decimals(hass: HomeAssistant, tmp_path):
     from custom_components.ebus.number import EbusNumber
     (tmp_path / "08.ehp.csv").write_text(
         "type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment\n"
-        "r,,,Curve,,,,b509,290000,value,,EXP,,,\n", encoding="utf-8")
+        "r,,,Curve,,,,b509,290000,value,,EXP,,,\n"
+        "r,,,Energy,,,,b509,2a0000,value,,EXP,,kWh,\n", encoding="utf-8")
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
                             options={"config_dir": str(tmp_path)}, version=1, minor_version=7)
     entry.add_to_hass(hass)
@@ -235,6 +236,12 @@ async def test_values_show_at_most_two_decimals(hass: HomeAssistant, tmp_path):
     for raw, shown in ((0.4499999, 0.45), (20864.622, 20864.62), (7, 7), ("text", "text")):
         coord.data = {value.cache_key: raw}
         assert reading.native_value == shown and control.native_value == shown
+    energy = values_of(next(m for m in coord.read_messages if m.name == "Energy"))[0]
+    reading, control = sensor.EbusSensor(coord, energy), EbusNumber(coord, energy, "user")
+    for raw, shown in ((20864.622, 20865), (12.4, 12), (7, 7)):  # kWh: whole numbers
+        coord.data = {energy.cache_key: raw}
+        assert reading.native_value == shown and control.native_value == shown
+        assert type(reading.native_value) is int
 
 
 async def test_identification_without_a_week_shows_the_year(hass: HomeAssistant):

@@ -45,13 +45,14 @@ class EbusNumber(EbusBusEntity, NumberEntity):
         self._attr_native_min_value = lo
         self._attr_native_max_value = hi
         self._attr_native_step = step
+        self._unit = field.unit
         if field.unit:
             self._attr_native_unit_of_measurement = field.unit
         self._attr_device_info = coordinator.device_info(zz)
 
     @property
     def native_value(self) -> float | None:
-        return cast("float | None", shown(self.coordinator.data.get(self._key)))
+        return cast("float | None", shown(self.coordinator.data.get(self._key), self._unit))
 
     async def async_set_native_value(self, value: float) -> None:
         await self.coordinator.async_write(self._msg, value)

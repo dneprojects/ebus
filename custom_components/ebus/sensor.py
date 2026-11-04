@@ -212,7 +212,7 @@ class EbusSensor(EbusBusEntity, SensorEntity):
         options = getattr(self, "_attr_options", None)
         if options is not None and value not in options:
             return None
-        return cast(StateType, shown(value))
+        return cast(StateType, shown(value, self._field.field.unit))
 
     @property
     def available(self) -> bool:

@@ -79,12 +79,11 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
         super().__init__(coordinator)
         self._zone = zone
         zz = int(zone.zz, 16)
+        self._attr_translation_key = "zone"  # also names the modes as the controller does
+        self._attr_translation_placeholders = {"n": str(zone.n)}
         short = value_of(coordinator.data, zone.shortname)
         if isinstance(short, str) and short.strip():
             self._attr_name = short  # the name the user gave the zone on the controller
-        else:
-            self._attr_translation_key = "zone"
-            self._attr_translation_placeholders = {"n": str(zone.n)}
         self._attr_unique_id = zone_uid(coordinator.uid_prefix, zone.zz, zone.n)
         if zone.target_bounds is not None:  # the setpoint register's own range
             (self._attr_min_temp, self._attr_max_temp,

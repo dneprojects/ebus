@@ -2330,7 +2330,12 @@
     },
     "climate": {
       "zone": {
-        "name": "Zone {n}"
+        "name": "Zone {n}",
+        "state": {
+          "auto": "Time-controlled",
+          "heat": "Manual",
+          "off": "Off"
+        }
       }
     }
   }

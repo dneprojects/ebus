@@ -347,7 +347,16 @@ async def test_zone_name_is_translated_unless_the_user_named_it(hass: HomeAssist
     plain = EbusZoneClimate(coord, zone)
     assert plain.translation_key == "zone" and plain.translation_placeholders == {"n": "2"}
     coord.data = {value_key(zone.shortname, zone.shortname.name): "Bad"}
-    assert EbusZoneClimate(coord, zone).name == "Bad"
+    named = EbusZoneClimate(coord, zone)
+    assert named.name == "Bad"
+    assert named.translation_key == "zone"  # its modes still carry the controller's names
+
+
+def test_zone_modes_are_named_as_the_controller_does():
+    from custom_components.ebus.strings_gen import FIXED_STATES
+    assert FIXED_STATES["climate"]["zone"]["de"] == {
+        "auto": "Zeitgesteuert", "heat": "Manuell", "off": "Aus"}
+    assert set(FIXED_STATES["climate"]["zone"]["en"]) == {"auto", "heat", "off"}
 
 
 async def test_set_temperature_with_a_mode_switches_the_zone_too(hass: HomeAssistant):
