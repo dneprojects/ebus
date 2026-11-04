@@ -179,7 +179,8 @@ def test_number_bounds_listed_else_unit_else_type():
     assert number_bounds(None, field("SIN")) == (-32767, 32767, 1)
     assert number_bounds(None, field("UCH", -10)) == (0, 2540, 10)  # negative multiplies
     assert number_bounds(None, field("D1C")) == (0, 100.0, 0.5)
-    assert number_bounds(None, field("UIN", 3))[2] == 0.3333  # the step is rounded
+    assert number_bounds(None, field("UIN", 3))[2] == 0.33  # the step is rounded
+    assert number_bounds(None, field("UIN", 1000))[2] == 0.01  # to at most two decimals
     assert number_bounds(None, field("EXP", unit="°C")) == (0.0, 90.0, 0.5)  # a float: by unit
     assert number_bounds(None, field("EXP", unit="xyz")) == (0.0, 10.0, 0.05)
     assert number_bounds((5.0, 30.0, 0.5), field("SCH")) == (5.0, 30.0, 0.5)  # listed wins
@@ -214,6 +215,26 @@ async def test_a_register_sent_elsewhere_stays_on_its_device(hass: HomeAssistant
     assert msg.zz == "25"
     ent = sensor.EbusSensor(coord, values_of(msg)[0])
     assert ent.device_info["identifiers"] == {(DOMAIN, "08")}
+
+
+async def test_values_show_at_most_two_decimals(hass: HomeAssistant, tmp_path):
+    from aioebus.values import values_of
+
+    from custom_components.ebus.number import EbusNumber
+    (tmp_path / "08.ehp.csv").write_text(
+        "type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment\n"
+        "r,,,Curve,,,,b509,290000,value,,EXP,,,\n", encoding="utf-8")
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999},
+                            options={"config_dir": str(tmp_path)}, version=1, minor_version=7)
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.devices = {0x08: ScanResult(0xB5, "Vaillant", "EHP00", "0100", "0200", 100, 200)}
+    await coord.async_load_definitions()
+    value = values_of(next(m for m in coord.read_messages if m.name == "Curve"))[0]
+    reading, control = sensor.EbusSensor(coord, value), EbusNumber(coord, value, "user")
+    for raw, shown in ((0.4499999, 0.45), (20864.622, 20864.62), (7, 7), ("text", "text")):
+        coord.data = {value.cache_key: raw}
+        assert reading.native_value == shown and control.native_value == shown
 
 
 async def test_identification_without_a_week_shows_the_year(hass: HomeAssistant):

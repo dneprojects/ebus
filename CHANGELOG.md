@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Sensors and number fields show at most two decimals (heat curve 0.45, not 0.4499999); a number's step is at least 0.01
+
 ## 0.7.6
 
 - Thermostat as the sensoCOMFORT has it: Auto (time-controlled), Heat (manual), Off; the day/night presets are gone

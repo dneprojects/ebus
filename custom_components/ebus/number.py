@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EbusConfigEntry
 from .coordinator import EbusCoordinator
-from .entities import icon_for, number_bounds
+from .entities import icon_for, number_bounds, shown
 from .entity import EbusBusEntity
 from .ids import control_uid
 
@@ -51,7 +51,7 @@ class EbusNumber(EbusBusEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        return cast("float | None", self.coordinator.data.get(self._key))
+        return cast("float | None", shown(self.coordinator.data.get(self._key)))
 
     async def async_set_native_value(self, value: float) -> None:
         await self.coordinator.async_write(self._msg, value)

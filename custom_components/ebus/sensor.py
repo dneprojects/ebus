@@ -20,7 +20,7 @@ from . import EbusConfigEntry
 from .adapter import wifi
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
-from .entities import disabled_field_labels, icon_for, options_of
+from .entities import disabled_field_labels, icon_for, options_of, shown
 from .entity import EbusBusEntity
 from .ids import entity_uid, zone_state_uid
 from .zone_state import STATES, in_use, zone_state
@@ -212,7 +212,7 @@ class EbusSensor(EbusBusEntity, SensorEntity):
         options = getattr(self, "_attr_options", None)
         if options is not None and value not in options:
             return None
-        return cast(StateType, value)
+        return cast(StateType, shown(value))
 
     @property
     def available(self) -> bool:

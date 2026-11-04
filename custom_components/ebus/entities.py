@@ -111,8 +111,16 @@ def number_bounds(listed: tuple[float, float, float] | None, field: FieldDef
         return listed
     if (own := value_range(field.type, field.divisor)) is not None:  # integer types
         lo, hi, step = own
-        return (lo, hi, round(step, 4))
+        return (lo, hi, max(round(step, SHOWN_DECIMALS), 10 ** -SHOWN_DECIMALS))
     return _UNIT_BOUNDS.get(field.unit or "", _UNIT_BOUNDS[""])
+
+
+SHOWN_DECIMALS: Final = 2
+
+
+def shown(value: object) -> object:
+    """A value as an entity reports it: a fraction with at most two decimals."""
+    return round(value, SHOWN_DECIMALS) if isinstance(value, float) else value
 
 
 def options_of(field: FieldDef) -> list[str]:
