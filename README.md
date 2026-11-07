@@ -30,6 +30,10 @@ starts no charge while the cylinder is within its charge hysteresis of the
 setpoint. Each heat pump has a sensor of its COP right now (heat output over
 electric power, none while it delivers no heat).
 
+The action `ebus.read_register` reads any register of a bus device and returns
+its raw answer (address, command, data in hex); it only reads, for finding out
+what a device offers.
+
 Several registers come from
 [arotherm-genia-ebusd](https://github.com/R91g/arotherm-genia-ebusd) (MIT), checked
 on a real bus first; see aioebus `defs/vaillant/PROVENANCE.md`.

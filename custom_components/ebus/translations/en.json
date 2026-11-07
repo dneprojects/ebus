@@ -42,6 +42,30 @@
       }
     }
   },
+  "services": {
+    "read_register": {
+      "name": "Read register",
+      "description": "Reads a register of a bus device and returns its raw answer. Only reads, changes nothing.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Adapter",
+          "description": "The eBUS adapter."
+        },
+        "address": {
+          "name": "Address",
+          "description": "The device's bus address, two hex digits."
+        },
+        "command": {
+          "name": "Command",
+          "description": "PB and SB, four hex digits."
+        },
+        "data": {
+          "name": "Data",
+          "description": "What the request carries after the command, in hex."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "vdatetime_time": {

@@ -1,0 +1,21 @@
+read_register:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: ebus
+    address:
+      required: true
+      example: "08"
+      selector:
+        text:
+    command:
+      required: true
+      example: "b509"
+      selector:
+        text:
+    data:
+      example: "540200c20b"
+      selector:
+        text:

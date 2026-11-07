@@ -10,13 +10,16 @@ from pathlib import Path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFS_CACHE, DOMAIN, STORE_PREFIXES, STORE_VERSION
 from .coordinator import EbusCoordinator
 from .device import ADAPTER_IDENTIFIER
 from .migrations import async_migrate_entry
+from .services import async_setup_services
 from .translate import forget_entry
 
 __all__ = ["async_migrate_entry"]  # Home Assistant looks it up on this module
@@ -28,6 +31,14 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT, Platform.CLIMATE, Platform.WATER_HEATER]
 
 type EbusConfigEntry = ConfigEntry[EbusCoordinator]
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EbusConfigEntry) -> bool:

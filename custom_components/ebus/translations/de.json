@@ -42,6 +42,30 @@
       }
     }
   },
+  "services": {
+    "read_register": {
+      "name": "Register lesen",
+      "description": "Liest ein Register eines Bus-Geräts und gibt die rohe Antwort zurück. Liest nur, ändert nichts.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Adapter",
+          "description": "Der eBUS-Adapter."
+        },
+        "address": {
+          "name": "Adresse",
+          "description": "Bus-Adresse des Geräts, zwei Hex-Ziffern."
+        },
+        "command": {
+          "name": "Befehl",
+          "description": "PB und SB, vier Hex-Ziffern."
+        },
+        "data": {
+          "name": "Daten",
+          "description": "Was die Anfrage nach dem Befehl mitführt, in Hex."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "vdatetime_time": {

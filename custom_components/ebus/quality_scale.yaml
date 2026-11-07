@@ -3,9 +3,7 @@
 # tracked here as done / todo / exempt toward a later promotion.
 rules:
   # --- Bronze ---------------------------------------------------------------
-  action-setup:
-    status: exempt
-    comment: The integration registers no custom service actions.
+  action-setup: done
   appropriate-polling: done
   brands:
     status: todo
@@ -14,9 +12,7 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: No custom actions to document.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done

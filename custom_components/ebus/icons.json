@@ -1,4 +1,7 @@
 {
+  "services": {
+    "read_register": {"service": "mdi:database-search"}
+  },
   "entity": {
     "climate": {
       "zone": {

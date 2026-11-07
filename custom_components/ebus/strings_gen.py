@@ -54,6 +54,17 @@ CONFIG_EN = {
                  "allow_write": "Allow writing settings to the bus",
                  "config_dir": "Extra device-definition directory (optional)",
                  "deep_scan": "Deep scan (probe all bus addresses once)"}}}},
+    "services": {"read_register": {
+        "name": "Read register",
+        "description": "Reads a register of a bus device and returns its raw answer. "
+                       "Only reads, changes nothing.",
+        "fields": {
+            "config_entry_id": {"name": "Adapter", "description": "The eBUS adapter."},
+            "address": {"name": "Address",
+                        "description": "The device's bus address, two hex digits."},
+            "command": {"name": "Command", "description": "PB and SB, four hex digits."},
+            "data": {"name": "Data",
+                     "description": "What the request carries after the command, in hex."}}}},
 }
 CONFIG_DE = {
     "config": {
@@ -86,6 +97,17 @@ CONFIG_DE = {
                  "allow_write": "Schreiben von Einstellungen auf den Bus erlauben",
                  "config_dir": "Zusätzliches Definitionsverzeichnis (optional)",
                  "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)"}}}},
+    "services": {"read_register": {
+        "name": "Register lesen",
+        "description": "Liest ein Register eines Bus-Geräts und gibt die rohe Antwort "
+                       "zurück. Liest nur, ändert nichts.",
+        "fields": {
+            "config_entry_id": {"name": "Adapter", "description": "Der eBUS-Adapter."},
+            "address": {"name": "Adresse",
+                        "description": "Bus-Adresse des Geräts, zwei Hex-Ziffern."},
+            "command": {"name": "Befehl", "description": "PB und SB, vier Hex-Ziffern."},
+            "data": {"name": "Daten",
+                     "description": "Was die Anfrage nach dem Befehl mitführt, in Hex."}}}},
 }
 CONFIG = {"en": CONFIG_EN, "de": CONFIG_DE}
 
