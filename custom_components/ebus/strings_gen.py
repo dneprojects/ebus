@@ -21,6 +21,8 @@ from aioebus.messages import FieldDef, MessageDef
 from aioebus.translations import slug, translation_key
 from aioebus.values import control_of, values_of
 
+from .entities import NO_VALUE_STATES
+
 # config-flow / options UI strings, per language (HA falls back to English for a
 # language not listed here)
 CONFIG_EN = {
@@ -162,6 +164,12 @@ FIXED_ATTRIBUTE_STATES = {
     },
 }
 
+# the labels of what a read value without content means (entities.NO_VALUE_STATES)
+NO_VALUE_LABELS = {
+    "en": {"no_error": "No error"},
+    "de": {"no_error": "Kein Fehler"},
+}
+
 # state labels of those entities: translation key -> language -> state -> label
 FIXED_STATES = {
     # the hot water's modes as the sensoCOMFORT names them, and its one-time charge
@@ -263,9 +271,12 @@ def build_entities(msgs: list[MessageDef], lang: str) -> dict[str, dict[str, Any
                 _states(value.field, lang) if kind == "select" else None)
         # reads and updates (broadcasts) are sensors
         if m.is_read:
+            no_value = NO_VALUE_STATES.get(m.name)
+            extra = ({no_value: NO_VALUE_LABELS[lang][no_value]}
+                     if no_value and lang in NO_VALUE_LABELS else {})
             for value in values_of(m):
                 put(platforms["sensor"], value.key, _name(m, value.field, lang),
-                    _states(value.field, lang))
+                    {**(_states(value.field, lang) or {}), **extra} or None)
     for platform, names in FIXED_NAMES.items():
         for key, by_lang in names.items():
             put(platforms[platform], key, by_lang.get(lang),

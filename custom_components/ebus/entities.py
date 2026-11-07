@@ -28,6 +28,10 @@ from .zone_state import messages_of as state_messages
 
 PRESENTATION: Final = Path(__file__).parent / "presentation.json"
 
+# what a register's read value without content means, by message: the state shown
+# (a device answers 0xffff in every slot of its error list while it has no error)
+NO_VALUE_STATES: Final = {"Currenterror": "no_error"}
+
 # a heat pump's coefficient of performance: its heat output over its electric
 # power (both kW); below this power it only keeps its electronics alive
 COP_HEAT: Final = "RunDataHeatOutput"

@@ -955,7 +955,10 @@
         "name": "Pufferspeicher Ladeüberhöhung"
       },
       "currenterror": {
-        "name": "Aktueller Fehler"
+        "name": "Aktueller Fehler",
+        "state": {
+          "no_error": "Kein Fehler"
+        }
       },
       "flowtemp": {
         "name": "Vorlauftemperatur"
@@ -1048,19 +1051,34 @@
         }
       },
       "currenterror_error": {
-        "name": "Aktueller Fehler 1"
+        "name": "Aktueller Fehler 1",
+        "state": {
+          "no_error": "Kein Fehler"
+        }
       },
       "currenterror_error_1": {
-        "name": "Aktueller Fehler 2"
+        "name": "Aktueller Fehler 2",
+        "state": {
+          "no_error": "Kein Fehler"
+        }
       },
       "currenterror_error_2": {
-        "name": "Aktueller Fehler 3"
+        "name": "Aktueller Fehler 3",
+        "state": {
+          "no_error": "Kein Fehler"
+        }
       },
       "currenterror_error_3": {
-        "name": "Aktueller Fehler 4"
+        "name": "Aktueller Fehler 4",
+        "state": {
+          "no_error": "Kein Fehler"
+        }
       },
       "currenterror_error_4": {
-        "name": "Aktueller Fehler 5"
+        "name": "Aktueller Fehler 5",
+        "state": {
+          "no_error": "Kein Fehler"
+        }
       },
       "probereg2800": {
         "name": "Register 0d2800 (unbekannt)"

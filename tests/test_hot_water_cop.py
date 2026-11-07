@@ -24,7 +24,7 @@ from custom_components.ebus.const import CONF_ALLOW_WRITE, DOMAIN
 from custom_components.ebus.coordinator import EbusCoordinator
 from custom_components.ebus.entities import cop_of, cop_sources, select_polled
 from custom_components.ebus.ids import cop_uid, hot_water_uid
-from custom_components.ebus.sensor import EbusCopSensor
+from custom_components.ebus.sensor import EbusCopSensor, EbusSensor
 from custom_components.ebus.water_heater import EbusHotWater
 
 _DEVICES = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004),
@@ -215,3 +215,37 @@ async def test_each_heat_pump_has_a_cop(hass: HomeAssistant):
                            coord._derived_entities())
     assert {(m.name, m.zz) for m in polled} == {("RunDataHeatOutput", "18"),
                                                 ("PowerConsumptionHmu", "18")}
+
+
+async def test_a_device_without_an_error_says_so(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    msg = next(m for m in coord.catalog.messages(0x08) if m.name == "Currenterror" and m.is_read)
+    [value] = values_of(msg)
+    sensor = EbusSensor(coord, value)
+    assert sensor.state_class is None  # a state beside numbers: no statistics
+    coord.data = {}
+    assert not sensor.available and sensor.native_value == "no_error"  # never read: unavailable
+    coord.data = {value.cache_key: msg.decode(b"", "ffffffffffffffffffff")[value.field.name]}
+    assert sensor.native_value == "no_error"
+    coord.data = {value.cache_key: msg.decode(b"", "1e01ffffffffffffffff")[value.field.name]}
+    assert sensor.native_value == 286
+
+
+async def test_other_sensors_stay_unknown_without_a_value(hass: HomeAssistant):
+    coord = await _coordinator(hass)
+    msg = next(m for m in coord.catalog.messages(0x08) if m.name == "RunDataHeatOutput")
+    [value] = values_of(msg)
+    sensor = EbusSensor(coord, value)
+    assert sensor.state_class is not None
+    coord.data = {value.cache_key: None}
+    assert sensor.native_value is None
+
+
+def test_no_error_is_named():
+    from aioebus.catalog import bundled_file
+
+    from custom_components.ebus.strings_gen import NO_VALUE_LABELS, build_entities
+    msgs = list(bundled_file("hmu.json"))
+    for lang, label in (("en", "No error"), ("de", "Kein Fehler")):
+        assert NO_VALUE_LABELS[lang]["no_error"] == label
+        assert build_entities(msgs, lang)["sensor"]["currenterror"]["state"] == {"no_error": label}

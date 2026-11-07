@@ -21,7 +21,15 @@ from . import EbusConfigEntry
 from .adapter import wifi
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
-from .entities import cop_of, cop_sources, disabled_field_labels, icon_for, options_of, shown
+from .entities import (
+    NO_VALUE_STATES,
+    cop_of,
+    cop_sources,
+    disabled_field_labels,
+    icon_for,
+    options_of,
+    shown,
+)
 from .entity import EbusBusEntity
 from .ids import cop_uid, entity_uid, zone_state_uid
 from .zone_state import STATES, in_use, zone_state
@@ -174,6 +182,7 @@ class EbusSensor(EbusBusEntity, SensorEntity):
         self._attr_unique_id = entity_uid(coordinator.uid_prefix, field.msg, field.label)
         self._attr_translation_key = field.key
         self._attr_icon = icon_for(field.field)
+        self._no_value = NO_VALUE_STATES.get(field.msg.name)
         # channels known to be unconnected on this device type (from the def
         # metadata, so the decision is static at registration) are off by default
         definition = coordinator.catalog.definition(zz)
@@ -198,7 +207,7 @@ class EbusSensor(EbusBusEntity, SensorEntity):
             # a numeric reading gets long-term statistics: energy accumulates
             # (total_increasing), everything else is a measurement; text, date/
             # time and flag fields stay without a state class
-            if has_numeric_value(field.field.type):
+            if has_numeric_value(field.field.type) and self._no_value is None:
                 state = unit_state or SensorStateClass.MEASUREMENT
                 if state is SensorStateClass.TOTAL_INCREASING and closes_period(field.msg):
                     # a closed period's total is a fixed figure, no running
@@ -213,6 +222,8 @@ class EbusSensor(EbusBusEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         value = self.coordinator.data.get(self._key)
+        if value is None and self._no_value is not None:
+            return self._no_value
         # an ENUM sensor must only report one of its declared options; _attr_options
         # is set only for those and raises when unset (HA cached-property backing),
         # so read it defensively -- a non-enum sensor has no options to enforce

@@ -992,7 +992,10 @@
         "name": "BufferChargeOffset"
       },
       "currenterror": {
-        "name": "Currenterror"
+        "name": "Currenterror",
+        "state": {
+          "no_error": "No error"
+        }
       },
       "flowtemp": {
         "name": "FlowTemp"
@@ -1090,19 +1093,34 @@
         }
       },
       "currenterror_error": {
-        "name": "Currenterror error"
+        "name": "Currenterror error",
+        "state": {
+          "no_error": "No error"
+        }
       },
       "currenterror_error_1": {
-        "name": "Currenterror error_1"
+        "name": "Currenterror error_1",
+        "state": {
+          "no_error": "No error"
+        }
       },
       "currenterror_error_2": {
-        "name": "Currenterror error_2"
+        "name": "Currenterror error_2",
+        "state": {
+          "no_error": "No error"
+        }
       },
       "currenterror_error_3": {
-        "name": "Currenterror error_3"
+        "name": "Currenterror error_3",
+        "state": {
+          "no_error": "No error"
+        }
       },
       "currenterror_error_4": {
-        "name": "Currenterror error_4"
+        "name": "Currenterror error_4",
+        "state": {
+          "no_error": "No error"
+        }
       },
       "probereg2800": {
         "name": "ProbeReg2800"
