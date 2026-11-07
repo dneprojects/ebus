@@ -939,6 +939,37 @@
           "taeglich": "taeglich"
         }
       },
+      "systemoperatingstate": {
+        "name": "SystemOperatingState",
+        "state": {
+          "standby": "standby",
+          "heating": "heating",
+          "cooling": "cooling",
+          "hwc": "hwc"
+        }
+      },
+      "globalsystemoff": {
+        "name": "GlobalSystemOff",
+        "state": {
+          "no": "no",
+          "yes": "yes"
+        }
+      },
+      "bivalencepointhc": {
+        "name": "BivalencePointHc"
+      },
+      "bivalencepointhwc": {
+        "name": "BivalencePointHwc"
+      },
+      "alternativepoint": {
+        "name": "AlternativePoint"
+      },
+      "bufferchargeoffset": {
+        "name": "BufferChargeOffset"
+      },
+      "currenterror": {
+        "name": "Currenterror"
+      },
       "flowtemp": {
         "name": "FlowTemp"
       },
@@ -1516,6 +1547,18 @@
       "energyelectriccool": {
         "name": "EnergyElectricCool"
       },
+      "rundataheatoutput": {
+        "name": "RunDataHeatOutput"
+      },
+      "rundatacondenserouttemp": {
+        "name": "RunDataCondenserOutTemp"
+      },
+      "runstatsdeicehours": {
+        "name": "RunStatsDeiceHours"
+      },
+      "runstatsdeicestarts": {
+        "name": "RunStatsDeiceStarts"
+      },
       "singlestoragecharge": {
         "name": "SingleStorageCharge",
         "state": {
@@ -1881,6 +1924,9 @@
           "airing": "Airing (heating off)",
           "special": "Special function"
         }
+      },
+      "cop": {
+        "name": "COP now"
       }
     },
     "number": {
@@ -2344,6 +2390,17 @@
               "ventilation": "Airing"
             }
           }
+        }
+      }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Hot water",
+        "state": {
+          "auto": "Time-controlled",
+          "manual": "Manual",
+          "off": "Off",
+          "boost": "One-time charge"
         }
       }
     }

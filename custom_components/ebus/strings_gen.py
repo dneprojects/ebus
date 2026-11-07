@@ -113,6 +113,8 @@ FIXED_NAMES = {
         "ident_manufactured": {"en": "Manufactured", "de": "Baujahr"},
         # what applies in heating zone {n} now (zone_state.py)
         "zone_state": {"en": "Zone {n} state", "de": "Zone {n} Zustand"},
+        # a heat pump's heat output over its electric power right now
+        "cop": {"en": "COP now", "de": "Leistungszahl aktuell"},
     },
     "binary_sensor": {
         "adapter_signal": {"en": "Signal", "de": "Signal"},
@@ -120,6 +122,9 @@ FIXED_NAMES = {
     # a heating zone without its own short name; {n} is the zone number
     "climate": {
         "zone": {"en": "Zone {n}", "de": "Zone {n}"},
+    },
+    "water_heater": {
+        "hot_water": {"en": "Hot water", "de": "Warmwasser"},
     },
 }
 
@@ -137,6 +142,15 @@ FIXED_ATTRIBUTE_STATES = {
 
 # state labels of those entities: translation key -> language -> state -> label
 FIXED_STATES = {
+    # the hot water's modes as the sensoCOMFORT names them, and its one-time charge
+    "water_heater": {
+        "hot_water": {
+            "en": {"auto": "Time-controlled", "manual": "Manual", "off": "Off",
+                   "boost": "One-time charge"},
+            "de": {"auto": "Zeitgesteuert", "manual": "Manuell", "off": "Aus",
+                   "boost": "Einmal laden"},
+        },
+    },
     # the thermostat's modes as the sensoCOMFORT names them (auto = time program)
     "climate": {
         "zone": {
@@ -211,7 +225,8 @@ def build_entities(msgs: list[MessageDef], lang: str) -> dict[str, dict[str, Any
     fixed adapter/identification entities."""
     base = lang == "en"
     platforms: dict[str, dict[str, Any]] = {
-        p: {} for p in ("sensor", "number", "select", "binary_sensor", "climate")}
+        p: {} for p in ("sensor", "number", "select", "binary_sensor", "climate",
+                        "water_heater")}
 
     def put(target: dict[str, Any], key: str, name: str | None,
             states: dict[str, str] | None) -> None:

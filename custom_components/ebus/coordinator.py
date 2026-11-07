@@ -62,8 +62,8 @@ from .device import (
     register_adapter,
     remove_devices,
 )
-from .entities import control_class, presentation, select_polled
-from .ids import CONTROL_SUFFIX, control_uid, uid
+from .entities import control_class, cop_sources, presentation, select_polled
+from .ids import CONTROL_SUFFIX, control_uid, cop_uid, hot_water_uid, uid
 from .translate import async_update_translations
 
 _LOGGER = logging.getLogger(__name__)
@@ -330,6 +330,19 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             _LOGGER.debug("ident %#04x read at runtime", device.address)
             self.async_update_listeners()  # the sensor platform adds its entities
 
+    def _derived_entities(self) -> list[tuple[str, tuple[MessageDef | None, ...]]]:
+        """The unique ids of the entities that are no single register, with the
+        registers they show."""
+        prefix = self.uid_prefix
+        out: list[tuple[str, tuple[MessageDef | None, ...]]] = [
+            (hot_water_uid(prefix, w.zz),
+             (w.target_read, w.current, w.mode_read, w.special_read))
+            for w in self.catalog.hot_water()]
+        for address in self.catalog.addresses:
+            if (sources := cop_sources(self.catalog.messages(address))) is not None:
+                out.append((cop_uid(prefix, f"{address:02x}"), sources))
+        return out
+
     def _build_scheduler(self) -> PollScheduler:
         """Poll only the read registers that back an enabled entity. Before any
         entity is registered (fresh install) poll every read, so values arrive
@@ -343,7 +356,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             enabled = {e.unique_id for e in entries if e.disabled_by is None}
             polled = select_polled(
                 self.read_messages, enabled,
-                self.catalog.zones(), self.uid_prefix)
+                self.catalog.zones(), self.uid_prefix, self._derived_entities())
         return PollScheduler(polled, base_interval=self._base_interval,
                              default_priority=PLAIN_READ_PRIORITY)
 

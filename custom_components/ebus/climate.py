@@ -13,8 +13,7 @@ change the setpoint is read at once and again a few seconds later, once the
 controller has recalculated it."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any, Final
 
 from aioebus.catalog import ClimateZone
@@ -28,16 +27,15 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
 from .entities import options_of
-from .entity import EbusBusEntity
+from .entity import EbusSettlingEntity
 from .ids import zone_uid
 from .zone_state import AIRING, AWAY, in_use, value_of, zone_state
 
@@ -47,8 +45,6 @@ _VETO_HOURS: Final = 3.0
 # period without an end, as the myVaillant library sets it
 PRESET_AIRING: Final = "ventilation"
 _AWAY_DAYS: Final = 365
-# seconds until the controller has recalculated its setpoint after a change
-_SETTLE_S: Final = 5.0
 
 
 def _enum_labels(msg: MessageDef | None) -> list[str]:
@@ -83,7 +79,7 @@ async def async_setup_entry(
         entry.async_on_unload(coordinator.async_add_listener(_add_active_zones))
 
 
-class EbusZoneClimate(EbusBusEntity, ClimateEntity):
+class EbusZoneClimate(EbusSettlingEntity, ClimateEntity):
     """One heating zone as a thermostat."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -95,7 +91,6 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
     def __init__(self, coordinator: EbusCoordinator, zone: ClimateZone) -> None:
         super().__init__(coordinator)
         self._zone = zone
-        self._reread: Callable[[], None] | None = None  # cancels the pending re-read
         zz = int(zone.zz, 16)
         self._attr_translation_key = "zone"  # also names the modes as the controller does
         self._attr_translation_placeholders = {"n": str(zone.n)}
@@ -302,29 +297,11 @@ class EbusZoneClimate(EbusBusEntity, ClimateEntity):
     async def _read_effect(self) -> None:
         """Read what a change set in effect, so the thermostat and the zone's
         state show it at once; the setpoint again once the controller has
-        recalculated it (a few seconds after the change)."""
+        recalculated it."""
         zone = self._zone
-        await self.coordinator.async_read_now(zone.setpoint, zone.special_read,
-                                              zone.holiday_start, zone.holiday_end)
-        self._cancel_reread()
-        if self.hass is not None and zone.setpoint is not None:
-            self._reread = async_call_later(self.hass, _SETTLE_S, HassJob(
-                self._read_settled, "ebus setpoint re-read", cancel_on_shutdown=True))
-
-    @callback
-    def _read_settled(self, _now: datetime) -> None:
-        self._reread = None
-        self.hass.async_create_background_task(
-            self.coordinator.async_read_now(self._zone.setpoint), "ebus setpoint re-read")
-
-    def _cancel_reread(self) -> None:
-        if self._reread is not None:
-            self._reread()
-            self._reread = None
-
-    async def async_will_remove_from_hass(self) -> None:
-        self._cancel_reread()
-        await super().async_will_remove_from_hass()
+        await self._read_change(
+            (zone.setpoint, zone.special_read, zone.holiday_start, zone.holiday_end),
+            (zone.setpoint,))
 
     async def _write(self, msg: MessageDef, value: object) -> None:
         await self.coordinator.async_write(msg, value)

@@ -7,6 +7,7 @@ from typing import Final, cast
 
 from aioebus.catalog import ClimateZone
 from aioebus.codecs import has_numeric_value
+from aioebus.messages import MessageDef
 from aioebus.values import Value, closes_period, values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTime
@@ -20,9 +21,9 @@ from . import EbusConfigEntry
 from .adapter import wifi
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
-from .entities import disabled_field_labels, icon_for, options_of, shown
+from .entities import cop_of, cop_sources, disabled_field_labels, icon_for, options_of, shown
 from .entity import EbusBusEntity
-from .ids import entity_uid, zone_state_uid
+from .ids import cop_uid, entity_uid, zone_state_uid
 from .zone_state import STATES, in_use, zone_state
 
 _UNIT_CLASS: Final[dict[str, tuple[SensorDeviceClass | None, SensorStateClass | None]]] = {
@@ -139,6 +140,12 @@ async def async_setup_entry(
     _add_ident_sensors()
     entry.async_on_unload(coordinator.async_add_listener(_add_ident_sensors))
 
+    # a heat pump's coefficient of performance now
+    async_add_entities(
+        EbusCopSensor(coordinator, address, *sources)
+        for address in coordinator.catalog.addresses
+        if (sources := cop_sources(coordinator.catalog.messages(address))) is not None)
+
     # what applies in a heating zone now; added with the zone's thermostat, once
     # one of its registers has a value
     pending = coordinator.catalog.zones()
@@ -238,6 +245,27 @@ class EbusZoneStateSensor(EbusBusEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         return zone_state(self.coordinator.data, self._zone, dt_util.now())
+
+
+class EbusCopSensor(EbusBusEntity, SensorEntity):
+    """A heat pump's heat output over its electric power right now."""
+
+    _attr_translation_key = "cop"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:gauge"
+
+    def __init__(self, coordinator: EbusCoordinator, address: int,
+                 heat: MessageDef, power: MessageDef) -> None:
+        super().__init__(coordinator)
+        self._heat = values_of(heat)[0].cache_key
+        self._power = values_of(power)[0].cache_key
+        self._attr_unique_id = cop_uid(coordinator.uid_prefix, f"{address:02x}")
+        self._attr_device_info = coordinator.device_info(address)
+
+    @property
+    def native_value(self) -> StateType:
+        data = self.coordinator.data
+        return cop_of(data.get(self._heat), data.get(self._power))
 
 
 class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):

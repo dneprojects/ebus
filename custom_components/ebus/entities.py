@@ -12,6 +12,7 @@ tests can load it without Home Assistant.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from functools import cache
 from pathlib import Path
 from typing import Any, Final
@@ -26,6 +27,12 @@ from .ids import control_uid, entity_uid, zone_state_uid, zone_uid
 from .zone_state import messages_of as state_messages
 
 PRESENTATION: Final = Path(__file__).parent / "presentation.json"
+
+# a heat pump's coefficient of performance: its heat output over its electric
+# power (both kW); below this power it only keeps its electronics alive
+COP_HEAT: Final = "RunDataHeatOutput"
+COP_POWER: Final = "PowerConsumptionHmu"
+COP_MIN_POWER_KW: Final = 0.06
 
 # mdi icon by unit, else by a keyword in the field name (mirrors the eBUS Bridge)
 _UNIT_ICON: Final[dict[str, str]] = {
@@ -166,16 +173,34 @@ def icon_for(field: FieldDef) -> str | None:
     return None
 
 
+def cop_of(heat: object, power: object) -> float | None:
+    """The coefficient of performance now; none while the compressor delivers no
+    heat (standby, defrost)."""
+    if not isinstance(heat, int | float) or not isinstance(power, int | float):
+        return None
+    return round(heat / power, 2) if power >= COP_MIN_POWER_KW and heat > 0 else None
+
+
+def cop_sources(messages: Iterable[MessageDef]) -> tuple[MessageDef, MessageDef] | None:
+    """A heat pump's registers of its heat output and electric power, if it has
+    both (same unit, read together)."""
+    reads = {m.name: m for m in messages if m.is_read}
+    heat, power = reads.get(COP_HEAT), reads.get(COP_POWER)
+    return (heat, power) if heat is not None and power is not None else None
+
+
 def select_polled(
     read_messages: list[MessageDef],
     enabled_uids: set[str],
     zones: list[ClimateZone],
     prefix: str,
+    backed: Iterable[tuple[str, Iterable[MessageDef | None]]] = (),
 ) -> list[MessageDef]:
     """The read messages that back at least one *enabled* entity, so only those
     are polled. A read backs a sensor, a number/select (its control id shares the
     sensor's (zz, name, label), so a writable's read twin is polled whenever its
-    control is enabled), a climate zone or a zone's state sensor."""
+    control is enabled), a climate zone or a zone's state sensor, or one of the
+    further entities ``backed`` lists with the registers they show."""
     polled: list[MessageDef] = []
     seen: set[int] = set()
 
@@ -198,5 +223,9 @@ def select_polled(
                 add(msg)
         if zone_state_uid(prefix, zone.zz, zone.n) in enabled_uids:
             for msg in state_messages(zone):
+                add(msg)
+    for unique_id, messages in backed:
+        if unique_id in enabled_uids:
+            for msg in messages:
                 add(msg)
     return polled

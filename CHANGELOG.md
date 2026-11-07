@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- New hot water entity: Zeitgesteuert, Manuell, Aus and a one-time charge, setpoint and cylinder temperature
+- New sensor per heat pump "COP now": heat output over electric power, none while it delivers no heat
+- New heat pump sensors: heat output, condenser outlet temperature, defrost hours and starts, current error
+- New controller sensors: system state, system off, bivalence and alternative points, buffer charge offset, current error; VWZ: current error
+- Heat pump status codes in German
+- Controllers and heat pumps scanning as BASV3, BASS3 or HMUX0 are supported (registers per arotherm-genia-ebusd, not tested here)
+
 ## 0.7.8
 
 - While airing the thermostat shows the controller's setpoint (0 °C) but it cannot be changed

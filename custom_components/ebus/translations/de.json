@@ -210,7 +210,10 @@
         }
       },
       "hc1circuittype_mctype": {
-        "name": "Heizkreis 1 Kreistyp"
+        "name": "Heizkreis 1 Kreistyp",
+        "state": {
+          "hwc": "Warmwasser"
+        }
       },
       "hc1actualflowtempdesired": {
         "name": "Heizkreis 1 Vorlauf-Sollwert aktuell"
@@ -262,7 +265,10 @@
         "name": "Heizkreis 1 Pumpe"
       },
       "hc2circuittype_mctype": {
-        "name": "Heizkreis 2 Kreistyp"
+        "name": "Heizkreis 2 Kreistyp",
+        "state": {
+          "hwc": "Warmwasser"
+        }
       },
       "hc2actualflowtempdesired": {
         "name": "Heizkreis 2 Vorlauf-Sollwert aktuell"
@@ -314,7 +320,10 @@
         "name": "Heizkreis 2 Pumpe"
       },
       "hc3circuittype_mctype": {
-        "name": "Heizkreis 3 Kreistyp"
+        "name": "Heizkreis 3 Kreistyp",
+        "state": {
+          "hwc": "Warmwasser"
+        }
       },
       "hc3actualflowtempdesired": {
         "name": "Heizkreis 3 Vorlauf-Sollwert aktuell"
@@ -893,6 +902,37 @@
           "off": "Aus"
         }
       },
+      "systemoperatingstate": {
+        "name": "Anlagen-Betriebsart",
+        "state": {
+          "standby": "Bereitschaft",
+          "heating": "Heizen",
+          "cooling": "Kühlen",
+          "hwc": "Warmwasser"
+        }
+      },
+      "globalsystemoff": {
+        "name": "Anlage aus",
+        "state": {
+          "no": "Nein",
+          "yes": "Ja"
+        }
+      },
+      "bivalencepointhc": {
+        "name": "Bivalenzpunkt Heizen"
+      },
+      "bivalencepointhwc": {
+        "name": "Bivalenzpunkt Warmwasser"
+      },
+      "alternativepoint": {
+        "name": "Alternativpunkt"
+      },
+      "bufferchargeoffset": {
+        "name": "Pufferspeicher Ladeüberhöhung"
+      },
+      "currenterror": {
+        "name": "Aktueller Fehler"
+      },
       "flowtemp": {
         "name": "Vorlauftemperatur"
       },
@@ -900,7 +940,8 @@
         "name": "Status Pumpe",
         "state": {
           "off": "Aus",
-          "on": "Ein"
+          "on": "Ein",
+          "hwc": "Warmwasser"
         }
       },
       "statenumber": {
@@ -931,7 +972,10 @@
         }
       },
       "positionvalveset": {
-        "name": "Umschaltventil Stellung"
+        "name": "Umschaltventil Stellung",
+        "state": {
+          "heating": "Heizen"
+        }
       },
       "modulationdesired": {
         "name": "Modulation Soll"
@@ -1079,7 +1123,11 @@
         }
       },
       "state_state": {
-        "name": "Betriebszustand"
+        "name": "Betriebszustand",
+        "state": {
+          "heating": "Heizen",
+          "cooling": "Kühlen"
+        }
       },
       "yieldhcday": {
         "name": "Umweltertrag Heizen heute"
@@ -1181,7 +1229,34 @@
         "name": "Ventilator 2 Drehzahl"
       },
       "rundatastatuscode": {
-        "name": "Statuscode"
+        "name": "Statuscode",
+        "state": {
+          "frost_protect": "Frostschutz",
+          "standby": "Bereitschaft",
+          "heat_compressor_shutdown": "Heizen: Kompressor abgeschaltet",
+          "heat_compressor_blocked": "Heizen: Kompressor gesperrt",
+          "heat_prerun": "Heizen: Vorlauf",
+          "heat_compressor_active": "Heizen: Kompressor aktiv",
+          "heat_overrun": "Heizen: Nachlauf",
+          "cool_compressor_shutdown": "Kühlen: Kompressor abgeschaltet",
+          "cool_compressor_blocked": "Kühlen: Kompressor gesperrt",
+          "cool_prerun": "Kühlen: Vorlauf",
+          "cool_compressor_active": "Kühlen: Kompressor aktiv",
+          "cool_overrun": "Kühlen: Nachlauf",
+          "heat_immersion_heater_active": "Heizen: Heizstab aktiv",
+          "hwc_compressor_blocked": "Warmwasser: Kompressor gesperrt",
+          "hwc_prerun": "Warmwasser: Vorlauf",
+          "hwc_compressor_active": "Warmwasser: Kompressor aktiv",
+          "hwc_immersion_heater_active": "Warmwasser: Heizstab aktiv",
+          "hwc_overrun": "Warmwasser: Nachlauf",
+          "heat_immersion_heater_shutdown": "Heizen: Heizstab abgeschaltet",
+          "heat_immersion_heater_blocked": "Heizen: Heizstab gesperrt",
+          "hwc_immersion_heater_shutdown": "Warmwasser: Heizstab abgeschaltet",
+          "hwc_immersion_heater_blocked": "Warmwasser: Heizstab gesperrt",
+          "air_purging_program_active": "Entlüftung aktiv",
+          "compressor_oil_heating_active": "Kompressoröl wird beheizt",
+          "deicing_active": "Abtauen aktiv"
+        }
       },
       "rundatahighpressure": {
         "name": "Hochdruck"
@@ -1325,7 +1400,8 @@
         "name": "Pumpenstatus (Status)",
         "state": {
           "off": "Aus",
-          "on": "Ein"
+          "on": "Ein",
+          "hwc": "Warmwasser"
         }
       },
       "statuscirpump": {
@@ -1388,6 +1464,18 @@
       },
       "energyelectriccool": {
         "name": "Stromverbrauch Kühlen"
+      },
+      "rundataheatoutput": {
+        "name": "Wärmeleistung"
+      },
+      "rundatacondenserouttemp": {
+        "name": "Kondensator Austritt"
+      },
+      "runstatsdeicehours": {
+        "name": "Abtauen Betriebsstunden"
+      },
+      "runstatsdeicestarts": {
+        "name": "Abtauen Starts"
       },
       "singlestoragecharge": {
         "name": "Einmalige Speicherladung",
@@ -1605,7 +1693,10 @@
         }
       },
       "mode_mctype": {
-        "name": "Betriebsart Kreistyp"
+        "name": "Betriebsart Kreistyp",
+        "state": {
+          "hwc": "Warmwasser"
+        }
       },
       "mode_hex": {
         "name": "Betriebsart Rohwert"
@@ -1726,6 +1817,9 @@
           "airing": "Stoßlüften (Heizung aus)",
           "special": "Sonderfunktion"
         }
+      },
+      "cop": {
+        "name": "Leistungszahl aktuell"
       }
     },
     "number": {
@@ -2167,6 +2261,17 @@
               "ventilation": "Stoßlüften"
             }
           }
+        }
+      }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Warmwasser",
+        "state": {
+          "auto": "Zeitgesteuert",
+          "manual": "Manuell",
+          "off": "Aus",
+          "boost": "Einmal laden"
         }
       }
     }

@@ -25,6 +25,15 @@ period (from today, open end = one year, at the zone's away temperature) and
 airing. The zone's state sensor tells what applies now (a
 time slot, setback or Eco outside the slots, quick veto, away, airing).
 
+The hot water entity has the same modes and a one-time charge; the controller
+starts no charge while the cylinder is within its charge hysteresis of the
+setpoint. Each heat pump has a sensor of its COP right now (heat output over
+electric power, none while it delivers no heat).
+
+Several registers come from
+[arotherm-genia-ebusd](https://github.com/R91g/arotherm-genia-ebusd) (MIT), checked
+on a real bus first; see aioebus `defs/vaillant/PROVENANCE.md`.
+
 ## Requirements
 
 - An enhanced eBUS adapter reachable over TCP (ebusd's `enh:host:port`). The
