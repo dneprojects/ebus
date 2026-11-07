@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- While airing the thermostat offers no temperature setting and shows no setpoint (the controller's is in "Raum-Sollwert aktuell")
+
 ## 0.7.9
 
 - New action "Read register": reads any register of a bus device and returns its raw answer; only reads

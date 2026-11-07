@@ -553,24 +553,27 @@ def test_presets_are_named():
     assert set(names["en"]) == set(names["de"])
 
 
-async def test_while_airing_the_setpoint_is_shown_but_not_adjustable(hass: HomeAssistant,
-                                                                    _wednesday):
+async def test_while_airing_there_is_no_setpoint_to_set(hass: HomeAssistant, _wednesday):
     coord = await _coordinator(hass)
     zone = next(z for z in coord.catalog.zones() if z.n == 2)
     climate = EbusZoneClimate(coord, zone)
     climate.hass = hass
     lo, hi = climate.min_temp, climate.max_temp
     past = _away(zone, "01.01.2019", "01.01.2019")
+    assert ClimateEntityFeature.TARGET_TEMPERATURE in climate.supported_features
     coord.data = {**_zone_data(zone, "manual", setpoint=0.0), **past,
                   **_special(zone, "ventilation")}
-    assert climate.target_temperature == 0.0  # heating off, as the controller says
-    assert climate.min_temp == climate.max_temp == 0.0  # nothing to step to
+    assert ClimateEntityFeature.TARGET_TEMPERATURE not in climate.supported_features
+    assert ClimateEntityFeature.PRESET_MODE in climate.supported_features  # it ends there
+    assert "temperature" not in climate.state_attributes
+    assert (climate.min_temp, climate.max_temp) == (lo, hi) and lo < hi  # never 0 to 0
     coord.async_write = AsyncMock()
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError):  # also when called anyway
         await climate.async_set_temperature(temperature=22.0, hvac_mode=HVACMode.AUTO)
     coord.async_write.assert_not_awaited()  # not even the mode
-    # the preset ends it; afterwards the range is the register's again
+    # the preset ends it; afterwards the setpoint is back
     coord.data = {**_zone_data(zone, "manual", setpoint=20.5), **past, **_special(zone, "auto")}
-    assert (climate.min_temp, climate.max_temp) == (lo, hi) and lo < hi
+    assert ClimateEntityFeature.TARGET_TEMPERATURE in climate.supported_features
+    assert climate.state_attributes["temperature"] == 20.5
     await climate.async_set_temperature(temperature=22.0)
     coord.async_write.assert_awaited()

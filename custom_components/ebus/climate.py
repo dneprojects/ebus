@@ -165,20 +165,13 @@ class EbusZoneClimate(EbusSettlingEntity, ClimateEntity):
                 continue
         return None
 
-    def _fixed_setpoint(self) -> float | None:
-        """While airing the controller holds its setpoint (heating off): shown,
-        but not adjustable."""
-        return self.target_temperature if self._state() == AIRING else None
-
     @property
-    def min_temp(self) -> float:
-        fixed = self._fixed_setpoint()
-        return fixed if fixed is not None else self._attr_min_temp
-
-    @property
-    def max_temp(self) -> float:
-        fixed = self._fixed_setpoint()
-        return fixed if fixed is not None else self._attr_max_temp
+    def supported_features(self) -> ClimateEntityFeature:
+        """While airing the heating is off: no setpoint to show or to set."""
+        features = self._attr_supported_features
+        if self._state() == AIRING:
+            features &= ~ClimateEntityFeature.TARGET_TEMPERATURE
+        return features
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
