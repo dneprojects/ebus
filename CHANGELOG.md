@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.10
 
 - "Current error" shows "Kein Fehler" when a device has none, instead of unknown
 - While airing the thermostat offers no temperature setting and shows no setpoint (the controller's is in "Raum-Sollwert aktuell")
