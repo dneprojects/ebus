@@ -62,5 +62,5 @@ async def _read_register(call: ServiceCall) -> ServiceResponse:
 
 def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_READ_REGISTER, _read_register,
-                                 schema=READ_SCHEMA,
+                                 schema=READ_SCHEMA,  # type: ignore[arg-type, unused-ignore]
                                  supports_response=SupportsResponse.ONLY)

@@ -12,7 +12,10 @@ from typing import Any, Final
 
 from aioebus.catalog import HotWater
 from aioebus.messages import MessageDef
-from homeassistant.components.water_heater import WaterHeaterEntity, WaterHeaterEntityFeature
+from homeassistant.components.water_heater import (  # type: ignore[attr-defined, unused-ignore]
+    WaterHeaterEntity,
+    WaterHeaterEntityFeature,
+)
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
