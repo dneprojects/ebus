@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.7.9
 
+- New action "Read register": reads any register of a bus device and returns its raw answer; only reads
 - New hot water entity: Zeitgesteuert, Manuell, Aus and a one-time charge, setpoint and cylinder temperature
 - New sensor per heat pump "COP now": heat output over electric power, none while it delivers no heat
 - New heat pump sensors: heat output, condenser outlet temperature, defrost hours and starts, current error
