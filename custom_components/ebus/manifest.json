@@ -8,7 +8,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/dneprojects/ebus/issues",
   "quality_scale": "bronze",
-  "requirements": ["aioebus==0.7.13"],
-  "version": "0.7.15",
+  "requirements": ["aioebus==0.7.14"],
+  "version": "0.7.16",
   "zeroconf": ["_ebusd._tcp.local."]
 }

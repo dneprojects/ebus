@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.16
 
 - The search for a known device that missed the setup scan runs in the background only; the setup no longer waits for a second try
 
