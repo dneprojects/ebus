@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.11
+
+- VR 71: new sensors "Relais R1"–"Relais R12" show the relay states the controller sends (e.g. the diverter valve); unused relays start disabled
+
 ## 0.7.10
 
 - "Current error" shows "Kein Fehler" when a device has none, instead of unknown

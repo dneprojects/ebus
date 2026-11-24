@@ -1874,6 +1874,90 @@
       "status_temp_2": {
         "name": "Status temp_2"
       },
+      "setactorstate_r1": {
+        "name": "SetActorState r1",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r2": {
+        "name": "SetActorState r2",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r3": {
+        "name": "SetActorState r3",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r4": {
+        "name": "SetActorState r4",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r5": {
+        "name": "SetActorState r5",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r6": {
+        "name": "SetActorState r6",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r7": {
+        "name": "SetActorState r7",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r8": {
+        "name": "SetActorState r8",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r9": {
+        "name": "SetActorState r9",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r10": {
+        "name": "SetActorState r10",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r11": {
+        "name": "SetActorState r11",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r12": {
+        "name": "SetActorState r12",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
       "sensordata1_s1": {
         "name": "SensorData1 s1"
       },

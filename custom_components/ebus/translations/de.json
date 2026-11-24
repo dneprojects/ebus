@@ -1767,6 +1767,90 @@
       "status_temp_2": {
         "name": "Sollwert 2 (Status)"
       },
+      "setactorstate_r1": {
+        "name": "Relais R1",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r2": {
+        "name": "Relais R2",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r3": {
+        "name": "Relais R3",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r4": {
+        "name": "Relais R4",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r5": {
+        "name": "Relais R5",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r6": {
+        "name": "Relais R6",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r7": {
+        "name": "Relais R7",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r8": {
+        "name": "Relais R8",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r9": {
+        "name": "Relais R9",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r10": {
+        "name": "Relais R10",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r11": {
+        "name": "Relais R11",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "setactorstate_r12": {
+        "name": "Relais R12",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
       "sensordata1_s1": {
         "name": "Temperatursensor S1"
       },

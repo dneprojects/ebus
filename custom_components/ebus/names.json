@@ -489,7 +489,20 @@
       "bivalencepointhc": "Bivalenzpunkt Heizen",
       "bivalencepointhwc": "Bivalenzpunkt Warmwasser",
       "alternativepoint": "Alternativpunkt",
-      "bufferchargeoffset": "Pufferspeicher Ladeüberhöhung"
+      "bufferchargeoffset": "Pufferspeicher Ladeüberhöhung",
+      "setactorstate": "Relais-Vorgabe",
+      "setactorstate_r1": "Relais R1",
+      "setactorstate_r2": "Relais R2",
+      "setactorstate_r3": "Relais R3",
+      "setactorstate_r4": "Relais R4",
+      "setactorstate_r5": "Relais R5",
+      "setactorstate_r6": "Relais R6",
+      "setactorstate_r7": "Relais R7",
+      "setactorstate_r8": "Relais R8",
+      "setactorstate_r9": "Relais R9",
+      "setactorstate_r10": "Relais R10",
+      "setactorstate_r11": "Relais R11",
+      "setactorstate_r12": "Relais R12"
     },
     "states": {
       "off": "Aus",

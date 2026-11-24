@@ -60,7 +60,10 @@ def test_disabled_fields_add_up():
     def labels(ident, hw="0000"):
         return entities.disabled_field_labels(resolve_bundled(_scan(ident, hw)))
 
-    assert "SensorData1 s4" in labels("VR_71", "5904")
+    vr71 = labels("VR_71", "5904")
+    assert "SensorData1 s4" in vr71
+    # relays the controller marks unused (FF) start hidden, the switched ones shown
+    assert "SetActorState r1" in vr71 and "SetActorState r6" not in vr71
     wp1, wp2 = labels("HMU00", "5103"), labels("V32", "6004")
     assert "Status01 temp_2" in wp1 and "SetMode hwctempdesired" not in wp1
     assert wp1 | {"SetMode hwctempdesired"} == wp2  # the profile adds to its file
