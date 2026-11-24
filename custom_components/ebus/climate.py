@@ -35,7 +35,7 @@ from homeassistant.util import dt as dt_util
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
 from .entities import options_of
-from .entity import EbusSettlingEntity
+from .entity import EbusSettlingEntity, legacy_temperatures
 from .ids import zone_uid
 from .zone_state import AIRING, AWAY, in_use, value_of, zone_state
 
@@ -82,7 +82,7 @@ async def async_setup_entry(
 class EbusZoneClimate(EbusSettlingEntity, ClimateEntity):
     """One heating zone as a thermostat."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     # defaults; a zone takes its setpoint register's range (from the aioebus catalog)
     _attr_min_temp = 5.0
     _attr_max_temp = 30.0
@@ -146,14 +146,14 @@ class EbusZoneClimate(EbusSettlingEntity, ClimateEntity):
         return value_of(self._data(), msg)
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         try:
             return float(self._val(self._zone.current))  # type: ignore[arg-type]
         except (TypeError, ValueError):
             return None
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """The setpoint in effect now (time program, setback, quick veto),
         else the manual one; none while the zone is off."""
         if self.hvac_mode is HVACMode.OFF:
@@ -298,3 +298,6 @@ class EbusZoneClimate(EbusSettlingEntity, ClimateEntity):
 
     async def _write(self, msg: MessageDef, value: object) -> None:
         await self.coordinator.async_write(msg, value)
+
+
+legacy_temperatures(EbusZoneClimate, ClimateEntity)

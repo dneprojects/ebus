@@ -58,3 +58,15 @@ class EbusSettlingEntity(EbusBusEntity):
     async def async_will_remove_from_hass(self) -> None:
         self._cancel_reread()
         await super().async_will_remove_from_hass()
+
+
+def legacy_temperatures(cls: type, base: type) -> None:
+    """A Home Assistant before the native temperature API (2026.8) reads the
+    unit and both temperatures under their old names: give them to it, so a
+    newer one does not see the deprecated names."""
+    if hasattr(base, "native_current_temperature"):
+        return
+    cls._attr_temperature_unit = cls._attr_native_temperature_unit  # type: ignore[attr-defined]
+    for name in ("current_temperature", "target_temperature"):
+        native = getattr(cls, "native_" + name)
+        setattr(cls, name, property(native.fget))

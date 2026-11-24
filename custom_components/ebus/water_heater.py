@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EbusConfigEntry
 from .coordinator import EbusCache, EbusCoordinator
-from .entity import EbusSettlingEntity
+from .entity import EbusSettlingEntity, legacy_temperatures
 from .ids import hot_water_uid
 from .zone_state import value_of
 
@@ -60,7 +60,7 @@ class EbusHotWater(EbusSettlingEntity, WaterHeaterEntity):
     """A controller's hot water."""
 
     _attr_translation_key = "hot_water"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
     # defaults; the setpoint register's range when the catalog names one
     _attr_min_temp = 30.0
@@ -95,11 +95,11 @@ class EbusHotWater(EbusSettlingEntity, WaterHeaterEntity):
             return None
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         return self._float(self._water.current)
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         return self._float(self._water.target_read)
 
     def _charging(self) -> bool:
@@ -138,3 +138,6 @@ class EbusHotWater(EbusSettlingEntity, WaterHeaterEntity):
                 await self.coordinator.async_write(water.mode_write, label)
         await self._read_change((water.mode_read, water.special_read),
                                 (water.special_read, water.target_read))
+
+
+legacy_temperatures(EbusHotWater, WaterHeaterEntity)

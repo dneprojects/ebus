@@ -177,9 +177,9 @@ async def test_climate_shows_the_setpoint_in_effect(hass: HomeAssistant):
     zone = next(z for z in coord.catalog.zones() if z.n == 1)
     climate = EbusZoneClimate(coord, zone)
     coord.data = _zone_data(zone, "auto", setpoint=18.0, manual=21.0)  # setback time
-    assert climate.target_temperature == 18.0
+    assert climate.native_target_temperature == 18.0
     coord.data = _zone_data(zone, "auto", manual=21.0)  # not read yet: the manual one
-    assert climate.target_temperature == 21.0
+    assert climate.native_target_temperature == 21.0
 
 
 @pytest.mark.parametrize(("cached", "hours"), [(2.5, 2.5), (None, 3.0)])
@@ -287,7 +287,7 @@ async def test_an_off_zone_shows_no_setpoint(hass: HomeAssistant):
     climate = EbusZoneClimate(coord, zone)
     climate.hass = hass
     coord.data = _zone_data(zone, "off", setpoint=5.0, manual=21.0)
-    assert climate.target_temperature is None
+    assert climate.native_target_temperature is None
     written = []
     coord.async_write = AsyncMock(side_effect=lambda msg, value: written.append((msg.name, value)))
     await climate.async_set_temperature(temperature=20.0)
@@ -467,7 +467,7 @@ async def test_the_preset_shows_what_applies(hass: HomeAssistant, _wednesday, da
     coord.data = {**_zone_data(zone, "auto", setpoint=5.0), **_away(zone, *data["holiday"]),
                   **_special(zone, data["special"])}
     assert climate.preset_mode == preset
-    assert climate.target_temperature == 5.0  # what the controller has in effect
+    assert climate.native_target_temperature == 5.0  # what the controller has in effect
 
 
 async def test_away_dates_reach_the_bus(hass: HomeAssistant, _wednesday):
@@ -577,3 +577,34 @@ async def test_while_airing_there_is_no_setpoint_to_set(hass: HomeAssistant, _we
     assert climate.state_attributes["temperature"] == 20.5
     await climate.async_set_temperature(temperature=22.0)
     coord.async_write.assert_awaited()
+
+
+def test_temperatures_have_their_old_names_only_where_home_assistant_needs_them():
+    from custom_components.ebus.entity import legacy_temperatures
+
+    def make():
+        class Entity:
+            _attr_native_temperature_unit = "°C"
+
+            @property
+            def native_current_temperature(self):
+                return 20.5
+
+            @property
+            def native_target_temperature(self):
+                return 21.0
+        return Entity
+
+    class OldBase:  # no native API (Home Assistant 2026.8)
+        pass
+
+    class NewBase:
+        native_current_temperature = None
+
+    old = make()
+    legacy_temperatures(old, OldBase)
+    assert (old().current_temperature, old().target_temperature) == (20.5, 21.0)
+    assert old._attr_temperature_unit == "°C"
+    new = make()
+    legacy_temperatures(new, NewBase)
+    assert not hasattr(new, "current_temperature") and not hasattr(new, "_attr_temperature_unit")

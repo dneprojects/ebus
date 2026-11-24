@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Thermostat and hot water use Home Assistant's native temperature properties (no deprecation warnings; older Home Assistant still served)
+
 ## 0.7.14
 
 - Icons: a switch for the VR 71 relays, a valve for the mixer movements (sensoCOMFORT and VR 71)

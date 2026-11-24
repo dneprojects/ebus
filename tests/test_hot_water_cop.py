@@ -74,11 +74,11 @@ async def _entity(hass: HomeAssistant, allow_write: bool = True):
 async def test_shows_what_the_controller_has(hass: HomeAssistant):
     coord, water, entity, _ = await _entity(hass)
     assert entity.operation_list == ["off", "auto", "manual", "boost"]
-    assert entity.current_operation is None and entity.target_temperature is None
-    assert entity.current_temperature is None  # nothing read yet
+    assert entity.current_operation is None and entity.native_target_temperature is None
+    assert entity.native_current_temperature is None  # nothing read yet
     coord.data = _data(water)
-    assert (entity.current_operation, entity.target_temperature,
-            entity.current_temperature) == ("auto", 50.0, 47.25)
+    assert (entity.current_operation, entity.native_target_temperature,
+            entity.native_current_temperature) == ("auto", 50.0, 47.25)
     coord.data = _data(water, mode="day")
     assert entity.current_operation == "manual"  # the app's name for the register's "day"
     coord.data = _data(water, mode="off")
