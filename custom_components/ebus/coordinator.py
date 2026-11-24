@@ -17,7 +17,7 @@ from typing import Any, Final
 import aiohttp
 from aioebus.active import ReadError
 from aioebus.catalog import Catalog
-from aioebus.discovery import BusSilent, Device, discover, identify_later, remember
+from aioebus.discovery import BusSilent, Device, discover, find_later, identify_later, remember
 from aioebus.engine import EbusEngine
 from aioebus.frame import BROADCAST
 from aioebus.link import Link, connect
@@ -300,6 +300,11 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             er.EVENT_ENTITY_REGISTRY_UPDATED, self._on_registry_update))
         self._entry.async_create_background_task(
             self.hass, self._late_identify(), name="ebus-identify")
+        if found.missing:
+            _LOGGER.info("eBUS: known device(s) %s did not answer the scan; looking again",
+                         ", ".join(f"{a:#04x}" for a in found.missing))
+            self._entry.async_create_background_task(
+                self.hass, self._late_find(found.missing), name="ebus-find")
         _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
                      len(self.devices), len(self.read_messages), len(self.write_messages))
 
@@ -329,6 +334,16 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             await self._ident_store.async_save(self._ident_known)
             _LOGGER.debug("ident %#04x read at runtime", device.address)
             self.async_update_listeners()  # the sensor platform adds its entities
+
+    async def _late_find(self, missing: list[int]) -> None:
+        """A device known from an earlier start that missed the scan (a busy
+        bus): once it answers, reload so it gets its definitions and entities."""
+        if self.engine is None:
+            return
+        async for device in find_later(self.engine, missing, _IDENT_RETRY_DELAYS):
+            _LOGGER.info("eBUS: device %#04x answered later; reloading", device.address)
+            self.hass.config_entries.async_schedule_reload(self._entry.entry_id)
+            return
 
     def _derived_entities(self) -> list[tuple[str, tuple[MessageDef | None, ...]]]:
         """The unique ids of the entities that are no single register, with the

@@ -399,3 +399,21 @@ async def test_removing_the_last_entry_drops_the_definition_cache(hass: HomeAssi
     await hass.config_entries.async_remove(first.entry_id)
     await async_remove_entry(hass, second)
     assert not cache.exists()
+
+
+async def test_a_known_device_found_later_reloads_the_entry(hass: HomeAssistant):
+    from aioebus.discovery import Device
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.engine = MagicMock()
+    vr71 = ScanResult(0xB5, "Vaillant", "VR_71", "0203", "5904", 203, 5904)
+
+    async def answers(engine, addresses, delays):
+        assert list(addresses) == [0x26]
+        yield Device(0x26, vr71)
+
+    with patch("custom_components.ebus.coordinator.find_later", answers), \
+            patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        await coord._late_find([0x26])
+    reload.assert_called_once_with(entry.entry_id)
