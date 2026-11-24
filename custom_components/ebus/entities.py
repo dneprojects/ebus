@@ -47,9 +47,10 @@ _KEYWORD_ICON: Final[tuple[tuple[str, str], ...]] = (
     ("pump", "mdi:pump"), ("pressure", "mdi:gauge"),
     ("temp", "mdi:thermometer"), ("mode", "mdi:tune"),
     ("error", "mdi:alert-circle-outline"), ("time", "mdi:clock-outline"))
-# by message, before unit and field: a VR71 relay, a mixer's movement
-_MESSAGE_ICON: Final[tuple[tuple[str, str], ...]] = (
-    ("setactorstate", "mdi:electric-switch"), ("mixermovement", "mdi:valve"))
+# by message, before unit and field: a mixer's movement (a VR71 relay takes its
+# icon by state from icons.json, so it sets none here)
+_MESSAGE_ICON: Final[tuple[tuple[str, str], ...]] = (("mixermovement", "mdi:valve"),)
+_STATE_ICON_MESSAGES: Final = ("setactorstate",)
 _MIXER_FIELD: Final = "mixer"
 
 # number range by unit for float registers (they have no natural raw range)
@@ -173,6 +174,8 @@ def device_model(scan: ScanResult, definition: Definition | None) -> str:
 
 def icon_for(field: FieldDef, message: str = "") -> str | None:
     msg = message.lower()
+    if msg in _STATE_ICON_MESSAGES:
+        return None
     for keyword, icon in _MESSAGE_ICON:
         if keyword in msg:
             return icon

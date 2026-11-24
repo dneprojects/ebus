@@ -176,7 +176,14 @@ def test_relays_and_mixer_movements_have_their_icons():
         f = next(v.field for v in values_of(msg) if v.field.name == field)
         return entities.icon_for(f, msg.name)
 
-    assert icon("vr_71.json", "SetActorState", "r6") == "mdi:electric-switch"
+    # a relay's icon follows its state (icons.json), so the entity sets none
+    assert icon("vr_71.json", "SetActorState", "r6") is None
+    import json
+    sensors = json.loads((PKG / "icons.json").read_text(encoding="utf-8"))["entity"]["sensor"]
+    msg = next(m for m in bundled_file("vr_71.json") if m.name == "SetActorState" and m.is_read)
+    for value in values_of(msg):
+        assert sensors[value.key] == {"default": "mdi:electric-switch",
+                                      "state": {"on": "mdi:electric-switch-closed"}}
     assert icon("vr_71.json", "Mc1Operation", "mixer") == "mdi:valve"
     assert icon("vr_71.json", "Mc1Operation", "pump") == "mdi:pump"
     assert icon("ctlv3.json", "Hc1MixerMovement", "value") == "mdi:valve"

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- VR 71 relays: icon by state, closed switch while on
 - A device known from an earlier start that misses the scan at setup is tried again and, once it answers, the integration reloads (no more missing VR 71 until the next restart)
 - Thermostat and hot water use Home Assistant's native temperature properties (no deprecation warnings; older Home Assistant still served)
 
