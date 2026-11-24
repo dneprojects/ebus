@@ -168,3 +168,16 @@ def test_every_bundled_entity_has_a_german_name():
     for platform, keys in en.items():
         missing = {k for k in keys if "name" not in de[platform].get(k, {})}
         assert not missing, (platform, sorted(missing)[:10])
+
+
+def test_relays_and_mixer_movements_have_their_icons():
+    def icon(file, name, field):
+        msg = next(m for m in bundled_file(file) if m.name == name and m.is_read)
+        f = next(v.field for v in values_of(msg) if v.field.name == field)
+        return entities.icon_for(f, msg.name)
+
+    assert icon("vr_71.json", "SetActorState", "r6") == "mdi:electric-switch"
+    assert icon("vr_71.json", "Mc1Operation", "mixer") == "mdi:valve"
+    assert icon("vr_71.json", "Mc1Operation", "pump") == "mdi:pump"
+    assert icon("ctlv3.json", "Hc1MixerMovement", "value") == "mdi:valve"
+    assert icon("vr_71.json", "SensorData1", "s1") == "mdi:thermometer"

@@ -47,6 +47,10 @@ _KEYWORD_ICON: Final[tuple[tuple[str, str], ...]] = (
     ("pump", "mdi:pump"), ("pressure", "mdi:gauge"),
     ("temp", "mdi:thermometer"), ("mode", "mdi:tune"),
     ("error", "mdi:alert-circle-outline"), ("time", "mdi:clock-outline"))
+# by message, before unit and field: a VR71 relay, a mixer's movement
+_MESSAGE_ICON: Final[tuple[tuple[str, str], ...]] = (
+    ("setactorstate", "mdi:electric-switch"), ("mixermovement", "mdi:valve"))
+_MIXER_FIELD: Final = "mixer"
 
 # number range by unit for float registers (they have no natural raw range)
 _UNIT_BOUNDS: Final[dict[str, tuple[float, float, float]]] = {
@@ -167,7 +171,13 @@ def device_model(scan: ScanResult, definition: Definition | None) -> str:
     return definition.model if definition is not None and definition.model else scan.ident
 
 
-def icon_for(field: FieldDef) -> str | None:
+def icon_for(field: FieldDef, message: str = "") -> str | None:
+    msg = message.lower()
+    for keyword, icon in _MESSAGE_ICON:
+        if keyword in msg:
+            return icon
+    if field.name.lower() == _MIXER_FIELD:  # a VR71 mixer circuit's movement
+        return "mdi:valve"
     if field.unit in _UNIT_ICON:
         return _UNIT_ICON[field.unit]
     name = field.name.lower()

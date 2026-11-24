@@ -203,7 +203,7 @@ class EbusSensor(EbusBusEntity, SensorEntity):
         zz = coordinator.catalog.owner(field.msg)
         self._attr_unique_id = entity_uid(coordinator.uid_prefix, field.msg, field.label)
         self._attr_translation_key = field.key
-        self._attr_icon = icon_for(field.field)
+        self._attr_icon = icon_for(field.field, field.msg.name)
         self._no_value = NO_VALUE_STATES.get(field.msg.name)
         # channels known to be unconnected on this device type (from the def
         # metadata, so the decision is static at registration) are off by default

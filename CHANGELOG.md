@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Icons: a switch for the VR 71 relays, a valve for the mixer movements (sensoCOMFORT and VR 71)
 - Heat pump status code: German names for "defrost time exceeded" and "defrost flow too cold"
 
 ## 0.7.13
