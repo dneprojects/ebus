@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.12
+
+- VR 71: new sensors per mixer circuit "Status", "Pumpe", "Mischer" and the flow setpoint sent to the VR 71 (off by default, repeats the controller's)
+- A value another device sends (passive) gets its sensor once it arrives: relays the controller marks unused no longer appear, on any installation
+
 ## 0.7.11
 
 - VR 71: new sensors "Relais R1"–"Relais R12" show the relay states the controller sends (e.g. the diverter valve); unused relays start disabled

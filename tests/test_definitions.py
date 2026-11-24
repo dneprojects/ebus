@@ -62,8 +62,10 @@ def test_disabled_fields_add_up():
 
     vr71 = labels("VR_71", "5904")
     assert "SensorData1 s4" in vr71
-    # relays the controller marks unused (FF) start hidden, the switched ones shown
-    assert "SetActorState r1" in vr71 and "SetActorState r6" not in vr71
+    # the VR71's flow setpoint repeats the controller's own; the relays are not
+    # listed: one the controller marks unused never gets a value (sensor.py)
+    assert "Mc1Operation flowtempdesired" in vr71 and "Mc1Operation mixer" not in vr71
+    assert not any(label.startswith("SetActorState") for label in vr71)
     wp1, wp2 = labels("HMU00", "5103"), labels("V32", "6004")
     assert "Status01 temp_2" in wp1 and "SetMode hwctempdesired" not in wp1
     assert wp1 | {"SetMode hwctempdesired"} == wp2  # the profile adds to its file

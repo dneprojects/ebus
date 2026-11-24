@@ -12,6 +12,7 @@ from aioebus.values import Value, closes_period, values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,6 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from . import EbusConfigEntry
 from .adapter import wifi
+from .const import DOMAIN
 from .coordinator import EbusCoordinator
 from .device import adapter_device_info
 from .entities import (
@@ -99,13 +101,33 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: EbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = [
-        EbusSensor(coordinator, field)
-        for msg in coordinator.read_messages
-        for field in values_of(msg)
-    ]
+    registry = er.async_get(hass)
+    entities: list[SensorEntity] = []
+    # a passive value (what another master sends) appears once the bus carries
+    # it: a channel the sender marks unused (e.g. a VR71 relay sent as FF) never
+    # does; one registered before stays
+    unseen: list[Value] = []
+    for msg in coordinator.read_messages:
+        for field in values_of(msg):
+            uid = entity_uid(coordinator.uid_prefix, field.msg, field.label)
+            if msg.is_passive and registry.async_get_entity_id("sensor", DOMAIN, uid) is None:
+                unseen.append(field)
+            else:
+                entities.append(EbusSensor(coordinator, field))
     entities += [EbusAdapterSensor(coordinator, *spec) for spec in _ADAPTER_SENSORS]
     async_add_entities(entities)
+
+    @callback
+    def _add_seen() -> None:
+        seen = [f for f in unseen if coordinator.data.get(f.cache_key) is not None]
+        if seen:
+            for field in seen:
+                unseen.remove(field)
+            async_add_entities(EbusSensor(coordinator, f) for f in seen)
+
+    _add_seen()
+    if unseen:
+        entry.async_on_unload(coordinator.async_add_listener(_add_seen))
 
     # an adapter with a web UI adds its own metrics, also once its web API
     # answers later (it may have been slow at setup)

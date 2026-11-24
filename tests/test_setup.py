@@ -284,6 +284,52 @@ async def test_climate_zone_added_once_its_data_arrives(hass: HomeAssistant):
     assert len(added) == 1  # added once, not on every update
 
 
+async def test_a_passive_value_gets_its_sensor_once_the_bus_carries_it(hass: HomeAssistant):
+    # VR71 relays: the controller sends FF for an unused one, which never gets a
+    # sensor; a switched one appears with its first value; a polled read at once
+    from custom_components.ebus import sensor
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.update_interval = None  # no refresh timer in this test
+    coord.devices = {0x26: ScanResult(0xB5, "Vaillant", "VR_71", "0203", "5904", 203, 5904)}
+    coord.data = {}
+    await coord.async_load_definitions()
+    entry.runtime_data = coord
+    added: list = []
+    await sensor.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
+    labels = {e._field.label for e in added if isinstance(e, EbusSensor)}
+    assert "SensorData1 s1" in labels
+    assert not any(label.startswith(("SetActorState", "Mc1Operation")) for label in labels)
+    coord.async_set_updated_data({("26", "SetActorState", "SetActorState r6"): "on",
+                                  ("26", "SetActorState", "SetActorState r1"): None})
+    new = [e._field.label for e in added if isinstance(e, EbusSensor)
+           and e._field.label.startswith("SetActorState")]
+    assert new == ["SetActorState r6"]
+    coord.async_set_updated_data({("26", "SetActorState", "SetActorState r6"): "off"})
+    assert sum(1 for e in added if isinstance(e, EbusSensor)
+               and e._field.label == "SetActorState r6") == 1  # added once
+
+
+async def test_a_registered_passive_sensor_is_added_at_setup(hass: HomeAssistant):
+    from custom_components.ebus import sensor
+    from custom_components.ebus.ids import entity_uid
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.update_interval = None
+    coord.devices = {0x26: ScanResult(0xB5, "Vaillant", "VR_71", "0203", "5904", 203, 5904)}
+    coord.data = {}
+    await coord.async_load_definitions()
+    entry.runtime_data = coord
+    msg = next(m for m in coord.read_messages if m.name == "SetActorState")
+    uid = entity_uid(coord.uid_prefix, msg, "SetActorState r1")
+    er.async_get(hass).async_get_or_create("sensor", DOMAIN, uid, config_entry=entry)
+    added: list = []
+    await sensor.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
+    assert "SetActorState r1" in {e._field.label for e in added if isinstance(e, EbusSensor)}
+
+
 async def test_stale_device_can_be_removed_while_the_entry_is_not_loaded(hass: HomeAssistant):
     from custom_components.ebus import async_remove_config_entry_device
     entry = _entry()

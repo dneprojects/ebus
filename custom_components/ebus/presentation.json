@@ -116,12 +116,8 @@
       "SensorData2 s8",
       "SensorData2 s10",
       "SensorData2 s11",
-      "SetActorState r1",
-      "SetActorState r2",
-      "SetActorState r7",
-      "SetActorState r8",
-      "SetActorState r9",
-      "SetActorState r10"
+      "Mc1Operation flowtempdesired",
+      "Mc2Operation flowtempdesired"
     ],
     "hmu.json": [
       "DateTime btime",

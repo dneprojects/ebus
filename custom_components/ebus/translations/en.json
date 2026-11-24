@@ -1958,6 +1958,46 @@
           "on": "on"
         }
       },
+      "mc1operation_status": {
+        "name": "Mc1Operation status",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc1operation_flowtempdesired": {
+        "name": "Mc1Operation flowtempdesired"
+      },
+      "mc1operation_pump": {
+        "name": "Mc1Operation pump",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc1operation_mixer": {
+        "name": "Mc1Operation mixer"
+      },
+      "mc2operation_status": {
+        "name": "Mc2Operation status",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc2operation_flowtempdesired": {
+        "name": "Mc2Operation flowtempdesired"
+      },
+      "mc2operation_pump": {
+        "name": "Mc2Operation pump",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc2operation_mixer": {
+        "name": "Mc2Operation mixer"
+      },
       "sensordata1_s1": {
         "name": "SensorData1 s1"
       },

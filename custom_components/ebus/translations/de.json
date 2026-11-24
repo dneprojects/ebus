@@ -1851,6 +1851,46 @@
           "on": "Ein"
         }
       },
+      "mc1operation_status": {
+        "name": "Mischerkreis 1 Status",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "mc1operation_flowtempdesired": {
+        "name": "Mischerkreis 1 Vorlauf-Sollwert (VR 71)"
+      },
+      "mc1operation_pump": {
+        "name": "Mischerkreis 1 Pumpe",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "mc1operation_mixer": {
+        "name": "Mischerkreis 1 Mischer"
+      },
+      "mc2operation_status": {
+        "name": "Mischerkreis 2 Status",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "mc2operation_flowtempdesired": {
+        "name": "Mischerkreis 2 Vorlauf-Sollwert (VR 71)"
+      },
+      "mc2operation_pump": {
+        "name": "Mischerkreis 2 Pumpe",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "mc2operation_mixer": {
+        "name": "Mischerkreis 2 Mischer"
+      },
       "sensordata1_s1": {
         "name": "Temperatursensor S1"
       },
