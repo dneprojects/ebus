@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.13
+
+- VR 71: "Mischerkreis N Mischer" is now "Mischerkreis N Mischerbewegung" without a unit: it is the movement the controller asks for (below 0 closing), not a position
+
 ## 0.7.12
 
 - VR 71: new sensors per mixer circuit "Status", "Pumpe", "Mischer" and the flow setpoint sent to the VR 71 (off by default, repeats the controller's)

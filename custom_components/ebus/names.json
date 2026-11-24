@@ -507,12 +507,12 @@
       "mc1operation_status": "Mischerkreis 1 Status",
       "mc1operation_flowtempdesired": "Mischerkreis 1 Vorlauf-Sollwert (VR 71)",
       "mc1operation_pump": "Mischerkreis 1 Pumpe",
-      "mc1operation_mixer": "Mischerkreis 1 Mischer",
+      "mc1operation_mixer": "Mischerkreis 1 Mischerbewegung",
       "mc2operation": "Mischerkreis 2 Vorgabe",
       "mc2operation_status": "Mischerkreis 2 Status",
       "mc2operation_flowtempdesired": "Mischerkreis 2 Vorlauf-Sollwert (VR 71)",
       "mc2operation_pump": "Mischerkreis 2 Pumpe",
-      "mc2operation_mixer": "Mischerkreis 2 Mischer"
+      "mc2operation_mixer": "Mischerkreis 2 Mischerbewegung"
     },
     "states": {
       "off": "Aus",

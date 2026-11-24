@@ -1869,7 +1869,7 @@
         }
       },
       "mc1operation_mixer": {
-        "name": "Mischerkreis 1 Mischer"
+        "name": "Mischerkreis 1 Mischerbewegung"
       },
       "mc2operation_status": {
         "name": "Mischerkreis 2 Status",
@@ -1889,7 +1889,7 @@
         }
       },
       "mc2operation_mixer": {
-        "name": "Mischerkreis 2 Mischer"
+        "name": "Mischerkreis 2 Mischerbewegung"
       },
       "sensordata1_s1": {
         "name": "Temperatursensor S1"
