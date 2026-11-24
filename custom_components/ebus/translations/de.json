@@ -1297,6 +1297,8 @@
           "hwc_immersion_heater_blocked": "Warmwasser: Heizstab gesperrt",
           "air_purging_program_active": "Entlüftung aktiv",
           "compressor_oil_heating_active": "Kompressoröl wird beheizt",
+          "deicing_time_too_long": "Abtauen: Zeit überschritten",
+          "deicing_flow_temp_too_low": "Abtauen: Vorlauf zu kalt",
           "deicing_active": "Abtauen aktiv"
         }
       },

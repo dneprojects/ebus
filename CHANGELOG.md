@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Heat pump status code: German names for "defrost time exceeded" and "defrost flow too cold"
+
 ## 0.7.13
 
 - VR 71: "Mischerkreis N Mischer" is now "Mischerkreis N Mischerbewegung" without a unit: it is the movement the controller asks for (below 0 closing), not a position
