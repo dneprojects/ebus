@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.15
 
 - VR 71 relays: icon by state, closed switch while on
 - A device known from an earlier start that misses the scan at setup is tried again and, once it answers, the integration reloads (no more missing VR 71 until the next restart)
