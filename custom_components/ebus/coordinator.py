@@ -70,6 +70,8 @@ _LOGGER = logging.getLogger(__name__)
 _RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into one rebuild
 # pauses (s) before each runtime attempt at an identification missed at setup
 _IDENT_RETRY_DELAYS: Final = (60, 240, 600, 900, 1800)
+# a known device that missed the scan: looked for soon, then less often
+_FIND_RETRY_DELAYS: Final = (15, 60, 240, 600, 900, 1800)
 _FETCH_TIMEOUT: Final = 15  # s per definition file from the CDN
 _STALE_AFTER: Final = 600  # s without the link before values count as unavailable
 _WEB_RETRY: Final = 600  # s between asks of an adapter whose web API did not answer
@@ -340,7 +342,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         bus): once it answers, reload so it gets its definitions and entities."""
         if self.engine is None:
             return
-        async for device in find_later(self.engine, missing, _IDENT_RETRY_DELAYS):
+        async for device in find_later(self.engine, missing, _FIND_RETRY_DELAYS):
             _LOGGER.info("eBUS: device %#04x answered later; reloading", device.address)
             self.hass.config_entries.async_schedule_reload(self._entry.entry_id)
             return

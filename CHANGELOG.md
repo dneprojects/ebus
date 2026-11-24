@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The search for a known device that missed the setup scan runs in the background only; the setup no longer waits for a second try
+
 ## 0.7.15
 
 - VR 71 relays: icon by state, closed switch while on
