@@ -456,13 +456,15 @@ async def test_the_adapter_shows_the_bus_load_and_poll_rates(hass: HomeAssistant
     coord.engine = EbusEngine(AsyncMock(), AsyncMock(), MessageRegistry([]))
     now = time.monotonic()
     meter = coord.engine.meter
-    for i in range(10):
-        meter.symbol(0x10 if i % 2 else SYN, now - 30 + i)
+    meter.symbol(SYN, now - 30)
+    for _ in range(1800):  # 1800 data symbols in 30 s: a quarter of 240 a second
+        meter.symbol(0x10, now - 15)
     meter.poll(0x15, now - 20)
     meter.poll(0x08, now - 10)
-    meter.foreign_unanswered(now - 5)
+    meter.foreign_unanswered(0x15, now - 5)
+    meter.foreign_unanswered(0x0B, now - 4)  # a probe of an empty address
     values = {slug: get(coord) for slug, _key, get, *_ in _ADAPTER_SENSORS}
-    assert values["busauslastung"] == 50.0
+    assert values["busauslastung"] == 25.0
     assert values["abfragen_pro_minute"] == 4.0  # 2 polls in the 30 s seen so far
     assert values["regler_abfragen_pro_minute"] == 2.0
     assert values["fremdabfragen_ohne_antwort_pro_minute"] == 2.0

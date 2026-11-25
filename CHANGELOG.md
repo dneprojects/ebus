@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.18
+
+- "Busauslastung" is measured against the bus capacity (it showed far too much); "Fremdabfragen ohne Antwort" counts only reads of devices that are on the bus (a controller probing an empty address is left out)
+
 ## 0.7.17
 
 - eBUS Adapter: new sensors "Busauslastung", "Eigene Abfragen pro Minute", "Eigene Abfragen an den Regler pro Minute" and "Fremdabfragen ohne Antwort pro Minute" (over the last minute)

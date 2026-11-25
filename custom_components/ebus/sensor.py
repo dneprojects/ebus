@@ -91,7 +91,7 @@ _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
      lambda c: c.controller_polls_per_minute(),
      _PER_MINUTE, None, SensorStateClass.MEASUREMENT, "mdi:thermostat"),
     ("fremdabfragen_ohne_antwort_pro_minute", "adapter_foreign_unanswered_rate",
-     lambda c: c.engine.meter.unanswered_per_minute(time.monotonic()) if c.engine else None,
+     lambda c: c.foreign_unanswered_per_minute(),
      _PER_MINUTE, None, SensorStateClass.MEASUREMENT, "mdi:network-strength-off-outline"),
 ]
 

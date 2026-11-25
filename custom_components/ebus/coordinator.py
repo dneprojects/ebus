@@ -354,6 +354,13 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         known = [r for r in rates if r is not None]
         return sum(known) if known else None
 
+    def foreign_unanswered_per_minute(self) -> float | None:
+        """Other masters' reads of the devices on this bus that stayed
+        unanswered in the last minute (a probe of an empty address is left out)."""
+        if self.engine is None:
+            return None
+        return self.engine.meter.unanswered_per_minute(time.monotonic(), set(self.devices))
+
     async def _late_find(self, missing: list[int]) -> None:
         """A device known from an earlier start that missed the scan (a busy
         bus): once it answers, reload so it gets its definitions and entities."""
