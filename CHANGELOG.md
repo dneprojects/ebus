@@ -2,6 +2,7 @@
 
 ## 0.7.17
 
+- eBUS Adapter: new sensors "Busauslastung", "Eigene Abfragen pro Minute", "Eigene Abfragen an den Regler pro Minute" and "Fremdabfragen ohne Antwort pro Minute" (over the last minute)
 - The system controller is polled gently so its myVAILLANT gateway keeps reaching it: at most one of our reads every 12 s, measurements every 5 min, settings hourly, time programs daily (values the gateway reads arrive passively)
 
 ## 0.7.16

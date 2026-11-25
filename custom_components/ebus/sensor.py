@@ -2,6 +2,7 @@
 and per heating zone what applies in it now."""
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from typing import Final, cast
 
@@ -10,7 +11,7 @@ from aioebus.codecs import has_numeric_value
 from aioebus.messages import MessageDef
 from aioebus.values import Value, closes_period, values_of
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
-from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,6 +63,7 @@ def _megabytes(value: object) -> StateType:
 
 
 # always available: derived from the engine / connection
+_PER_MINUTE: Final = "1/min"
 _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
     ("host", "adapter_host", lambda c: f"{c.host}:{c.port}",
      None, None, None, "mdi:ip-network"),
@@ -77,6 +79,20 @@ _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
     ("werte_zwischengespeichert", "adapter_cached_values",
      lambda c: len(c.engine.cache) if c.engine else None,
      None, None, SensorStateClass.MEASUREMENT, "mdi:database"),
+    # the last minute on the bus: how full it is, how much we ask, and how often
+    # another master (e.g. the controller's gateway) is left without an answer
+    ("busauslastung", "adapter_bus_load",
+     lambda c: c.engine.meter.utilization(time.monotonic()) if c.engine else None,
+     PERCENTAGE, None, SensorStateClass.MEASUREMENT, "mdi:gauge"),
+    ("abfragen_pro_minute", "adapter_polls_rate",
+     lambda c: c.engine.meter.polls_per_minute(time.monotonic()) if c.engine else None,
+     _PER_MINUTE, None, SensorStateClass.MEASUREMENT, "mdi:swap-vertical"),
+    ("regler_abfragen_pro_minute", "adapter_controller_polls_rate",
+     lambda c: c.controller_polls_per_minute(),
+     _PER_MINUTE, None, SensorStateClass.MEASUREMENT, "mdi:thermostat"),
+    ("fremdabfragen_ohne_antwort_pro_minute", "adapter_foreign_unanswered_rate",
+     lambda c: c.engine.meter.unanswered_per_minute(time.monotonic()) if c.engine else None,
+     _PER_MINUTE, None, SensorStateClass.MEASUREMENT, "mdi:network-strength-off-outline"),
 ]
 
 # only when the adapter exposes its web API (eBUS Adapter Shield / ebusd-ESP).

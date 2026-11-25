@@ -344,6 +344,16 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             _LOGGER.debug("ident %#04x read at runtime", device.address)
             self.async_update_listeners()  # the sensor platform adds its entities
 
+    def controller_polls_per_minute(self) -> float | None:
+        """Our polls of the system controller(s) in the last minute."""
+        if self.engine is None:
+            return None
+        now = time.monotonic()
+        rates = [self.engine.meter.polls_per_minute(now, int(zz, 16))
+                 for zz in {z.zz for z in self.catalog.zones()}]
+        known = [r for r in rates if r is not None]
+        return sum(known) if known else None
+
     async def _late_find(self, missing: list[int]) -> None:
         """A device known from an earlier start that missed the scan (a busy
         bus): once it answers, reload so it gets its definitions and entities."""

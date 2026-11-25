@@ -443,3 +443,26 @@ async def test_the_controller_is_polled_with_a_gap(hass: HomeAssistant):
     assert drain(CONTROLLER_POLL_GAP_S).count("15") == 1
     curve = sch._items[("15", "Hc1HeatCurve")]
     assert sch.interval(curve) >= 3600
+
+
+async def test_the_adapter_shows_the_bus_load_and_poll_rates(hass: HomeAssistant):
+    from custom_components.ebus.sensor import _ADAPTER_SENSORS
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.devices = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004)}
+    coord.data = {}
+    await coord.async_load_definitions()
+    coord.engine = EbusEngine(AsyncMock(), AsyncMock(), MessageRegistry([]))
+    now = time.monotonic()
+    meter = coord.engine.meter
+    for i in range(10):
+        meter.symbol(0x10 if i % 2 else SYN, now - 30 + i)
+    meter.poll(0x15, now - 20)
+    meter.poll(0x08, now - 10)
+    meter.foreign_unanswered(now - 5)
+    values = {slug: get(coord) for slug, _key, get, *_ in _ADAPTER_SENSORS}
+    assert values["busauslastung"] == 50.0
+    assert values["abfragen_pro_minute"] == 4.0  # 2 polls in the 30 s seen so far
+    assert values["regler_abfragen_pro_minute"] == 2.0
+    assert values["fremdabfragen_ohne_antwort_pro_minute"] == 2.0

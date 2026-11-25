@@ -1953,6 +1953,18 @@
       "adapter_cached_values": {
         "name": "Werte zwischengespeichert"
       },
+      "adapter_bus_load": {
+        "name": "Busauslastung"
+      },
+      "adapter_polls_rate": {
+        "name": "Eigene Abfragen pro Minute"
+      },
+      "adapter_controller_polls_rate": {
+        "name": "Eigene Abfragen an den Regler pro Minute"
+      },
+      "adapter_foreign_unanswered_rate": {
+        "name": "Fremdabfragen ohne Antwort pro Minute"
+      },
       "adapter_wifi_signal": {
         "name": "WLAN-Signal"
       },

@@ -2058,6 +2058,18 @@
       "adapter_cached_values": {
         "name": "Cached values"
       },
+      "adapter_bus_load": {
+        "name": "Bus load"
+      },
+      "adapter_polls_rate": {
+        "name": "Own polls per minute"
+      },
+      "adapter_controller_polls_rate": {
+        "name": "Own polls of the controller per minute"
+      },
+      "adapter_foreign_unanswered_rate": {
+        "name": "Other masters' reads unanswered per minute"
+      },
       "adapter_wifi_signal": {
         "name": "Wi-Fi signal"
       },
