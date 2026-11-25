@@ -17,7 +17,16 @@ from typing import Any, Final
 import aiohttp
 from aioebus.active import ReadError
 from aioebus.catalog import Catalog
-from aioebus.discovery import BusSilent, Device, discover, find_later, identify_later, remember
+from aioebus.discovery import (
+    BusSilent,
+    Device,
+    Discovery,
+    discover,
+    find_later,
+    identify_later,
+    recall,
+    remember,
+)
 from aioebus.engine import EbusEngine
 from aioebus.frame import BROADCAST
 from aioebus.link import Link, connect
@@ -50,6 +59,7 @@ from .const import (
     DEFAULT_DEEP_SCAN,
     DEFAULT_SCAN_INTERVAL,
     DEFS_CACHE,
+    DEVICE_STORE,
     DOMAIN,
     IDENT_STORE,
     PLAIN_READ_PRIORITY,
@@ -79,6 +89,8 @@ _RESCOPE_COOLDOWN: Final = 2  # s; collapses a burst of registry changes into on
 _IDENT_RETRY_DELAYS: Final = (60, 240, 600, 900, 1800)
 # a known device that missed the scan: looked for soon, then less often
 _FIND_RETRY_DELAYS: Final = (15, 60, 240, 600, 900, 1800)
+# the background scan behind a quick setup: soon, then again if the bus is silent
+_VERIFY_DELAYS: Final = (20, 60, 300, 900)
 _FETCH_TIMEOUT: Final = 15  # s per definition file from the CDN
 _STALE_AFTER: Final = 600  # s without the link before values count as unavailable
 _WEB_RETRY: Final = 600  # s between asks of an adapter whose web API did not answer
@@ -148,6 +160,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._ident_store: Store[dict[str, Any]] = Store(
             hass, STORE_VERSION, f"{IDENT_STORE}{entry.entry_id}")
         self._ident_known: dict[str, Any] = {}  # the store's content, kept current
+        # the devices the last scan found: a later start sets up from them at once
+        # and scans in the background (HA wants a quick setup)
+        self._device_store: Store[dict[str, Any]] = Store(
+            hass, STORE_VERSION, f"{DEVICE_STORE}{entry.entry_id}")
 
     def uid(self, *parts: object) -> str:
         """An entity unique_id scoped to this config entry (see ids.py)."""
@@ -259,6 +275,18 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         await self._runner.start()
         cached = await self._addr_store.async_load() or []
         stored = await self._ident_store.async_load() or {}
+        known = _devices_from(await self._device_store.async_load(), stored)
+        if known and not self.deep_scan:
+            # quick setup from the devices found last time; the bus is scanned in
+            # the background, and a new or changed device reloads the entry
+            self._found = known
+            self.devices = {zz: d.scan for zz, d in known.items()}
+            self.idents = {zz: d.ident for zz, d in known.items() if d.ident is not None}
+            self._ident_known = stored
+            await self._finish_setup(translate_inline=False)
+            self._entry.async_create_background_task(
+                self.hass, self._verify_devices(cached, stored), name="ebus-verify")
+            return
         if self.deep_scan:
             _LOGGER.info("eBUS: deep scan of the whole address space")
         try:
@@ -274,18 +302,25 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self.idents = {zz: d.ident for zz, d in found.devices.items() if d.ident is not None}
         self._found = found.devices
         self._ident_known = found.remembered
-        entry_id = self._entry.entry_id
         # a phantom address of a unit found elsewhere; the former synthetic
         # 'Broadcast' device (its entities live on the adapter now)
-        remove_devices(self.hass, entry_id, [*found.dropped, BROADCAST])
-        if found.extra_addresses != sorted(a for a in cached if isinstance(a, int)):
-            await self._addr_store.async_save(found.extra_addresses)
-        if found.remembered != stored:
-            await self._ident_store.async_save(found.remembered)
+        remove_devices(self.hass, self._entry.entry_id, [*found.dropped, BROADCAST])
+        await self._save_discovery(found, cached, stored)
         if self.deep_scan:  # the option means "probe everything once": done
             self.hass.config_entries.async_update_entry(
                 self._entry, options={**self._entry.options, CONF_DEEP_SCAN: False})
             self.options = dict(self._entry.options)
+        await self._finish_setup(translate_inline=True)
+        if found.missing:
+            _LOGGER.info("eBUS: known device(s) %s did not answer the scan; looking again",
+                         ", ".join(f"{a:#04x}" for a in found.missing))
+            self._entry.async_create_background_task(
+                self.hass, self._late_find(found.missing), name="ebus-find")
+
+    async def _finish_setup(self, *, translate_inline: bool) -> None:
+        """Everything after the device list is known: adapter device, definitions,
+        names, polling and the value cache."""
+        entry_id = self._entry.entry_id
         # register the adapter as the hub device: scanned devices hang off it
         # (via_device_id) and the broadcast entities belong to it. Enrich it from
         # the adapter shield's own web API when present (real firmware/hardware +
@@ -295,11 +330,14 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             self.hass, entry_id, self.host, self.adapter_status)
         await self.async_load_definitions()
         # generate localized entity names on the user's machine from the upstream
-        # CDN (never bundled): best-effort, so a CDN hiccup just leaves names English
-        try:
-            await async_update_translations(self.hass, entry_id, self.catalog)
-        except Exception as err:  # noqa: BLE001 - names are cosmetic, never block setup
-            _LOGGER.debug("eBUS: translation generation skipped: %s", err)
+        # CDN (never bundled): best-effort, so a CDN hiccup just leaves names
+        # English. A known installation has them already: refresh in the background
+        if translate_inline:
+            await self._translate()
+        else:
+            self._entry.async_create_background_task(
+                self.hass, self._translate(), name="ebus-translate")
+        assert self.engine is not None
         self.engine.registry = MessageRegistry(self.catalog.all_messages())
         self.engine.scheduler = self._build_scheduler()
         await self._cache.async_restore(self.engine)
@@ -309,13 +347,52 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             er.EVENT_ENTITY_REGISTRY_UPDATED, self._on_registry_update))
         self._entry.async_create_background_task(
             self.hass, self._late_identify(), name="ebus-identify")
-        if found.missing:
-            _LOGGER.info("eBUS: known device(s) %s did not answer the scan; looking again",
-                         ", ".join(f"{a:#04x}" for a in found.missing))
+
+    async def _translate(self) -> None:
+        try:
+            await async_update_translations(self.hass, self._entry.entry_id, self.catalog)
+        except Exception as err:  # noqa: BLE001 - names are cosmetic, never block setup
+            _LOGGER.debug("eBUS: translation generation skipped: %s", err)
+
+    async def _save_discovery(self, found: Discovery, cached: list[Any],
+                              stored: dict[str, Any]) -> None:
+        if found.extra_addresses != sorted(a for a in cached if isinstance(a, int)):
+            await self._addr_store.async_save(found.extra_addresses)
+        if found.remembered != stored:
+            await self._ident_store.async_save(found.remembered)
+        await self._device_store.async_save(
+            {f"{zz:02x}": _scan_record(d.scan) for zz, d in found.devices.items()})
+
+    async def _verify_devices(self, cached: list[Any], stored: dict[str, Any]) -> None:
+        """Scan the bus behind a quick setup. A new device, or one that answers
+        as another unit now, reloads the entry; a known one that misses this scan
+        stays (a busy bus) and is looked for again."""
+        assert self.engine is not None
+        for delay in _VERIFY_DELAYS:
+            await asyncio.sleep(delay)
+            try:
+                found = await discover(self.engine, extra_addresses=cached, remembered=stored)
+            except (BusSilent, ConnectionError) as err:
+                _LOGGER.debug("eBUS: background scan not possible yet: %s", err)
+                continue
+            break
+        else:
+            return
+        changed = sorted(
+            zz for zz, d in found.devices.items()
+            if zz not in self.devices or _scan_record(self.devices[zz]) != _scan_record(d.scan))
+        missing = [zz for zz in self.devices if zz not in found.devices]
+        merged = Discovery({**self._found, **found.devices}, found.extra_addresses,
+                           found.remembered, found.dropped, missing)
+        await self._save_discovery(merged, cached, stored)
+        if changed or found.dropped:
+            _LOGGER.info("eBUS: devices changed on the bus (%s); reloading",
+                         ", ".join(f"{a:#04x}" for a in changed) or "duplicate addresses")
+            self.hass.config_entries.async_schedule_reload(self._entry.entry_id)
+            return
+        if missing:
             self._entry.async_create_background_task(
-                self.hass, self._late_find(found.missing), name="ebus-find")
-        _LOGGER.info("eBUS: %d device(s), %d read / %d write register(s)",
-                     len(self.devices), len(self.read_messages), len(self.write_messages))
+                self.hass, self._late_find(missing), name="ebus-find")
 
     async def _ask_web(self) -> bool:
         """Ask the adapter's web API for its status; True when it answered (the
@@ -516,3 +593,28 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         if self.engine is not None:
             await self._cache.async_save(self.engine)  # final flush
         self._close()
+
+
+def _scan_record(scan: ScanResult) -> dict[str, Any]:
+    """A device's scan answer as stored (JSON-ready)."""
+    return {"mf": scan.mf, "manufacturer": scan.manufacturer, "ident": scan.ident,
+            "sw": scan.sw, "hw": scan.hw, "sw_num": scan.sw_num, "hw_num": scan.hw_num}
+
+
+def _devices_from(data: object, idents: dict[str, Any]) -> dict[int, Device]:
+    """The devices of the last scan, with their remembered identification; a
+    malformed record is skipped (a hand-edited store)."""
+    out: dict[int, Device] = {}
+    if not isinstance(data, dict):
+        return out
+    for key, rec in data.items():
+        try:
+            zz = int(key, 16)
+            scan = ScanResult(int(rec["mf"]), str(rec["manufacturer"]), str(rec["ident"]),
+                              str(rec["sw"]), str(rec["hw"]),
+                              rec["sw_num"] if isinstance(rec["sw_num"], int) else None,
+                              rec["hw_num"] if isinstance(rec["hw_num"], int) else None)
+        except (KeyError, TypeError, ValueError):
+            continue
+        out[zz] = Device(zz, scan, recall(scan, idents.get(key)))
+    return out

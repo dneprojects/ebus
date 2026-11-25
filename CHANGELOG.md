@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.19
+
+- Quick setup: a known installation starts from the devices found last time and scans the bus in the background (Home Assistant no longer waits for it); a new or changed device reloads the entry, a device that misses one scan stays
+
 ## 0.7.18
 
 - "Busauslastung" is measured against the bus capacity (it showed far too much); "Fremdabfragen ohne Antwort" counts only reads of devices that are on the bus (a controller probing an empty address is left out)

@@ -19,10 +19,12 @@ DEFAULT_ALLOW_WRITE: Final = False  # writing settings is opt-in
 CONF_DEEP_SCAN: Final = "deep_scan"  # options: probe the full address space once
 DEFAULT_DEEP_SCAN: Final = False
 
-# per-entry stored files (value cache, extra addresses, identifications), each
+# per-entry stored files (value cache, extra addresses, identifications, the
+# devices last found), each
 # named <prefix><entry_id> under .storage
-STORE_PREFIXES: Final[tuple[str, ...]] = ("ebus_cache_", "ebus_addrs_", "ebus_idents_")
-CACHE_STORE, ADDRESS_STORE, IDENT_STORE = STORE_PREFIXES
+STORE_PREFIXES: Final[tuple[str, ...]] = (
+    "ebus_cache_", "ebus_addrs_", "ebus_idents_", "ebus_devices_")
+CACHE_STORE, ADDRESS_STORE, IDENT_STORE, DEVICE_STORE = STORE_PREFIXES
 STORE_VERSION: Final = 1
 # shared cache of definitions downloaded from the CDN, under .storage
 DEFS_CACHE: Final = "ebus_defs"
