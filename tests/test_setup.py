@@ -417,3 +417,29 @@ async def test_a_known_device_found_later_reloads_the_entry(hass: HomeAssistant)
             patch.object(hass.config_entries, "async_schedule_reload") as reload:
         await coord._late_find([0x26])
     reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_the_controller_is_polled_with_a_gap(hass: HomeAssistant):
+    from custom_components.ebus.entities import CONTROLLER_POLL_GAP_S
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.devices = {0x15: ScanResult(0xB5, "Vaillant", "CTLV3", "0808", "8004", 808, 8004),
+                     0x08: ScanResult(0xB5, "Vaillant", "HMU00", "0902", "5103", 902, 5103)}
+    coord.data = {}
+    await coord.async_load_definitions()
+    sch = coord._build_scheduler()
+
+    def drain(now):
+        handed = []
+        while (item := sch.next_due(now)) is not None:
+            handed.append(item.msg.zz)
+            sch.mark(item.msg.zz, item.msg.name, now)
+        return handed
+
+    first = drain(0.0)
+    assert first.count("15") == 1 and first.count("08") > 1  # the heat pump is not held back
+    assert drain(CONTROLLER_POLL_GAP_S - 1) == []  # the controller rests
+    assert drain(CONTROLLER_POLL_GAP_S).count("15") == 1
+    curve = sch._items[("15", "Hc1HeatCurve")]
+    assert sch.interval(curve) >= 3600

@@ -37,6 +37,15 @@ NO_VALUE_STATES: Final = {"Currenterror": "no_error"}
 COP_HEAT: Final = "RunDataHeatOutput"
 COP_POWER: Final = "PowerConsumptionHmu"
 COP_MIN_POWER_KW: Final = 0.06
+# a system controller (the device with heating zones) is read by its own gateway
+# all the time; our polls there keep a gap and a slow pace, so the gateway's reads
+# get through (too many made a myVAILLANT gateway lose the controller). Values the
+# gateway reads anyway arrive passively.
+CONTROLLER_POLL_GAP_S: Final = 12.0  # at most ~5 of our polls a minute, as ebusd did
+CONTROLLER_LIVE_PRIORITY: Final = 5  # measurements (r1..r4): every 5 min at most
+CONTROLLER_SETTING_PRIORITY: Final = 60  # settings, names, statistics: hourly
+CONTROLLER_TIMER_PRIORITY: Final = 1440  # time programs (b555): once a day
+TIMER_PBSB: Final = "b555"  # a controller's time programs
 
 # mdi icon by unit, else by a keyword in the field name (mirrors the eBUS Bridge)
 _UNIT_ICON: Final[dict[str, str]] = {
@@ -188,6 +197,19 @@ def icon_for(field: FieldDef, message: str = "") -> str | None:
         if keyword in name:
             return icon
     return None
+
+
+def controller_priority(msg: MessageDef, priority: int) -> int:
+    """The polling priority on a system controller (see CONTROLLER_POLL_GAP_S):
+    time programs once a day, settings hourly, measurements every few minutes;
+    0 stays 0 (not polled)."""
+    if priority <= 0:
+        return priority
+    if msg.pbsb.lower() == TIMER_PBSB:
+        return max(priority, CONTROLLER_TIMER_PRIORITY)
+    if msg.poll_priority and msg.poll_priority < CONTROLLER_LIVE_PRIORITY:
+        return CONTROLLER_LIVE_PRIORITY  # an r1..r4 measurement
+    return max(priority, CONTROLLER_SETTING_PRIORITY)
 
 
 def cop_of(heat: object, power: object) -> float | None:

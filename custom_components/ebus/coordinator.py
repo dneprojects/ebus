@@ -62,7 +62,14 @@ from .device import (
     register_adapter,
     remove_devices,
 )
-from .entities import control_class, cop_sources, presentation, select_polled
+from .entities import (
+    CONTROLLER_POLL_GAP_S,
+    control_class,
+    controller_priority,
+    cop_sources,
+    presentation,
+    select_polled,
+)
 from .ids import CONTROL_SUFFIX, control_uid, cop_uid, hot_water_uid, uid
 from .translate import async_update_translations
 
@@ -374,8 +381,18 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             polled = select_polled(
                 self.read_messages, enabled,
                 self.catalog.zones(), self.uid_prefix, self._derived_entities())
+        # a system controller (it holds the heating zones) shares the bus with
+        # its gateway: poll it slowly and with a gap, so the gateway's reads get
+        # through
+        controllers = {z.zz.lower() for z in self.catalog.zones()}
+
+        def priority_for(msg: MessageDef, priority: int) -> int:
+            return controller_priority(msg, priority) if msg.zz.lower() in controllers else priority
+
         return PollScheduler(polled, base_interval=self._base_interval,
-                             default_priority=PLAIN_READ_PRIORITY)
+                             default_priority=PLAIN_READ_PRIORITY,
+                             address_gaps=dict.fromkeys(controllers, CONTROLLER_POLL_GAP_S),
+                             priority_for=priority_for)
 
     @callback
     def async_rescope_polling(self) -> None:

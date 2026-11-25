@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.17
+
+- The system controller is polled gently so its myVAILLANT gateway keeps reaching it: at most one of our reads every 12 s, measurements every 5 min, settings hourly, time programs daily (values the gateway reads arrive passively)
+
 ## 0.7.16
 
 - The search for a known device that missed the setup scan runs in the background only; the setup no longer waits for a second try

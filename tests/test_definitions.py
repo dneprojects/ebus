@@ -188,3 +188,16 @@ def test_relays_and_mixer_movements_have_their_icons():
     assert icon("vr_71.json", "Mc1Operation", "pump") == "mdi:pump"
     assert icon("ctlv3.json", "Hc1MixerMovement", "value") == "mdi:valve"
     assert icon("vr_71.json", "SensorData1", "s1") == "mdi:thermometer"
+
+
+def test_a_controller_is_polled_slowly():
+    # its gateway reads it all the time: measurements every 5 min at most,
+    # settings hourly, time programs once a day; what is off stays off
+    ctl = {m.name: m for m in bundled_file("ctlv3.json") if m.is_read}
+    live = next(m for m in ctl.values() if m.poll_priority == 1)
+    timer = next(m for m in ctl.values() if m.pbsb.lower() == "b555")
+    setting = ctl["Hc1HeatCurve"]
+    assert entities.controller_priority(live, 1) == entities.CONTROLLER_LIVE_PRIORITY
+    assert entities.controller_priority(setting, 5) == entities.CONTROLLER_SETTING_PRIORITY
+    assert entities.controller_priority(timer, 5) == entities.CONTROLLER_TIMER_PRIORITY
+    assert entities.controller_priority(setting, 0) == 0
