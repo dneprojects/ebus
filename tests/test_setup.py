@@ -498,3 +498,29 @@ async def test_a_device_seen_sending_gets_its_sent_rate_sensor(hass: HomeAssista
     assert len(sent) == 1
     assert sent[0].unique_id.endswith("_f6_gesendete_telegramme_pro_minute")
     assert sent[0].native_value == 12.0  # 6 in the 30 s seen, scaled to a minute
+
+
+async def test_a_gateway_is_left_alone(hass: HomeAssistant):
+    # VR 940f (NETX3): no register of it is polled or written, its old register
+    # entities go, its identification sensors stay
+    from custom_components.ebus.entities import is_gateway
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.update_interval = None
+    netx = ScanResult(0xB5, "Vaillant", "NETX3", "0128", "1803", 128, 1803)
+    vr71 = ScanResult(0xB5, "Vaillant", "VR_71", "0203", "5904", 203, 5904)
+    assert is_gateway(netx) and not is_gateway(vr71) and not is_gateway(None)
+    coord.devices = {0xF6: netx, 0x26: vr71}
+    reg = er.async_get(hass)
+    old = reg.async_get_or_create("sensor", DOMAIN, coord.uid("f6", "Currenterror", "Currenterror"),
+                                  config_entry=entry)
+    ident = reg.async_get_or_create("sensor", DOMAIN, coord.uid("f6", "artikelnummer"),
+                                    config_entry=entry)
+    await coord.async_load_definitions()
+    assert coord.gateways == {0xF6}
+    assert coord.read_messages and all(m.zz.lower() != "f6" for m in coord.read_messages)
+    assert any(m.zz.lower() == "26" for m in coord.read_messages)
+    assert all(m.zz.lower() != "f6" for m in coord.write_messages)
+    assert reg.async_get(old.entity_id) is None
+    assert reg.async_get(ident.entity_id) is not None

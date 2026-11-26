@@ -116,3 +116,16 @@ async def test_a_first_setup_scans_and_stores_the_devices(hass: HomeAssistant):
     discover.assert_awaited_once()
     finish.assert_awaited_once_with(translate_inline=True)
     assert set(await coord._device_store.async_load()) == {"08", "15"}
+
+
+async def test_a_known_gateway_is_not_scanned_again(hass: HomeAssistant):
+    netx = ScanResult(0xB5, "Vaillant", "NETX3", "0128", "1803", 128, 1803)
+    _entry_, coord = await _coordinator(
+        hass, {0x08: Device(0x08, HMU), 0xF6: Device(0xF6, netx)})
+    found = Discovery({0x08: Device(0x08, HMU), 0xF6: Device(0xF6, netx)}, [], {})
+    with patch.object(coord_mod, "_VERIFY_DELAYS", (0,)), \
+         patch.object(coord_mod, "discover", AsyncMock(return_value=found)) as discover, \
+         patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        await coord._verify_devices([], {})
+    assert set(discover.await_args.kwargs["untouched"]) == {0xF6}
+    reload.assert_not_called()

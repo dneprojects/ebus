@@ -78,10 +78,11 @@ from .entities import (
     control_class,
     controller_priority,
     cop_sources,
+    is_gateway,
     presentation,
     select_polled,
 )
-from .ids import CONTROL_SUFFIX, control_uid, cop_uid, hot_water_uid, uid
+from .ids import CONTROL_SUFFIX, control_uid, cop_uid, hot_water_uid, message_of, uid
 from .translate import async_update_translations
 
 _LOGGER = logging.getLogger(__name__)
@@ -218,8 +219,31 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         answers from memory and the message lists are set."""
         await self.hass.async_add_executor_job(presentation)
         await self.catalog.load(self.devices, self.idents)
-        self.read_messages = self.catalog.device_messages("r")
-        self.write_messages = self.catalog.device_messages("w") if self.allow_write else []
+        # a gateway's registers are neither polled nor written (is_gateway); what
+        # it sends is still decoded passively
+        spared = {f"{zz:02x}" for zz in self.gateways}
+        self.read_messages = [m for m in self.catalog.device_messages("r")
+                              if m.zz.lower() not in spared]
+        self.write_messages = ([m for m in self.catalog.device_messages("w")
+                                if m.zz.lower() not in spared] if self.allow_write else [])
+        self._remove_gateway_registers(spared)
+
+    @property
+    def gateways(self) -> set[int]:
+        """The internet gateways on this bus (left alone, see is_gateway)."""
+        return {zz for zz, scan in self.devices.items() if is_gateway(scan)}
+
+    def _remove_gateway_registers(self, spared: set[str]) -> None:
+        """Drop the register entities of a gateway (from before it was left
+        alone); its identification and diagnostics stay."""
+        if not spared:
+            return
+        registry = er.async_get(self.hass)
+        for ent in er.async_entries_for_config_entry(registry, self._entry.entry_id):
+            parts = ent.unique_id.split("_", 2)
+            if (len(parts) == 3 and parts[1] in spared
+                    and message_of(ent.unique_id) is not None):
+                registry.async_remove(ent.entity_id)
 
     async def _fetch_text(self, url: str) -> str | None:
         """A file from the CDN for the catalog: "" when the CDN says it is not
@@ -379,7 +403,9 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         for delay in _VERIFY_DELAYS:
             await asyncio.sleep(delay)
             try:
-                found = await discover(self.engine, extra_addresses=cached, remembered=stored)
+                found = await discover(
+                    self.engine, extra_addresses=cached, remembered=stored,
+                    untouched={zz: d for zz, d in self._found.items() if is_gateway(d.scan)})
             except (BusSilent, ConnectionError) as err:
                 _LOGGER.debug("eBUS: background scan not possible yet: %s", err)
                 continue

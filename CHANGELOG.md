@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.24
+
+- An internet gateway (Vaillant VR 9xx, ident NETX...) is left alone: none of its registers is polled or written, and once known it is not scanned again at a start; its identification (article, serial, year) is read once and remembered. What it sends is still decoded passively, and its register entities from before are removed
+
 ## 0.7.23
 
 - New diagnostic sensor "Gesendete Telegramme pro Minute" on each device that sends on its own (controller, myVAILLANT gateway, VWZ AI, ...), counted passively: e.g. whether the gateway talks to its controller

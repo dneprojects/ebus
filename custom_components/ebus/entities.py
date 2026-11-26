@@ -42,6 +42,11 @@ COP_MIN_POWER_KW: Final = 0.06
 # get through (too many made a myVAILLANT gateway lose the controller). Values the
 # gateway reads anyway arrive passively.
 CONTROLLER_POLL_GAP_S: Final = 12.0  # at most ~5 of our polls a minute, as ebusd did
+# an internet gateway (Vaillant VR 9xx: NETX...) keeps its cloud's picture of the
+# system in sync over the bus; asking it ourselves may disturb that (its heating
+# zones vanished from the cloud while we polled it). It is never polled and not
+# scanned again once known: its identification is read once and remembered
+GATEWAY_IDENT_PREFIXES: Final = ("NETX",)
 CONTROLLER_LIVE_PRIORITY: Final = 5  # measurements (r1..r4): every 5 min at most
 CONTROLLER_SETTING_PRIORITY: Final = 60  # settings, names, statistics: hourly
 CONTROLLER_TIMER_PRIORITY: Final = 1440  # time programs (b555): once a day
@@ -197,6 +202,11 @@ def icon_for(field: FieldDef, message: str = "") -> str | None:
         if keyword in name:
             return icon
     return None
+
+
+def is_gateway(scan: ScanResult | None) -> bool:
+    """An internet gateway, left alone on the bus (see GATEWAY_IDENT_PREFIXES)."""
+    return scan is not None and scan.ident.upper().startswith(GATEWAY_IDENT_PREFIXES)
 
 
 def controller_priority(msg: MessageDef, priority: int) -> int:
