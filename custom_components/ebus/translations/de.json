@@ -42,6 +42,12 @@
       }
     }
   },
+  "issues": {
+    "commands_lost": {
+      "title": "eBUS: Befehle an {device} kommen nicht an",
+      "description": "{count} Befehle an {device} in {minutes} min nicht angekommen (zuletzt: {message}); {device} führt sie womöglich nicht aus. Einzelfälle: Logbuch, eBUS. Verschwindet von selbst, sobald Befehle wieder ankommen."
+    }
+  },
   "services": {
     "read_register": {
       "name": "Register lesen",
@@ -1964,6 +1970,9 @@
       },
       "adapter_foreign_unanswered_rate": {
         "name": "Fremdabfragen ohne Antwort pro Minute"
+      },
+      "adapter_ack_faults_rate": {
+        "name": "Quittungsfehler pro Minute"
       },
       "adapter_wifi_signal": {
         "name": "WLAN-Signal"

@@ -93,6 +93,11 @@ _ADAPTER_SENSORS: Final[list[_AdapterSpec]] = [
     ("fremdabfragen_ohne_antwort_pro_minute", "adapter_foreign_unanswered_rate",
      lambda c: c.foreign_unanswered_per_minute(),
      _PER_MINUTE, None, SensorStateClass.MEASUREMENT, "mdi:network-strength-off-outline"),
+    # another master's command its receiver did not acknowledge cleanly (refused,
+    # not acknowledged, taken only on the resend, or its answer refused)
+    ("quittungsfehler_pro_minute", "adapter_ack_faults_rate",
+     lambda c: c.ack_faults_per_minute(),
+     _PER_MINUTE, None, SensorStateClass.MEASUREMENT, "mdi:message-alert-outline"),
 ]
 
 # only when the adapter exposes its web API (eBUS Adapter Shield / ebusd-ESP).

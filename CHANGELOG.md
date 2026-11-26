@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.20
+
+- Acknowledgments read passively: every command another bus participant sends (e.g. the controller's relay command to the VR71) is checked for its receiver's acknowledgment, without any traffic of ours
+- eBUS Adapter: new sensor "Quittungsfehler pro Minute" (commands to devices on the bus refused, not acknowledged, taken only on the resend, or with their answer refused)
+- Logbook: each such command as "sender → receiver: message, what went wrong" (at most one entry a minute per command and kind, with the count)
+- Repair issue "Befehle an … kommen nicht an" when 5 commands to one device are lost within 10 minutes; it clears itself after 30 minutes without a lost one
+- Diagnostics: the latest 200 acknowledgment faults
+
 ## 0.7.19
 
 - Quick setup: a known installation starts from the devices found last time and scans the bus in the background (Home Assistant no longer waits for it); a new or changed device reloads the entry, a device that misses one scan stays

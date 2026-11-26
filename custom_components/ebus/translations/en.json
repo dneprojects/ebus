@@ -42,6 +42,12 @@
       }
     }
   },
+  "issues": {
+    "commands_lost": {
+      "title": "eBUS: commands to {device} do not arrive",
+      "description": "{count} commands to {device} did not arrive within {minutes} min (last: {message}); {device} may not carry them out. Each case: logbook, eBUS. Clears itself once commands arrive again."
+    }
+  },
   "services": {
     "read_register": {
       "name": "Read register",
@@ -2069,6 +2075,9 @@
       },
       "adapter_foreign_unanswered_rate": {
         "name": "Other masters' reads unanswered per minute"
+      },
+      "adapter_ack_faults_rate": {
+        "name": "Acknowledgment faults per minute"
       },
       "adapter_wifi_signal": {
         "name": "Wi-Fi signal"

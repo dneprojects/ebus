@@ -56,6 +56,11 @@ CONFIG_EN = {
                  "allow_write": "Allow writing settings to the bus",
                  "config_dir": "Extra device-definition directory (optional)",
                  "deep_scan": "Deep scan (probe all bus addresses once)"}}}},
+    "issues": {"commands_lost": {
+        "title": "eBUS: commands to {device} do not arrive",
+        "description": "{count} commands to {device} did not arrive within {minutes} "
+                       "min (last: {message}); {device} may not carry them out. Each case: "
+                       "logbook, eBUS. Clears itself once commands arrive again."}},
     "services": {"read_register": {
         "name": "Read register",
         "description": "Reads a register of a bus device and returns its raw answer. "
@@ -99,6 +104,12 @@ CONFIG_DE = {
                  "allow_write": "Schreiben von Einstellungen auf den Bus erlauben",
                  "config_dir": "Zusätzliches Definitionsverzeichnis (optional)",
                  "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)"}}}},
+    "issues": {"commands_lost": {
+        "title": "eBUS: Befehle an {device} kommen nicht an",
+        "description": "{count} Befehle an {device} in {minutes} min nicht angekommen "
+                       "(zuletzt: {message}); {device} führt sie womöglich nicht aus. "
+                       "Einzelfälle: Logbuch, eBUS. Verschwindet von selbst, sobald Befehle "
+                       "wieder ankommen."}},
     "services": {"read_register": {
         "name": "Register lesen",
         "description": "Liest ein Register eines Bus-Geräts und gibt die rohe Antwort "
@@ -135,6 +146,8 @@ FIXED_NAMES = {
                                           "de": "Eigene Abfragen an den Regler pro Minute"},
         "adapter_foreign_unanswered_rate": {"en": "Other masters' reads unanswered per minute",
                                             "de": "Fremdabfragen ohne Antwort pro Minute"},
+        "adapter_ack_faults_rate": {"en": "Acknowledgment faults per minute",
+                                    "de": "Quittungsfehler pro Minute"},
         "adapter_wifi_signal": {"en": "Wi-Fi signal", "de": "WLAN-Signal"},
         "adapter_uptime": {"en": "Uptime", "de": "Laufzeit"},
         "adapter_free_memory": {"en": "Free memory", "de": "Freier Speicher"},

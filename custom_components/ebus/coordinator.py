@@ -47,6 +47,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .ack_watch import AckWatch
 from .adapter import fetch_status
 from .cache import CacheStore
 from .const import (
@@ -126,6 +127,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self.read_messages: list[MessageDef] = []
         self.write_messages: list[MessageDef] = []
         self.engine: EbusEngine | None = None
+        self.acks: AckWatch | None = None  # set with the engine
         # the adapter shield's own web API (firmware, Wi-Fi, uptime); {} when the
         # adapter has no web UI or is unreachable
         self.adapter_status: dict[str, Any] = {}
@@ -271,6 +273,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # the engine runs from the start: discovery goes through it (one transaction
         # policy), and it decodes the bus passively once the definitions are known
         self.engine = EbusEngine(allow_write=self.allow_write)
+        # other masters' commands that did not get through: logbook and issue
+        self.acks = AckWatch(self.hass, self._entry.entry_id, lambda: self.devices)
+        self.engine.on_ack_fault = self.acks.on_fault
+        self._entry.async_on_unload(self.acks.close)
         self._runner = EngineRunner(self.engine, self._open_link, on_lost=self._on_link_lost)
         await self._runner.start()
         cached = await self._addr_store.async_load() or []
@@ -438,6 +444,13 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             return None
         return self.engine.meter.unanswered_per_minute(time.monotonic(), set(self.devices))
 
+    def ack_faults_per_minute(self) -> float | None:
+        """Other masters' telegrams to the devices on this bus whose
+        acknowledgment failed in the last minute."""
+        if self.engine is None or self.acks is None:
+            return None
+        return self.engine.meter.ack_faults_per_minute(time.monotonic(), self.acks.addresses())
+
     async def _late_find(self, missing: list[int]) -> None:
         """A device known from an earlier start that missed the scan (a busy
         bus): once it answers, reload so it gets its definitions and entities."""
@@ -584,6 +597,8 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         elif time.monotonic() - self._web_asked > _WEB_RETRY and await self._ask_web():
             register_adapter(self.hass, self._entry.entry_id, self.host,
                              self.adapter_status)
+        if self.acks is not None:
+            self.acks.tick()  # clear an issue whose commands arrive again
         # persist the cache (throttled) so a restart can warm-start from it
         self._cache.schedule_save(self.engine)
         return dict(self.engine.cache)
