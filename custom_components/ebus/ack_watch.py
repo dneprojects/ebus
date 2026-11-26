@@ -3,18 +3,18 @@
 The engine checks every telegram's acknowledgment (aioebus ``acks``): other
 masters' passively, our own from the transaction. Here each fault to a device
 on this bus becomes a logbook entry (at most one a minute per command and kind,
-with the count since the last one), and commands that keep getting lost to a
-device raise a repair issue that clears itself once they arrive again.
+with the count since the last one). A single loss is bus noise the sender
+repeats; a command lost several times in a row does not get through and raises
+a repair issue, which clears itself once it arrives again.
 """
 from __future__ import annotations
 
 import logging
 import time
-from collections import deque
 from collections.abc import Callable, Collection, Mapping
 from typing import Any, Final
 
-from aioebus.acks import ANSWER_REFUSED, NO_ACK, REFUSED, REPEATED, AckFault
+from aioebus.acks import ANSWER_REFUSED, NO_ACK, REFUSED, REPEATED, AckFault, CommandKey
 from aioebus.frame import is_master
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -28,9 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 EVENT_COMMAND_FAULT: Final = "ebus_command_fault"
 ISSUE_KEY: Final = "commands_lost"
 LOG_GAP_S: Final = 60.0  # one logbook entry a minute per command and kind
-ISSUE_LOST: Final = 5  # lost commands to one device ...
-ISSUE_WINDOW_S: Final = 600.0  # ... within this time raise the issue
-ISSUE_CLEAR_S: Final = 1800.0  # it clears after this long without a lost one
+ISSUE_STREAK: Final = 3  # the same command lost this often in a row: an issue
+# it clears when the command arrives again, or (no longer sent) after this long
+# without a lost command to the device
+ISSUE_CLEAR_S: Final = 1800.0
 
 # what went wrong, per language (logbook text and the issue)
 FAULT_TEXT: Final[dict[str, dict[str, str]]] = {
@@ -66,13 +67,15 @@ class AckWatch:
     issues, for the devices of one config entry."""
 
     def __init__(self, hass: HomeAssistant, entry_id: str,
-                 devices: Callable[[], Collection[int]]) -> None:
+                 devices: Callable[[], Collection[int]],
+                 streaks: Callable[[], Mapping[CommandKey, int]]) -> None:
         self.hass = hass
         self.entry_id = entry_id
         self._devices = devices  # the scanned device addresses, read when needed
+        self._streaks = streaks  # the engine's commands lost in a row, read when needed
         # per (receiver, command, kind): when it was last logged, faults since
         self._logged: dict[tuple[int, str, str], tuple[float, int]] = {}
-        self._lost: dict[int, deque[float]] = {}  # per device: times of lost commands
+        self._last_lost: dict[int, float] = {}  # per device: when a command was lost
         self._issues: set[int] = set()  # devices with a raised issue
         self._clear_stale_issues()
 
@@ -91,7 +94,9 @@ class AckWatch:
         now = time.monotonic()
         self._log(fault, now)
         if fault.lost:
-            self._count_lost(slave_of(fault.zz), fault, now)
+            self._last_lost[slave_of(fault.zz)] = now
+            if fault.streak >= ISSUE_STREAK:
+                self._raise(slave_of(fault.zz), fault)
 
     def _log(self, fault: AckFault, now: float) -> None:
         # an unknown message by its command only: the keys stay few
@@ -111,32 +116,30 @@ class AckWatch:
             "fault": fault.fault, "lost": fault.lost, "count": count,
         })
 
-    def _count_lost(self, zz: int, fault: AckFault, now: float) -> None:
-        times = self._lost.setdefault(zz, deque())
-        times.append(now)
-        while times and now - times[0] > ISSUE_WINDOW_S:
-            times.popleft()
-        if len(times) < ISSUE_LOST or zz in self._issues:
+    def _raise(self, zz: int, fault: AckFault) -> None:
+        if zz in self._issues:
             return
         self._issues.add(zz)
         name = self._name(zz)
-        _LOGGER.warning("eBUS: %d commands to %s (%02x) did not arrive within %d min, "
-                        "last %s", len(times), name, zz, ISSUE_WINDOW_S // 60,
-                        fault.message or fault.pbsb)
+        sender = ADAPTER_NAME if fault.own else self._name(fault.qq)
+        message = fault.message or fault.pbsb
+        _LOGGER.warning("eBUS: %s from %s to %s (%02x) lost %d times in a row",
+                        message, sender, name, zz, fault.streak)
         ir.async_create_issue(
             self.hass, DOMAIN, self._issue_id(zz), is_fixable=False,
             severity=ir.IssueSeverity.WARNING, translation_key=ISSUE_KEY,
-            translation_placeholders={"device": name, "count": str(len(times)),
-                                      "minutes": str(int(ISSUE_WINDOW_S // 60)),
-                                      "message": fault.message or fault.pbsb})
+            translation_placeholders={"device": name, "sender": sender,
+                                      "message": message, "count": str(fault.streak)})
 
     @callback
     def tick(self) -> None:
-        """Clear the issue of a device whose commands arrive again."""
+        """Clear the issue of a device whose commands arrive again: none of them
+        is lost in a row any more, or none was lost for a long time (the command
+        is no longer sent)."""
         now = time.monotonic()
+        stuck = {slave_of(key[1]) for key, n in self._streaks().items() if n >= ISSUE_STREAK}
         for zz in list(self._issues):
-            times = self._lost.get(zz)
-            if times and now - times[-1] < ISSUE_CLEAR_S:
+            if zz in stuck and now - self._last_lost.get(zz, now) < ISSUE_CLEAR_S:
                 continue
             self._issues.discard(zz)
             ir.async_delete_issue(self.hass, DOMAIN, self._issue_id(zz))

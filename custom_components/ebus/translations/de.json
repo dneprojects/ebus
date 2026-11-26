@@ -45,7 +45,7 @@
   "issues": {
     "commands_lost": {
       "title": "eBUS: Befehle an {device} kommen nicht an",
-      "description": "{count} Befehle an {device} in {minutes} min nicht angekommen (zuletzt: {message}); {device} führt sie womöglich nicht aus. Einzelfälle: Logbuch, eBUS. Verschwindet von selbst, sobald Befehle wieder ankommen."
+      "description": "{message} von {sender} an {device} {count}-mal hintereinander nicht angekommen; {device} führt ihn womöglich nicht aus. Einzelfälle: Logbuch, eBUS. Verschwindet von selbst, sobald er wieder ankommt."
     }
   },
   "services": {

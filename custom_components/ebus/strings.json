@@ -45,7 +45,7 @@
   "issues": {
     "commands_lost": {
       "title": "eBUS: commands to {device} do not arrive",
-      "description": "{count} commands to {device} did not arrive within {minutes} min (last: {message}); {device} may not carry them out. Each case: logbook, eBUS. Clears itself once commands arrive again."
+      "description": "{message} from {sender} to {device} did not arrive {count} times in a row; {device} may not carry it out. Each case: logbook, eBUS. Clears itself once it arrives again."
     }
   },
   "services": {

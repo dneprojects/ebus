@@ -58,9 +58,9 @@ CONFIG_EN = {
                  "deep_scan": "Deep scan (probe all bus addresses once)"}}}},
     "issues": {"commands_lost": {
         "title": "eBUS: commands to {device} do not arrive",
-        "description": "{count} commands to {device} did not arrive within {minutes} "
-                       "min (last: {message}); {device} may not carry them out. Each case: "
-                       "logbook, eBUS. Clears itself once commands arrive again."}},
+        "description": "{message} from {sender} to {device} did not arrive {count} times "
+                       "in a row; {device} may not carry it out. Each case: logbook, eBUS. "
+                       "Clears itself once it arrives again."}},
     "services": {"read_register": {
         "name": "Read register",
         "description": "Reads a register of a bus device and returns its raw answer. "
@@ -106,10 +106,9 @@ CONFIG_DE = {
                  "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)"}}}},
     "issues": {"commands_lost": {
         "title": "eBUS: Befehle an {device} kommen nicht an",
-        "description": "{count} Befehle an {device} in {minutes} min nicht angekommen "
-                       "(zuletzt: {message}); {device} führt sie womöglich nicht aus. "
-                       "Einzelfälle: Logbuch, eBUS. Verschwindet von selbst, sobald Befehle "
-                       "wieder ankommen."}},
+        "description": "{message} von {sender} an {device} {count}-mal hintereinander nicht "
+                       "angekommen; {device} führt ihn womöglich nicht aus. Einzelfälle: "
+                       "Logbuch, eBUS. Verschwindet von selbst, sobald er wieder ankommt."}},
     "services": {"read_register": {
         "name": "Register lesen",
         "description": "Liest ein Register eines Bus-Geräts und gibt die rohe Antwort "

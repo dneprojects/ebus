@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.21
+
+- Repair issue "Befehle an … kommen nicht an" only when the same command (sender, receiver, message) is lost 3 times in a row; it clears once that command arrives again (or after 30 minutes without a lost one, when it is no longer sent). A single loss is bus noise the sender repeats: it stays in the logbook and the sensor only
+
 ## 0.7.20
 
 - Acknowledgments checked: every command on the bus is checked for its receiver's acknowledgment -- the devices' own (e.g. the controller's relay command to the VR71) passively, without any traffic of ours, and our own reads and writes

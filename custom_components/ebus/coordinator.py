@@ -274,7 +274,9 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         # policy), and it decodes the bus passively once the definitions are known
         self.engine = EbusEngine(allow_write=self.allow_write)
         # other masters' commands that did not get through: logbook and issue
-        self.acks = AckWatch(self.hass, self._entry.entry_id, lambda: self.devices)
+        engine = self.engine
+        self.acks = AckWatch(self.hass, self._entry.entry_id, lambda: self.devices,
+                             lambda: engine.lost_streaks)
         self.engine.on_ack_fault = self.acks.on_fault
         self._entry.async_on_unload(self.acks.close)
         self._runner = EngineRunner(self.engine, self._open_link, on_lost=self._on_link_lost)

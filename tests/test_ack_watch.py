@@ -24,8 +24,9 @@ def _enable(enable_custom_integrations):
     yield
 
 
-def _fault(kind: str, zz: int = VR71, message: str | None = "SetActorState") -> AckFault:
-    return AckFault(0.0, 0x10, zz, "b510", bytes.fromhex("0100"), kind, message)
+def _fault(kind: str, zz: int = VR71, message: str | None = "SetActorState",
+           streak: int = 1) -> AckFault:
+    return AckFault(0.0, 0x10, zz, "b510", bytes.fromhex("0100"), kind, message, streak=streak)
 
 
 class _Clock:
@@ -36,7 +37,7 @@ class _Clock:
         return self.now
 
 
-async def _watch(hass: HomeAssistant, clock: _Clock) -> AckWatch:
+async def _watch(hass: HomeAssistant, clock: _Clock, streaks: dict | None = None) -> AckWatch:
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4", "port": 9999})
     entry.add_to_hass(hass)
     reg = dr.async_get(hass)
@@ -44,7 +45,8 @@ async def _watch(hass: HomeAssistant, clock: _Clock) -> AckWatch:
         reg.async_get_or_create(config_entry_id=entry.entry_id,
                                 identifiers={(DOMAIN, f"{zz:02x}")}, name=name)
     with patch.object(aw.time, "monotonic", clock):
-        return AckWatch(hass, entry.entry_id, lambda: {CTL, VR71})
+        return AckWatch(hass, entry.entry_id, lambda: {CTL, VR71},
+                        lambda: streaks if streaks is not None else {})
 
 
 async def test_each_fault_is_logged_once_a_minute_with_the_count(hass: HomeAssistant):
@@ -69,37 +71,56 @@ async def test_each_fault_is_logged_once_a_minute_with_the_count(hass: HomeAssis
     assert describe(events[2].data, "en-GB").endswith("did not arrive (4x since the last entry)")
 
 
-async def test_lost_commands_raise_an_issue_that_clears_itself(hass: HomeAssistant):
+async def test_a_command_lost_again_and_again_raises_an_issue_until_it_arrives(
+        hass: HomeAssistant):
     clock = _Clock()
-    watch = await _watch(hass, clock)
+    streaks: dict = {}  # the engine's commands lost in a row
+    watch = await _watch(hass, clock, streaks)
     issues = ir.async_get(hass)
     issue_id = f"commands_lost_{watch.entry_id}_26"
+    key = (0x10, VR71, "b510", "SetActorState")
     with patch.object(aw.time, "monotonic", clock):
-        for _ in range(4):
-            watch.on_fault(_fault(REFUSED))
-            watch.on_fault(_fault(REPEATED))  # arrived after all: never counts
-            clock.now += 30
+        for n in (1, 2):
+            streaks[key] = n
+            watch.on_fault(_fault(REFUSED, streak=n))
         assert issues.async_get_issue(DOMAIN, issue_id) is None
-        watch.on_fault(_fault(REFUSED))
+        streaks[key] = 3
+        watch.on_fault(_fault(NO_ACK, streak=3))
         issue = issues.async_get_issue(DOMAIN, issue_id)
         assert issue is not None
-        assert issue.translation_placeholders["device"] == "VR 71"
-        assert issue.translation_placeholders["count"] == "5"
-        clock.now += aw.ISSUE_CLEAR_S - 1
-        watch.tick()  # not long enough without a lost one
+        assert issue.translation_placeholders == {
+            "device": "VR 71", "sender": "sensoCOMFORT", "message": "SetActorState",
+            "count": "3"}
+        watch.tick()  # still lost in a row
         assert issues.async_get_issue(DOMAIN, issue_id) is not None
-        clock.now += 2
+        del streaks[key]  # it arrived
         watch.tick()
     assert issues.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_lost_commands_spread_out_raise_nothing(hass: HomeAssistant):
+async def test_an_issue_of_a_command_no_longer_sent_clears_in_time(hass: HomeAssistant):
+    clock = _Clock()
+    streaks = {(0x10, VR71, "b510", "SetActorState"): 3}  # stays: no longer sent
+    watch = await _watch(hass, clock, streaks)
+    issue_id = f"commands_lost_{watch.entry_id}_26"
+    with patch.object(aw.time, "monotonic", clock):
+        watch.on_fault(_fault(NO_ACK, streak=3))
+        clock.now += aw.ISSUE_CLEAR_S - 1
+        watch.tick()
+        assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+        clock.now += 2
+        watch.tick()
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_single_losses_of_many_commands_raise_nothing(hass: HomeAssistant):
+    # bus noise: each command lost once, each repeated by its sender
     clock = _Clock()
     watch = await _watch(hass, clock)
     with patch.object(aw.time, "monotonic", clock):
-        for _ in range(10):  # one every 3 min: never 5 within 10 min
-            watch.on_fault(_fault(NO_ACK))
-            clock.now += 180
+        for i in range(20):
+            watch.on_fault(_fault(NO_ACK, message=f"Msg{i}", streak=1))
+            clock.now += 10
     assert not [i for d, i in ir.async_get(hass).issues if d == DOMAIN]
 
 
@@ -109,14 +130,14 @@ async def test_an_issue_from_the_last_run_is_cleared_at_start(hass: HomeAssistan
     for issue_id in (f"commands_lost_{entry.entry_id}_26", "commands_lost_other_26"):
         ir.async_create_issue(hass, DOMAIN, issue_id, is_fixable=False,
                               severity=ir.IssueSeverity.WARNING, translation_key="commands_lost")
-    watch = AckWatch(hass, entry.entry_id, lambda: {VR71})
+    watch = AckWatch(hass, entry.entry_id, lambda: {VR71}, dict)
     left = {i for d, i in ir.async_get(hass).issues if d == DOMAIN}
     assert left == {"commands_lost_other_26"}  # another entry's stays
     assert watch.addresses() == {VR71}  # 0x21 is no master address
 
 
 async def test_master_addresses_of_devices_count_too(hass: HomeAssistant):
-    watch = AckWatch(hass, "x", lambda: {CTL, 0x08})
+    watch = AckWatch(hass, "x", lambda: {CTL, 0x08}, dict)
     assert watch.addresses() == {CTL, 0x10, 0x08, 0x03}
 
 
