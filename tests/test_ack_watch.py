@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
-from aioebus.acks import NO_ACK, REFUSED, REPEATED, AckFault
+from aioebus.acks import EMPTY_ANSWER, NO_ACK, REFUSED, REPEATED, UNANSWERED, AckFault
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import issue_registry as ir
@@ -152,3 +152,20 @@ async def test_our_own_lost_command_is_logged_as_the_adapters(hass: HomeAssistan
     await hass.async_block_till_done()
     data = events[0].data
     assert (data["sender"], data["receiver"], data["own"]) == ("eBUS Adapter", "sensoCOMFORT", True)
+
+
+async def test_a_read_without_an_answer_is_logged_but_raises_nothing(hass: HomeAssistant):
+    clock = _Clock()
+    watch = await _watch(hass, clock)
+    events = async_capture_events(hass, EVENT_COMMAND_FAULT)
+    gateway_read = AckFault(0.0, 0xF1, CTL, "b524", bytes.fromhex("020003001600"),
+                            UNANSWERED, "Z1ShortName")
+    with patch.object(aw.time, "monotonic", clock):
+        for _ in range(5):
+            watch.on_fault(gateway_read)
+            watch.on_fault(_fault(EMPTY_ANSWER, zz=CTL, message="Z1Name1", streak=0))
+            clock.now += 61
+    await hass.async_block_till_done()
+    assert describe(events[0].data, "de") == "0xf1 → sensoCOMFORT: Z1ShortName keine Antwort"
+    assert describe(events[1].data, "en").endswith("Z1Name1 empty answer")
+    assert not [i for d, i in ir.async_get(hass).issues if d == DOMAIN]

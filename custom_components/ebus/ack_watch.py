@@ -14,7 +14,16 @@ import time
 from collections.abc import Callable, Collection, Mapping
 from typing import Any, Final
 
-from aioebus.acks import ANSWER_REFUSED, NO_ACK, REFUSED, REPEATED, AckFault, CommandKey
+from aioebus.acks import (
+    ANSWER_REFUSED,
+    EMPTY_ANSWER,
+    NO_ACK,
+    REFUSED,
+    REPEATED,
+    UNANSWERED,
+    AckFault,
+    CommandKey,
+)
 from aioebus.frame import is_master
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -36,9 +45,11 @@ ISSUE_CLEAR_S: Final = 1800.0
 # what went wrong, per language (logbook text and the issue)
 FAULT_TEXT: Final[dict[str, dict[str, str]]] = {
     "en": {NO_ACK: "not acknowledged", REFUSED: "refused",
-           REPEATED: "taken only on the resend", ANSWER_REFUSED: "answer refused"},
+           REPEATED: "taken only on the resend", ANSWER_REFUSED: "answer refused",
+           UNANSWERED: "no answer", EMPTY_ANSWER: "empty answer"},
     "de": {NO_ACK: "nicht quittiert", REFUSED: "abgelehnt",
-           REPEATED: "erst bei Wiederholung angenommen", ANSWER_REFUSED: "Antwort abgelehnt"},
+           REPEATED: "erst bei Wiederholung angenommen", ANSWER_REFUSED: "Antwort abgelehnt",
+           UNANSWERED: "keine Antwort", EMPTY_ANSWER: "leere Antwort"},
 }
 _LOST_TEXT: Final = {"en": "did not arrive", "de": "kam nicht an"}
 _COUNT_TEXT: Final = {"en": "{n}x since the last entry", "de": "{n}x seit dem letzten Eintrag"}

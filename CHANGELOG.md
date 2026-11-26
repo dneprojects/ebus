@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.22
+
+- Logbook: also a read that arrived but got no answer ("keine Antwort") or an empty one although it expects data ("leere Antwort"), with sender, receiver and message -- e.g. the myVAILLANT gateway's reads of the controller; neither counts as an acknowledgment fault nor raises the repair issue
+
 ## 0.7.21
 
 - Repair issue "Befehle an … kommen nicht an" only when the same command (sender, receiver, message) is lost 3 times in a row; it clears once that command arrives again (or after 30 minutes without a lost one, when it is no longer sent). A single loss is bus noise the sender repeats: it stays in the logbook and the sensor only
