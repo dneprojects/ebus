@@ -2079,6 +2079,9 @@
       "adapter_ack_faults_rate": {
         "name": "Acknowledgment faults per minute"
       },
+      "sent_rate": {
+        "name": "Telegrams sent per minute"
+      },
       "adapter_wifi_signal": {
         "name": "Wi-Fi signal"
       },

@@ -1974,6 +1974,9 @@
       "adapter_ack_faults_rate": {
         "name": "Quittungsfehler pro Minute"
       },
+      "sent_rate": {
+        "name": "Gesendete Telegramme pro Minute"
+      },
       "adapter_wifi_signal": {
         "name": "WLAN-Signal"
       },

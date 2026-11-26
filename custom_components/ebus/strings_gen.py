@@ -147,6 +147,9 @@ FIXED_NAMES = {
                                             "de": "Fremdabfragen ohne Antwort pro Minute"},
         "adapter_ack_faults_rate": {"en": "Acknowledgment faults per minute",
                                     "de": "Quittungsfehler pro Minute"},
+        # what a device that sends on its own sent in the last minute
+        "sent_rate": {"en": "Telegrams sent per minute",
+                      "de": "Gesendete Telegramme pro Minute"},
         "adapter_wifi_signal": {"en": "Wi-Fi signal", "de": "WLAN-Signal"},
         "adapter_uptime": {"en": "Uptime", "de": "Laufzeit"},
         "adapter_free_memory": {"en": "Free memory", "de": "Freier Speicher"},

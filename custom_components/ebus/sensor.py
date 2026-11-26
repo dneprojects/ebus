@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import EbusConfigEntry
+from .ack_watch import slave_of
 from .adapter import wifi
 from .const import DOMAIN
 from .coordinator import EbusCoordinator
@@ -191,6 +192,23 @@ async def async_setup_entry(
     _add_ident_sensors()
     entry.async_on_unload(coordinator.async_add_listener(_add_ident_sensors))
 
+    # what a device that sends on its own (controller, gateway, ...) sent in the
+    # last minute; added once it was seen sending
+    senders: set[int] = set()
+
+    @callback
+    def _add_sent_sensors() -> None:
+        if coordinator.engine is None:
+            return
+        new = [qq for qq in coordinator.engine.meter.senders
+               if qq not in senders and slave_of(qq) in coordinator.devices]
+        if new:
+            senders.update(new)
+            async_add_entities(EbusSentSensor(coordinator, qq) for qq in new)
+
+    _add_sent_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_add_sent_sensors))
+
     # a heat pump's coefficient of performance now
     async_add_entities(
         EbusCopSensor(coordinator, address, *sources)
@@ -353,6 +371,30 @@ class EbusAdapterSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         return self._value(self.coordinator)
+
+
+class EbusSentSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):
+    """The telegrams a device sent on its own in the last minute (e.g. whether
+    a gateway talks to its controller), counted passively."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "sent_rate"
+    _attr_native_unit_of_measurement = _PER_MINUTE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:send-outline"
+
+    def __init__(self, coordinator: EbusCoordinator, qq: int) -> None:
+        super().__init__(coordinator)
+        self._qq = qq  # its master address; the device is its slave address
+        zz = slave_of(qq)
+        self._attr_unique_id = coordinator.uid(f"{zz:02x}", "gesendete_telegramme_pro_minute")
+        self._attr_device_info = coordinator.device_info(zz)
+
+    @property
+    def native_value(self) -> StateType:
+        engine = self.coordinator.engine
+        return engine.meter.sent_per_minute(time.monotonic(), self._qq) if engine else None
 
 
 class EbusIdentSensor(CoordinatorEntity[EbusCoordinator], SensorEntity):

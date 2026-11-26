@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.23
+
+- New diagnostic sensor "Gesendete Telegramme pro Minute" on each device that sends on its own (controller, myVAILLANT gateway, VWZ AI, ...), counted passively: e.g. whether the gateway talks to its controller
+
 ## 0.7.22
 
 - Logbook: also a read that arrived but got no answer ("keine Antwort") or an empty one although it expects data ("leere Antwort"), with sender, receiver and message -- e.g. the myVAILLANT gateway's reads of the controller; neither counts as an acknowledgment fault nor raises the repair issue

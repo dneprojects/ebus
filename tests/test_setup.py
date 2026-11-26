@@ -468,3 +468,33 @@ async def test_the_adapter_shows_the_bus_load_and_poll_rates(hass: HomeAssistant
     assert values["abfragen_pro_minute"] == 4.0  # 2 polls in the 30 s seen so far
     assert values["regler_abfragen_pro_minute"] == 2.0
     assert values["fremdabfragen_ohne_antwort_pro_minute"] == 2.0
+
+
+async def test_a_device_seen_sending_gets_its_sent_rate_sensor(hass: HomeAssistant):
+    # the gateway (master f1, device f6) sends on its own; a master without a
+    # scanned device (an unknown sender) gets none
+    from custom_components.ebus import sensor
+    from custom_components.ebus.sensor import EbusSentSensor
+    entry = _entry()
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    coord.update_interval = None
+    coord.devices = {0xF6: ScanResult(0xB5, "Vaillant", "NETX3", "0128", "1803", 128, 1803)}
+    coord.data = {}
+    coord.engine = EbusEngine()
+    await coord.async_load_definitions()
+    entry.runtime_data = coord
+    added: list = []
+    await sensor.async_setup_entry(hass, entry, lambda ents: added.extend(ents))
+    assert not [e for e in added if isinstance(e, EbusSentSensor)]
+    now = time.monotonic()
+    coord.engine.meter.symbol(SYN, now - 30)
+    for t in range(6):
+        coord.engine.meter.sent(0xF1, now - 30 + t)
+    coord.engine.meter.sent(0x71, now)  # no device scanned behind it
+    coord.async_set_updated_data({})
+    coord.async_set_updated_data({})  # added once
+    sent = [e for e in added if isinstance(e, EbusSentSensor)]
+    assert len(sent) == 1
+    assert sent[0].unique_id.endswith("_f6_gesendete_telegramme_pro_minute")
+    assert sent[0].native_value == 12.0  # 6 in the 30 s seen, scaled to a minute
