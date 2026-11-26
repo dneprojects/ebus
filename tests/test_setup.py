@@ -524,3 +524,24 @@ async def test_a_gateway_is_left_alone(hass: HomeAssistant):
     assert all(m.zz.lower() != "f6" for m in coord.write_messages)
     assert reg.async_get(old.entity_id) is None
     assert reg.async_get(ident.entity_id) is not None
+
+
+async def test_our_bus_address_and_yielding_to_a_gateway(hass: HomeAssistant):
+    from custom_components.ebus.const import CONF_SOURCE_ADDRESS
+    entry = MockConfigEntry(domain=DOMAIN, data=_DATA, version=1, minor_version=2,
+                            options={CONF_SOURCE_ADDRESS: "ff"})
+    entry.add_to_hass(hass)
+    coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)
+    assert coord.source_address == 0xFF
+    coord.options = {CONF_SOURCE_ADDRESS: "26"}  # no master address: the default
+    assert coord.source_address == 0x31
+    coord.options = {}
+    assert coord.source_address == 0x31
+    coord.devices = {0xF6: ScanResult(0xB5, "Vaillant", "NETX3", "0128", "1803", 128, 1803),
+                     0x26: ScanResult(0xB5, "Vaillant", "VR_71", "0203", "5904", 203, 5904)}
+    coord.engine = EbusEngine()
+    with patch.object(EbusCoordinator, "_ask_web", AsyncMock(return_value=False)), \
+         patch.object(EbusCoordinator, "_translate", AsyncMock()), \
+         patch.object(EbusCoordinator, "_late_identify", AsyncMock()):
+        await coord._finish_setup(translate_inline=True)
+    assert coord.engine.yield_to == {0xF1}  # the gateway's master address

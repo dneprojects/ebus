@@ -23,11 +23,14 @@ from .const import (
     CONF_CONFIG_DIR,
     CONF_DEEP_SCAN,
     CONF_SCAN_INTERVAL,
+    CONF_SOURCE_ADDRESS,
     DEFAULT_ALLOW_WRITE,
     DEFAULT_DEEP_SCAN,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SOURCE_ADDRESS,
     DOMAIN,
+    MASTER_ADDRESSES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -178,5 +181,9 @@ class EbusOptionsFlow(OptionsFlow):
                 CONF_DEEP_SCAN,
                 default=opts.get(CONF_DEEP_SCAN, DEFAULT_DEEP_SCAN),
             ): bool,
+            vol.Required(
+                CONF_SOURCE_ADDRESS,
+                default=opts.get(CONF_SOURCE_ADDRESS, DEFAULT_SOURCE_ADDRESS),
+            ): vol.In(sorted(MASTER_ADDRESSES)),
         })
         return self.async_show_form(step_id="init", data_schema=schema)  # type: ignore[arg-type, unused-ignore]

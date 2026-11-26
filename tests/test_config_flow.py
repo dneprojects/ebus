@@ -184,7 +184,7 @@ async def test_options_change_reloads_with_the_new_settings(hass: HomeAssistant)
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {"scan_interval": 30, "allow_write": True, "config_dir": "",
-                             "deep_scan": False}
+                             "deep_scan": False, "source_address": "31"}
     reload.assert_awaited_once()
     from custom_components.ebus.coordinator import EbusCoordinator
     coord = EbusCoordinator(hass, entry, "1.2.3.4", 9999)

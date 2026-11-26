@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.25
+
+- Our polls give way while an internet gateway (Vaillant VR 9xx) is busy reading the system (5 of its telegrams in 10 s; at most 60 s at a stretch); the count is in the diagnostics
+- New option "Busadresse der Integration": our master address on the bus, which decides who goes first when two masters start at once (the lower wins); 31 as ebusd (default), ff gives way to everybody
+
 ## 0.7.24
 
 - An internet gateway (Vaillant VR 9xx, ident NETX...) is left alone: none of its registers is polled or written, and once known it is not scanned again at a start; its identification (article, serial, year) is read once and remembered. What it sends is still decoded passively, and its register entities from before are removed

@@ -28,7 +28,7 @@ from aioebus.discovery import (
     remember,
 )
 from aioebus.engine import EbusEngine
-from aioebus.frame import BROADCAST
+from aioebus.frame import BROADCAST, is_master
 from aioebus.link import Link, connect
 from aioebus.messages import MessageDef
 from aioebus.passive import MessageRegistry
@@ -56,9 +56,11 @@ from .const import (
     CONF_CONFIG_DIR,
     CONF_DEEP_SCAN,
     CONF_SCAN_INTERVAL,
+    CONF_SOURCE_ADDRESS,
     DEFAULT_ALLOW_WRITE,
     DEFAULT_DEEP_SCAN,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SOURCE_ADDRESS,
     DEFS_CACHE,
     DEVICE_STORE,
     DOMAIN,
@@ -229,6 +231,16 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         self._remove_gateway_registers(spared)
 
     @property
+    def source_address(self) -> int:
+        """Our master address on the bus (options; ebusd's 0x31 by default)."""
+        raw = self.options.get(CONF_SOURCE_ADDRESS, DEFAULT_SOURCE_ADDRESS)
+        try:
+            qq = int(str(raw), 16)
+        except ValueError:
+            return int(DEFAULT_SOURCE_ADDRESS, 16)
+        return qq if is_master(qq) else int(DEFAULT_SOURCE_ADDRESS, 16)
+
+    @property
     def gateways(self) -> set[int]:
         """The internet gateways on this bus (left alone, see is_gateway)."""
         return {zz for zz, scan in self.devices.items() if is_gateway(scan)}
@@ -296,7 +308,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
     async def _discover(self) -> None:
         # the engine runs from the start: discovery goes through it (one transaction
         # policy), and it decodes the bus passively once the definitions are known
-        self.engine = EbusEngine(allow_write=self.allow_write)
+        self.engine = EbusEngine(allow_write=self.allow_write, qq=self.source_address)
         # other masters' commands that did not get through: logbook and issue
         engine = self.engine
         self.acks = AckWatch(self.hass, self._entry.entry_id, lambda: self.devices,
@@ -370,6 +382,10 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
             self._entry.async_create_background_task(
                 self.hass, self._translate(), name="ebus-translate")
         assert self.engine is not None
+        # our polls give way while a gateway reads the system (its master
+        # address is 5 below its device address)
+        self.engine.yield_to = {(zz - 5) & 0xFF for zz in self.gateways
+                                if is_master((zz - 5) & 0xFF)}
         self.engine.registry = MessageRegistry(self.catalog.all_messages())
         self.engine.scheduler = self._build_scheduler()
         await self._cache.async_restore(self.engine)

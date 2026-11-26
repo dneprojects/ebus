@@ -48,5 +48,7 @@ async def async_get_config_entry_diagnostics(
             "read_registers": len(coordinator.read_messages),
             "write_registers": len(coordinator.write_messages),
             "cached_values": len(coordinator.engine.cache) if coordinator.engine else 0,
+            # times our polls gave way to a busy gateway
+            "yields": coordinator.engine.stats.yields if coordinator.engine else 0,
         },
     }

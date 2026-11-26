@@ -17,6 +17,13 @@ PLAIN_READ_PRIORITY: Final = 5
 DEFAULT_ALLOW_WRITE: Final = False  # writing settings is opt-in
 
 CONF_DEEP_SCAN: Final = "deep_scan"  # options: probe the full address space once
+# options: our master address on the bus. It decides who goes first when two
+# masters start at once (the lower address wins); 0x31 is ebusd's, 0xFF yields
+# to everybody
+CONF_SOURCE_ADDRESS: Final = "source_address"
+DEFAULT_SOURCE_ADDRESS: Final = "31"
+MASTER_ADDRESSES: Final = tuple(
+    f"{hi << 4 | lo:02x}" for hi in (0, 1, 3, 7, 15) for lo in (0, 1, 3, 7, 15))
 DEFAULT_DEEP_SCAN: Final = False
 
 # per-entry stored files (value cache, extra addresses, identifications, the

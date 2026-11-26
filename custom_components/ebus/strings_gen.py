@@ -55,7 +55,9 @@ CONFIG_EN = {
         "data": {"scan_interval": "Base poll interval (s)",
                  "allow_write": "Allow writing settings to the bus",
                  "config_dir": "Extra device-definition directory (optional)",
-                 "deep_scan": "Deep scan (probe all bus addresses once)"}}}},
+                 "deep_scan": "Deep scan (probe all bus addresses once)",
+                 "source_address": "Bus address of this integration (hex; ff gives way to "
+                                   "everybody, 31 as ebusd)"}}}},
     "issues": {"commands_lost": {
         "title": "eBUS: commands to {device} do not arrive",
         "description": "{message} from {sender} to {device} did not arrive {count} times "
@@ -103,7 +105,9 @@ CONFIG_DE = {
         "data": {"scan_interval": "Basis-Abfrageintervall (s)",
                  "allow_write": "Schreiben von Einstellungen auf den Bus erlauben",
                  "config_dir": "Zusätzliches Definitionsverzeichnis (optional)",
-                 "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)"}}}},
+                 "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)",
+                 "source_address": "Busadresse der Integration (hex; ff lässt allen den "
+                                   "Vortritt, 31 wie ebusd)"}}}},
     "issues": {"commands_lost": {
         "title": "eBUS: Befehle an {device} kommen nicht an",
         "description": "{message} von {sender} an {device} {count}-mal hintereinander nicht "
