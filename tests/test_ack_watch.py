@@ -118,3 +118,16 @@ async def test_an_issue_from_the_last_run_is_cleared_at_start(hass: HomeAssistan
 async def test_master_addresses_of_devices_count_too(hass: HomeAssistant):
     watch = AckWatch(hass, "x", lambda: {CTL, 0x08})
     assert watch.addresses() == {CTL, 0x10, 0x08, 0x03}
+
+
+async def test_our_own_lost_command_is_logged_as_the_adapters(hass: HomeAssistant):
+    clock = _Clock()
+    watch = await _watch(hass, clock)
+    events = async_capture_events(hass, EVENT_COMMAND_FAULT)
+    own = AckFault(0.0, 0x31, CTL, "b524", bytes.fromhex("02000300"), NO_ACK, "Z1DayTemp",
+                   own=True)
+    with patch.object(aw.time, "monotonic", clock):
+        watch.on_fault(own)
+    await hass.async_block_till_done()
+    data = events[0].data
+    assert (data["sender"], data["receiver"], data["own"]) == ("eBUS Adapter", "sensoCOMFORT", True)

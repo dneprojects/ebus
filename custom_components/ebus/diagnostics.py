@@ -40,7 +40,7 @@ async def async_get_config_entry_diagnostics(
         "allow_write": coordinator.allow_write,
         "update_interval_s": interval.total_seconds() if interval else None,
         "devices": devices,
-        # other masters' telegrams whose acknowledgment failed, the latest last
+        # telegrams (the devices' and ours) whose acknowledgment failed, the latest last
         "ack_faults": ([f.as_dict() for f in coordinator.engine.ack_faults]
                        if coordinator.engine else []),
         "counts": {

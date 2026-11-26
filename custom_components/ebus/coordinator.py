@@ -445,7 +445,7 @@ class EbusCoordinator(DataUpdateCoordinator[EbusCache]):
         return self.engine.meter.unanswered_per_minute(time.monotonic(), set(self.devices))
 
     def ack_faults_per_minute(self) -> float | None:
-        """Other masters' telegrams to the devices on this bus whose
+        """Telegrams (the devices' and ours) to the devices on this bus whose
         acknowledgment failed in the last minute."""
         if self.engine is None or self.acks is None:
             return None

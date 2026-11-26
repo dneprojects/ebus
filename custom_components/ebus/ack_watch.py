@@ -1,10 +1,10 @@
-"""Acknowledgment watch: other masters' commands that did not get through.
+"""Acknowledgment watch: commands on the bus that did not get through.
 
-The engine reads every telegram's acknowledgment passively (aioebus ``acks``).
-Here each fault to a device on this bus becomes a logbook entry (at most one a
-minute per command and kind, with the count since the last one), and commands
-that keep getting lost to a device raise a repair issue that clears itself once
-they arrive again.
+The engine checks every telegram's acknowledgment (aioebus ``acks``): other
+masters' passively, our own from the transaction. Here each fault to a device
+on this bus becomes a logbook entry (at most one a minute per command and kind,
+with the count since the last one), and commands that keep getting lost to a
+device raise a repair issue that clears itself once they arrive again.
 """
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
+from .device import ADAPTER_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +104,8 @@ class AckWatch:
         self._logged[key] = (now, 0)
         self.hass.bus.async_fire(EVENT_COMMAND_FAULT, {
             "config_entry_id": self.entry_id,
-            "sender": self._name(fault.qq), "receiver": self._name(fault.zz),
+            "sender": ADAPTER_NAME if fault.own else self._name(fault.qq),
+            "receiver": self._name(fault.zz), "own": fault.own,
             "sender_address": f"{fault.qq:02x}", "address": f"{fault.zz:02x}",
             "command": fault.pbsb, "data": fault.data.hex(), "message": fault.message,
             "fault": fault.fault, "lost": fault.lost, "count": count,
