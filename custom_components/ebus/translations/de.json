@@ -2238,6 +2238,9 @@
       "z3daytemp": {
         "name": "Zone 3 Sollwert manuell"
       },
+      "bufferchargeoffset": {
+        "name": "Pufferspeicher Ladeüberhöhung"
+      },
       "manualtappingtempdesired": {
         "name": "Zapf-Sollwert manuell"
       },

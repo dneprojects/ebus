@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.7.26
 
+- sensoCOMFORT: "Pufferspeicher Ladeüberhöhung" is a configuration setting (0–15 K, created disabled)
 - Option "Busadresse der Integration": clearer hint (ff lowest priority, 31 recommended)
 
 ## 0.7.25

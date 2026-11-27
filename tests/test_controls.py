@@ -252,3 +252,11 @@ async def test_identification_without_a_week_shows_the_year(hass: HomeAssistant)
     coord.async_update_listeners()
     year = next(e for e in added if e.unique_id == coord.uid("15", "baujahr"))
     assert year.native_value == "2021"
+
+
+async def test_the_buffer_charge_offset_is_an_installer_setting(hass: HomeAssistant):
+    nums = await _entities(hass, number)
+    buf = nums["BufferChargeOffset"]
+    assert (buf.native_min_value, buf.native_max_value, buf.native_step) == (0, 15, 1)
+    assert buf.entity_category is EntityCategory.CONFIG
+    assert buf.entity_registry_enabled_default is False

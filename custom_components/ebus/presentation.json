@@ -58,6 +58,7 @@
         "Z3SFMode"
       ],
       "installer": [
+        "BufferChargeOffset",
         "ContinuousHeating",
         "CylinderChargeHyst",
         "FrostOverRideTime",

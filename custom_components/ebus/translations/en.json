@@ -2343,6 +2343,9 @@
       "z3daytemp": {
         "name": "Z3DayTemp"
       },
+      "bufferchargeoffset": {
+        "name": "BufferChargeOffset"
+      },
       "manualtappingtempdesired": {
         "name": "ManualTappingTempDesired"
       },
