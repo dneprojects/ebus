@@ -38,7 +38,7 @@
           "allow_write": "Schreiben von Einstellungen auf den Bus erlauben",
           "config_dir": "Zusätzliches Definitionsverzeichnis (optional)",
           "deep_scan": "Tiefen-Scan (einmal alle Bus-Adressen prüfen)",
-          "source_address": "Busadresse der Integration (hex; ff lässt allen den Vortritt, 31 wie ebusd)"
+          "source_address": "Busadresse der Integration (hex; ff niedrigste Priorität, 31 empfohlen)"
         }
       }
     }

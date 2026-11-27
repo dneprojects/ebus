@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Option "Busadresse der Integration": clearer hint (ff lowest priority, 31 recommended)
+
 ## 0.7.25
 
 - Our polls give way while an internet gateway (Vaillant VR 9xx) is busy reading the system (5 of its telegrams in 10 s; at most 60 s at a stretch); the count is in the diagnostics

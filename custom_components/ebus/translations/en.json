@@ -38,7 +38,7 @@
           "allow_write": "Allow writing settings to the bus",
           "config_dir": "Extra device-definition directory (optional)",
           "deep_scan": "Deep scan (probe all bus addresses once)",
-          "source_address": "Bus address of this integration (hex; ff gives way to everybody, 31 as ebusd)"
+          "source_address": "Bus address of this integration (hex; ff lowest priority, 31 recommended)"
         }
       }
     }
